@@ -3,6 +3,7 @@
 [CmdletBinding()]
 param(
     [switch]$Json,
+    [switch]$Complex,
     [string]$ShortName,
     [int]$Number = 0,
     [switch]$Help,
@@ -13,10 +14,11 @@ $ErrorActionPreference = 'Stop'
 
 # Show help if requested
 if ($Help) {
-    Write-Host "Usage: ./create-new-feature.ps1 [-Json] [-ShortName <name>] [-Number N] <feature description>"
+    Write-Host "Usage: ./create-new-feature.ps1 [-Json] [-Complex] [-ShortName <name>] [-Number N] <feature description>"
     Write-Host ""
     Write-Host "Options:"
     Write-Host "  -Json               Output in JSON format"
+    Write-Host "  -Complex            Mark as complex feature (creates TECHNICAL.md)"
     Write-Host "  -ShortName <name>   Provide a custom short name (2-4 words) for the branch"
     Write-Host "  -Number N           Specify branch number manually (overrides auto-detection)"
     Write-Host "  -Help               Show this help message"
@@ -24,6 +26,7 @@ if ($Help) {
     Write-Host "Examples:"
     Write-Host "  ./create-new-feature.ps1 'Add user authentication system' -ShortName 'user-auth'"
     Write-Host "  ./create-new-feature.ps1 'Implement OAuth2 integration for API'"
+    Write-Host "  ./create-new-feature.ps1 'Multi-tenant zones system' -Complex -ShortName 'zones'"
     exit 0
 }
 
@@ -263,10 +266,50 @@ New-Item -ItemType Directory -Path $featureDir -Force | Out-Null
 
 $template = Join-Path $repoRoot '.specify/templates/spec-template.md'
 $specFile = Join-Path $featureDir 'spec.md'
-if (Test-Path $template) { 
-    Copy-Item $template $specFile -Force 
-} else { 
-    New-Item -ItemType File -Path $specFile | Out-Null 
+if (Test-Path $template) {
+    Copy-Item $template $specFile -Force
+} else {
+    New-Item -ItemType File -Path $specFile | Out-Null
+}
+
+# Create TECHNICAL.md and directories if complex feature
+if ($Complex) {
+    # Create directories for complex features (ADRs and business rules)
+    New-Item -ItemType Directory -Path (Join-Path $featureDir 'decisions') -Force | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $featureDir 'rules') -Force | Out-Null
+
+    $technicalTemplate = Join-Path $repoRoot '.specify/templates/adaptive/technical-constraints-template.md'
+    $technicalFile = Join-Path $featureDir 'TECHNICAL.md'
+    if (Test-Path $technicalTemplate) {
+        Copy-Item $technicalTemplate $technicalFile -Force
+    } else {
+        # Create minimal TECHNICAL.md if template doesn't exist
+        Write-Warning "[specify] Warning: Template not found at $technicalTemplate, creating minimal TECHNICAL.md"
+        $minimalTechnical = @"
+# Technical Constraints: [FEATURE]
+
+**Feature**: ``specs/###-feature-name/``
+**Created**: [DATE]
+**Status**: DRAFT
+
+## Tech Stack
+
+[To be determined during planning]
+
+## Constraints
+
+[To be determined during planning]
+
+## Risk Flags
+
+[To be determined during planning]
+
+## Decision History
+
+[Amendments will be added as pivots occur]
+"@
+        Set-Content -Path $technicalFile -Value $minimalTechnical
+    }
 }
 
 # Set the SPECIFY_FEATURE environment variable for the current session

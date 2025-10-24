@@ -5,13 +5,17 @@ set -e
 JSON_MODE=false
 SHORT_NAME=""
 BRANCH_NUMBER=""
+COMPLEX_FEATURE=false
 ARGS=()
 i=1
 while [ $i -le $# ]; do
     arg="${!i}"
     case "$arg" in
-        --json) 
-            JSON_MODE=true 
+        --json)
+            JSON_MODE=true
+            ;;
+        --complex)
+            COMPLEX_FEATURE=true
             ;;
         --short-name)
             if [ $((i + 1)) -gt $# ]; then
@@ -40,11 +44,12 @@ while [ $i -le $# ]; do
             fi
             BRANCH_NUMBER="$next_arg"
             ;;
-        --help|-h) 
-            echo "Usage: $0 [--json] [--short-name <name>] [--number N] <feature_description>"
+        --help|-h)
+            echo "Usage: $0 [--json] [--short-name <name>] [--number N] [--complex] <feature_description>"
             echo ""
             echo "Options:"
             echo "  --json              Output in JSON format"
+            echo "  --complex           Mark as complex feature (creates TECHNICAL.md)"
             echo "  --short-name <name> Provide a custom short name (2-4 words) for the branch"
             echo "  --number N          Specify branch number manually (overrides auto-detection)"
             echo "  --help, -h          Show this help message"
@@ -52,10 +57,11 @@ while [ $i -le $# ]; do
             echo "Examples:"
             echo "  $0 'Add user authentication system' --short-name 'user-auth'"
             echo "  $0 'Implement OAuth2 integration for API' --number 5"
+            echo "  $0 'Multi-tenant zones system' --complex --short-name 'zones'"
             exit 0
             ;;
-        *) 
-            ARGS+=("$arg") 
+        *)
+            ARGS+=("$arg")
             ;;
     esac
     i=$((i + 1))
@@ -246,6 +252,45 @@ mkdir -p "$FEATURE_DIR"
 TEMPLATE="$REPO_ROOT/.specify/templates/spec-template.md"
 SPEC_FILE="$FEATURE_DIR/spec.md"
 if [ -f "$TEMPLATE" ]; then cp "$TEMPLATE" "$SPEC_FILE"; else touch "$SPEC_FILE"; fi
+
+# Create TECHNICAL.md and directories if complex feature
+if $COMPLEX_FEATURE; then
+    # Create directories for complex features (ADRs and business rules)
+    mkdir -p "$FEATURE_DIR/decisions"
+    mkdir -p "$FEATURE_DIR/rules"
+
+    TECHNICAL_TEMPLATE="$REPO_ROOT/.specify/templates/adaptive/technical-constraints-template.md"
+    TECHNICAL_FILE="$FEATURE_DIR/TECHNICAL.md"
+    if [ -f "$TECHNICAL_TEMPLATE" ]; then
+        cp "$TECHNICAL_TEMPLATE" "$TECHNICAL_FILE"
+    else
+        # Create minimal TECHNICAL.md if template doesn't exist
+        >&2 echo "[specify] Warning: Template not found at $TECHNICAL_TEMPLATE, creating minimal TECHNICAL.md"
+        cat > "$TECHNICAL_FILE" <<'EOF'
+# Technical Constraints: [FEATURE]
+
+**Feature**: `specs/###-feature-name/`
+**Created**: [DATE]
+**Status**: DRAFT
+
+## Tech Stack
+
+[To be determined during planning]
+
+## Constraints
+
+[To be determined during planning]
+
+## Risk Flags
+
+[To be determined during planning]
+
+## Decision History
+
+[Amendments will be added as pivots occur]
+EOF
+    fi
+fi
 
 # Set the SPECIFY_FEATURE environment variable for the current session
 export SPECIFY_FEATURE="$BRANCH_NAME"

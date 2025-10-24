@@ -296,6 +296,50 @@ Our research and experimentation focus on:
 - Provide robust iterative feature development workflows
 - Extend processes to handle upgrades and modernization tasks
 
+## 🔄 Adaptive SDD & Architectural Pivots
+
+Spec-Kit includes an **Adaptive SDD** methodology for handling architectural changes discovered during implementation:
+
+### TECHNICAL.md - Living Constraints Document
+
+For complex features (multi-tenant, performance-critical, integration-heavy), create a `TECHNICAL.md` file that:
+- Captures technical constraints (performance, security, scalability)
+- Documents risk flags with `[NEEDS VALIDATION]` markers
+- Evolves through amendments (~~old~~ → new) rather than edits
+- Preserves decision history as architecture changes
+
+### Architecture Decision Records (ADRs)
+
+When implementation reveals architectural blockers:
+1. **Document the pivot** via ADR (immutable decision record)
+2. **Validate against constitution** (simplicity, anti-abstraction, integration-first gates)
+3. **Update contract tests FIRST** (test-driven architecture changes)
+4. **Amend TECHNICAL.md** with strikethrough for old constraints
+5. **Regenerate plan & tasks** using amended constraints
+
+**Learn more**: [Unified SDD Methodology v2.1](./docs/unified-sdd-methodology.md#adaptive-sdd)
+
+## 📋 Business Rules Management
+
+Capture and validate business logic through a centralized catalog system:
+
+### Constitutional Quality Gates
+
+Nine validation rules ensure business rules are:
+- **Testable**: ≥2 test references (valid + invalid cases)
+- **Complete**: All required fields present
+- **Traceable**: Links to spec, implementation, and tests
+- **Test-First**: Tests exist before marking rules ACTIVE
+
+### Workflow Integration
+
+1. **Harvest** (Planning): Extract business rules from specifications
+2. **Implement** (Development): Annotate code with `@BusinessRule BR-DOMAIN-###`
+3. **Extract** (Post-Implementation): Update catalog from code annotations
+4. **Query** (Ongoing): LLM agents read `QUICK_REFERENCE.md` for fast lookup
+
+**Learn more**: [Unified SDD Methodology v2.1](./docs/unified-sdd-methodology.md#business-rules-management)
+
 ## 🔧 Prerequisites
 
 - **Linux/macOS/Windows**
@@ -309,6 +353,7 @@ If you encounter issues with an agent, please open an issue so we can refine the
 ## 📖 Learn More
 
 - **[Complete Spec-Driven Development Methodology](./spec-driven.md)** - Deep dive into the full process
+- **[Unified SDD Methodology v2.1](./docs/unified-sdd-methodology.md)** - Enhanced workflow with confidence checks, evidence requirements, and adaptive pivot protocol
 - **[Detailed Walkthrough](#-detailed-process)** - Step-by-step implementation guide
 
 ---

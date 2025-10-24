@@ -27,11 +27,79 @@
 **Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
 **Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
 
-## Constitution Check
+## Phase -1: Constitutional Validation
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+*GATE: Must pass before technical planning begins. Re-validate after design decisions.*
 
-[Gates determined based on constitution file]
+### Purpose
+Ensure this feature aligns with project principles and constitutional requirements BEFORE investing time in technical research and planning.
+
+### Constitutional Gates
+
+Read `memory/constitution.md` and validate this feature against each article:
+
+**Common Articles** (adapt based on your project's constitution):
+
+#### Article I-III: Core Principles
+- [ ] **Test-First Philosophy**: Can this feature be developed with tests written BEFORE implementation?
+  - If NO: Justify why TDD cannot apply
+- [ ] **Simplicity**: Does this feature add minimal complexity?
+  - If NO: Document complexity justification in Complexity Tracking section
+- [ ] **Clarity**: Are requirements clear enough to start planning?
+  - If NO: Run `/speckit.clarify` before proceeding
+
+#### Article VII: Simplicity Gate (if your constitution has this)
+- [ ] **Framework Addition**: Does this require adding a new framework/library?
+  - If YES: List in Complexity Tracking with justification
+- [ ] **Project Addition**: Does this require a new project/service?
+  - If YES: Verify this doesn't exceed constitutional limits (e.g., max 3 projects)
+
+#### Article VIII: Anti-Abstraction Gate (if your constitution has this)
+- [ ] **Custom Wrappers**: Will this introduce abstraction layers?
+  - If YES: Justify why built-in APIs insufficient
+- [ ] **Design Patterns**: Will this use Repository, Factory, or other patterns?
+  - If YES: Document specific problem patterns solve
+
+#### Article IX: Integration-First Gate (if your constitution has this)
+- [ ] **Contract Tests**: Can contract tests be defined BEFORE implementation?
+  - If YES: Contracts will be created in Phase 1
+  - If NO: Explain why (e.g., prototype feature)
+- [ ] **Real Dependencies**: Will tests use real databases/services (not mocks)?
+  - If NO: Justify why mocks necessary
+
+#### Article XI: Technical Pivot Protocol (if complex feature)
+- [ ] **Complexity Assessment**: Is this feature complex? (Multi-tenant, performance-critical, integration-heavy)
+  - If YES: TECHNICAL.md will be created during planning
+  - If NO: Skip TECHNICAL.md (CRUD features)
+- [ ] **Risk Flags Identified**: Are there known technical uncertainties?
+  - If YES: Document [NEEDS VALIDATION] flags in TECHNICAL.md
+  - If NO: Proceed with standard planning
+
+#### [Add Project-Specific Articles]
+- [ ] **[Article Name]**: [Validation question]
+  - Assessment: [PASS | CONDITIONAL | FAIL]
+  - Justification: [If CONDITIONAL or FAIL, explain]
+
+### Validation Result
+
+**Status**: [ ] ✅ PASS | [ ] ⚠️ CONDITIONAL | [ ] ❌ FAIL
+
+**If PASS**: Proceed to technical research and planning
+
+**If CONDITIONAL**: Document required approvals/justifications below:
+- [Approval 1]: [What is conditional, who must approve, by when]
+- [Approval 2]: [...]
+
+**If FAIL**: STOP - Address constitutional violations before planning:
+- [Violation 1]: [What failed, how to fix]
+- [Violation 2]: [...]
+
+### Notes
+- Constitutional validation is **mandatory** before `/speckit.plan`
+- Violations require either:
+  1. Amend feature to comply with constitution, OR
+  2. Amend constitution to reflect new reality (requires approval), OR
+  3. Document exception with architect approval
 
 ## Project Structure
 
