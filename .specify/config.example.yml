@@ -1,0 +1,210 @@
+# Spec-Kit Configuration Example
+# Copy this to .specify/config.yml and customize for your project
+
+# Deep Review Configuration
+clarify:
+  deep_review:
+    # Global enable/disable
+    enabled: true
+
+    # Default mode when auto-detection doesn't trigger specific mode
+    # Options: "fast" | "balanced" | "thorough"
+    default_mode: "balanced"
+
+    # Auto-enable conditions
+    auto_enable:
+      # Enable if spec has "Complex Features" section
+      complex_features_section: true
+
+      # Enable if these keywords found in spec (case-insensitive)
+      keywords:
+        - authentication
+        - authorization
+        - payment
+        - billing
+        - multi-tenant
+        - real-time
+        - websocket
+        - integration
+        - external api
+        - third-party
+        - security
+        - compliance
+        - gdpr
+        - pci
+
+      # Enable if requirement count >= threshold
+      min_requirements: 15
+
+      # Enable if spec word count >= threshold
+      min_word_count: 3000
+
+      # Enable if spec has multiple [NEEDS CLARIFICATION] markers
+      min_clarification_markers: 3
+
+      # Enable if complexity score >= threshold (0-100)
+      # Score = (requirements × 2) + (sections × 5) + (keywords × 10) + (dependencies × 15)
+      min_complexity_score: 50
+
+    # Domain-specific question patterns
+    domain_patterns:
+      authentication:
+        keywords: ["login", "signup", "password", "oauth", "jwt", "session", "mfa", "2fa"]
+        questions:
+          - "What password policy requirements apply? (complexity, length, expiration)"
+          - "Is multi-factor authentication required or optional?"
+          - "How long should user sessions remain active?"
+          - "Are there rate limiting requirements for login attempts?"
+          - "What authentication method is preferred (OAuth, JWT, session-based)?"
+
+      payment:
+        keywords: ["payment", "checkout", "billing", "subscription", "invoice", "refund", "stripe", "paypal"]
+        questions:
+          - "Are payment operations idempotent (safe to retry)?"
+          - "How should failed payment retries be handled?"
+          - "What refund workflows are required?"
+          - "Are webhooks needed for payment status updates?"
+          - "What payment provider integration is required?"
+
+      multi_tenant:
+        keywords: ["tenant", "organization", "workspace", "account", "isolation", "multi-tenant"]
+        questions:
+          - "How is data isolated between tenants (row-level, schema, database)?"
+          - "Are there cross-tenant access scenarios (e.g., shared resources)?"
+          - "How are tenant limits/quotas enforced?"
+          - "Is tenant migration (import/export) required?"
+          - "What tenant identification strategy is used (subdomain, path, header)?"
+
+      real_time:
+        keywords: ["real-time", "websocket", "sse", "polling", "live", "stream"]
+        questions:
+          - "What is the acceptable latency for real-time updates?"
+          - "How many concurrent connections are expected?"
+          - "What happens when real-time connection fails (fallback to polling)?"
+          - "Are there retry/reconnection strategies required?"
+          - "What real-time protocol is preferred (WebSocket, SSE, long-polling)?"
+
+      integration:
+        keywords: ["integration", "api", "webhook", "external", "third-party", "rest", "graphql"]
+        questions:
+          - "What are the rate limits for external API calls?"
+          - "How should API failures be handled (retry, circuit breaker)?"
+          - "Are there authentication requirements for external services?"
+          - "What data format is expected (JSON, XML, protobuf)?"
+          - "Are there webhook security requirements (signature validation)?"
+
+    # Analysis pass configuration
+    passes:
+      logic_validation:
+        enabled: true
+        max_thoughts: 5
+
+      completeness:
+        enabled: true
+        max_thoughts: 6
+
+      optimization:
+        enabled: true
+        max_thoughts: 7
+
+      synthesis:
+        enabled: true
+        max_thoughts: 2
+
+    # Question generation
+    questions:
+      # Maximum questions (spec-kit standard is 5)
+      max_count: 5
+
+      # Minimum impact score to include question (0-100)
+      min_impact_score: 60
+
+      # Balance category coverage (avoid multiple questions from same category)
+      balance_categories: true
+
+      # Prefer multiple-choice over short-answer
+      prefer_multiple_choice: true
+
+    # Optimization suggestions
+    optimization:
+      # Include alternative implementation suggestions
+      suggest_alternatives: true
+
+      # Identify over-engineering opportunities
+      flag_over_engineering: true
+
+      # Suggest scope reduction options
+      suggest_scope_reduction: true
+
+      # Flag premature optimization patterns
+      detect_premature_optimization: true
+
+    # Token management
+    token_limits:
+      # Hard limit (stops even if needsMoreThoughts=true)
+      max_tokens_per_review: 20000
+
+      # Soft limit (warning only)
+      warn_at_tokens: 15000
+
+    # Performance tuning
+    performance:
+      # Cache taxonomy scan results
+      cache_taxonomy_scan: true
+
+      # Skip deep review if recent analysis exists (hours)
+      use_cached_analysis_within_hours: 24
+
+      # Parallel processing (experimental - not yet supported)
+      parallel_thinking: false
+
+# Other spec-kit configurations (future)
+specify:
+  # Spec generation preferences
+  generation:
+    max_clarification_markers: 3
+    max_quality_iterations: 3
+    auto_create_checklists: true
+
+plan:
+  # Planning preferences
+  planning:
+    require_constitution_validation: true
+    auto_generate_research_tasks: true
+    create_quickstart: true
+
+tasks:
+  # Task generation preferences
+  tasks:
+    strict_checklist_format: true
+    include_file_paths: true
+    detect_parallelization: true
+
+analyze:
+  # Analysis preferences
+  analysis:
+    auto_run_after_specify: true
+    auto_run_after_plan: true
+    auto_run_after_tasks: true
+    surface_only_high_severity: true
+    generate_remediation_plans: false  # Require user approval
+
+# Git integration
+git:
+  auto_commit:
+    enabled: false
+    commit_after_specify: false
+    commit_after_clarify: false
+    commit_after_plan: false
+    commit_after_tasks: false
+
+# AI Agent preferences
+agent:
+  # Preferred agent (if multiple installed)
+  preferred: "claude"
+
+  # Context management
+  context:
+    auto_update_agent_files: true
+    include_research_md: true
+    include_quickstart_md: true
