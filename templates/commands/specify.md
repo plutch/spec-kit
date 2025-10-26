@@ -184,7 +184,246 @@ Given that feature description, do this:
 
    d. **Update Checklist**: After each validation iteration, update the checklist file with current pass/fail status
 
-7. Report completion with branch name, spec file path, checklist results, and readiness for the next phase (`/speckit.clarify` or `/speckit.plan`).
+7. **Specification Review Gate** (Self-Check Pattern):
+
+   **Purpose**: Validate specification completeness and present review summary before proceeding.
+
+   **Self-Evaluation Checklist** (MUST answer honestly):
+
+   ❓ **"Are all requirements included?"**
+      ```yaml
+      Action Required:
+        - Compare spec.md content vs user's feature description
+        - Verify no key features omitted
+        - Check all user stories covered
+
+      Expected Check:
+        ✅ All requirements from description covered
+        ✅ User scenarios complete
+        ✅ Success criteria defined
+
+        OR identify:
+        ❌ Missing: [list any requirements not covered]
+      ```
+
+   ❓ **"Are there ambiguous statements remaining?"**
+      ```yaml
+      Action Required:
+        - Scan spec for vague adjectives ("fast", "intuitive", "robust") without metrics
+        - Count [NEEDS CLARIFICATION] markers (should be ≤3)
+        - Check success criteria are measurable
+
+      Expected Check:
+        ✅ No vague terms without quantification
+        ✅ [NEEDS CLARIFICATION] markers: [N]/3 (within limit)
+        ✅ All success criteria measurable
+
+        OR identify:
+        ⚠️ Ambiguous terms found: [list with line numbers]
+        ⚠️ [NEEDS CLARIFICATION] count: [N] (over limit if >3)
+      ```
+
+   ❓ **"Are requirements testable?"**
+      ```yaml
+      Action Required:
+        - Verify each functional requirement has acceptance criteria
+        - Check no implementation details leaked (languages, frameworks, APIs)
+        - Validate user stories have clear outcomes
+
+      Expected Check:
+        ✅ All requirements have acceptance criteria
+        ✅ No tech stack mentioned in spec
+        ✅ User stories testable
+
+        OR identify:
+        ❌ Requirements without acceptance criteria: [list]
+        ❌ Implementation details found: [quote sections]
+      ```
+
+   ❓ **"Are user stories clear?"**
+      ```yaml
+      Action Required:
+        - Validate user journey makes sense (no missing steps)
+        - Check scenarios cover happy path and edge cases
+        - Verify user roles/personas defined if multiple actors
+
+      Expected Check:
+        ✅ User journey complete (no gaps)
+        ✅ Edge cases identified
+        ✅ Multiple user types distinguished (if applicable)
+
+        OR identify:
+        ⚠️ Missing steps in journey: [describe gaps]
+        ⚠️ Edge cases unclear: [list areas]
+      ```
+
+   **Evidence Collection**:
+   ```yaml
+   Sections Completed:
+     - User Scenarios & Testing: ✅ / ⚠️ / ❌
+     - Functional Requirements: ✅ / ⚠️ / ❌
+     - Success Criteria: ✅ / ⚠️ / ❌
+     - Key Entities: ✅ / ⚠️ / ❌ / N/A
+     - Edge Cases: ✅ / ⚠️ / ❌
+     - Assumptions: ✅ / ⚠️ / ❌
+
+   Quality Metrics:
+     - [NEEDS CLARIFICATION] markers: [N] (max 3)
+     - Requirements count: [N]
+     - Success criteria count: [N]
+     - Quality checklist: [X]/[Y] items passed
+
+   Issues Found:
+     - [List any issues from self-check, or "None"]
+   ```
+
+   **Determine Status**:
+   ```yaml
+   Calculate overall readiness:
+
+   ✅ READY:
+     - All checklist items passed
+     - ≤3 [NEEDS CLARIFICATION] markers
+     - No critical issues
+
+   ⚠️ NEEDS REVIEW:
+     - Some checklist items failed but not critical
+     - 1-3 [NEEDS CLARIFICATION] markers present
+     - Minor ambiguities found
+
+   ❌ INCOMPLETE:
+     - Multiple critical checklist failures
+     - >3 [NEEDS CLARIFICATION] markers
+     - Major sections missing
+   ```
+
+   **Output Format** (Present to User):
+   ```markdown
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   📋 Specification Review Complete
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   Status: [✅ READY | ⚠️ NEEDS REVIEW | ❌ INCOMPLETE]
+
+   Branch: [branch-name]
+   Spec: [path/to/spec.md]
+   Checklist: [path/to/checklists/requirements.md]
+
+   ## Self-Check Results
+
+   Requirements Coverage:
+   ✅ All requirements from description included ([N] total)
+   [OR: ❌ Missing requirements: [list]]
+
+   Ambiguity Check:
+   [IF ≤3 markers:]
+   ⚠️ [N] clarifications needed (marked in spec)
+   [ELSE IF >3 markers:]
+   ❌ Too many clarifications needed ([N] found, reduced to 3 most critical)
+   [ELSE:]
+   ✅ No ambiguous statements
+
+   Testability:
+   ✅ All requirements testable ([N]/[N] with acceptance criteria)
+   ✅ No implementation details leaked
+   [OR: ❌ Issues found: [list]]
+
+   User Stories:
+   ✅ User journey complete
+   ✅ Edge cases identified ([N] cases)
+   [OR: ⚠️ Gaps found: [list]]
+
+   ## Quality Checklist Status
+
+   [Show checklist results from step 6]
+   Quality Score: [X]/[Y] items passed ([%]%)
+
+   ## Issues to Address
+
+   [IF any issues found:]
+   Priority Issues:
+   - [Issue 1 with line number]
+   - [Issue 2 with line number]
+
+   Clarifications Needed:
+   - [NEEDS CLARIFICATION]: [Topic] (line [N])
+   - [NEEDS CLARIFICATION]: [Topic] (line [N])
+   [up to 3]
+
+   [IF no issues:]
+   ✅ None - specification is complete and clear
+
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ## Next Steps
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   [IF ✅ READY with no clarifications:]
+   1. Review spec: [spec.md path]
+   2. Proceed to planning: /speckit.plan
+
+   [IF ⚠️ NEEDS REVIEW with clarifications:]
+   1. Review spec: [spec.md path]
+   2. Address clarifications: /speckit.clarify
+   3. OR proceed if acceptable: /speckit.plan
+
+   [IF ❌ INCOMPLETE:]
+   1. Review spec: [spec.md path]
+   2. Address critical issues: [list specific actions]
+   3. Re-run: /speckit.specify (to regenerate)
+
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   Ready to proceed? (yes/review spec/address issues/regenerate)
+   ```
+
+   **User Interaction**:
+   ```yaml
+   IF user says "yes" or "proceed":
+     → Suggest next command based on status:
+        - If READY with no clarifications → /speckit.plan
+        - If clarifications exist → /speckit.clarify
+        - If INCOMPLETE → List required fixes
+
+   IF user says "review" or "review spec":
+     → Provide spec file path
+     → Wait for user feedback
+     → Ask if they want to make changes
+
+   IF user says "address issues":
+     → List specific issues with line numbers
+     → Offer to make corrections
+     → Re-run review gate after fixes
+
+   IF user says "regenerate":
+     → Warn: "This will recreate the spec from scratch"
+     → Ask for confirmation
+     → If confirmed, start over from step 1
+
+   IF user provides feedback or changes:
+     → Apply requested changes to spec
+     → Re-run validation (step 6)
+     → Re-run review gate (step 7)
+   ```
+
+   **Benefits** (from PM Agent patterns):
+   ```yaml
+   Evidence-Based Validation:
+     - ✅ No "looks good" without checking
+     - ✅ Actual issue detection before proceeding
+     - ✅ Transparent quality metrics
+
+   Early Issue Detection:
+     - ✅ Catches problems before planning phase
+     - ✅ Prevents downstream rework (5K-20K token savings)
+     - ✅ User confidence in spec quality
+
+   Hallucination Prevention:
+     - ✅ Forces self-check against actual requirements
+     - ✅ No claiming "complete" without evidence
+     - ✅ Explicit status (READY/NEEDS REVIEW/INCOMPLETE)
+   ```
+
+8. Report completion with branch name, spec file path, checklist results, and readiness for the next phase (`/speckit.clarify` or `/speckit.plan`).
 
 **NOTE:** The script creates and checks out the new branch and initializes the spec file before writing.
 

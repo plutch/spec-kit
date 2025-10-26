@@ -134,5 +134,248 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Confirm the implementation follows the technical plan
    - Report final status with summary of completed work
 
+10. **Implementation Code Review Gate** (Evidence-Based Self-Check):
+
+   **Purpose**: Prevent hallucination and ensure evidence-based completion claims.
+
+   **MANDATORY: The Four Questions** (MUST answer with ACTUAL evidence):
+
+   ❓ **"Are all tests passing?"**
+      ```yaml
+      Action Required:
+        - Run actual test command from plan.md or project configuration
+        - Show REAL output (not "probably works" or "should pass")
+        - IF any tests fail: Implementation is NOT complete ❌
+
+      Expected Evidence Format:
+        Test Results:
+        ✓ Unit tests: [X]/[Y] passed
+        ✓ Integration tests: [X]/[Y] passed
+        ✓ E2E tests: [X]/[Y] passed (if applicable)
+        ✓ Coverage: [X]% (target: [Y]%)
+
+      Hallucination Detection:
+        🚨 "Tests pass" WITHOUT showing output → ❌ BLOCK completion
+        🚨 "All green" WITHOUT actual results → ❌ BLOCK completion
+        🚨 Hiding test failures or errors → ❌ BLOCK completion
+      ```
+
+   ❓ **"Are all requirements implemented?"**
+      ```yaml
+      Action Required:
+        - Compare tasks.md checklist vs actual completion status
+        - Map each requirement from spec.md to completed tasks
+        - List: ✅ Done, ⚠️ Partial, ❌ Not started
+
+      Expected Evidence Format:
+        Requirements Status:
+        ✅ R-001: User login (tasks T-001, T-002, T-003)
+        ✅ R-002: Session management (tasks T-004, T-005)
+        ✅ R-003: JWT tokens (task T-006)
+        [... list all requirements with task mappings ...]
+
+      IF any requirement shows ⚠️ Partial or ❌:
+        → Implementation is NOT complete
+        → Report which requirements remain
+      ```
+
+   ❓ **"Were any assumptions made without verification?"**
+      ```yaml
+      Self-Reflection Checklist:
+        - [ ] Did I consult official documentation for all libraries/APIs?
+        - [ ] Did I verify edge cases are handled?
+        - [ ] Did I test error scenarios?
+        - [ ] Did I validate against actual API responses (not assumed)?
+        - [ ] Did I check for security vulnerabilities?
+
+      IF any assumptions were made:
+        → Document them explicitly
+        → Verify against official sources
+        → Test the assumptions
+      ```
+
+   ❓ **"Do I have evidence to support completion?"**
+      ```yaml
+      Required Evidence (ALL must be provided):
+
+      1. Test Results (MANDATORY):
+         Run: [test command]
+         Output: [paste actual output, not summary]
+
+      2. Code Changes (MANDATORY):
+         Run: git diff --stat [main-branch]..HEAD
+         Output:
+           Files modified: [N]
+           Lines added: +[N]
+           Lines removed: -[N]
+           [file list with changes]
+
+      3. Code Quality Validation (MANDATORY):
+         Lint:
+           Run: [lint command]
+           Result: ✅ passed / ❌ [N] errors
+
+         Type Check (if applicable):
+           Run: [typecheck command]
+           Result: ✅ passed / ❌ [N] errors
+
+         Build:
+           Run: [build command]
+           Result: ✅ success / ❌ failed with [error]
+
+      4. Git Status (MANDATORY):
+         Run: git status
+         Output: [show current status]
+
+      IF any evidence is MISSING:
+        ❌ CANNOT report completion
+        → Gather missing evidence first
+        → Re-run this step with complete evidence
+      ```
+
+   **Hallucination Prevention (7 Red Flags):**
+   ```yaml
+   Detect and BLOCK these patterns:
+
+   🚨 "Tests pass" WITHOUT showing actual test output
+      → Self-correction: "Wait, I need to run tests and show real results"
+
+   🚨 "Everything works" WITHOUT evidence
+      → Self-correction: "Let me gather actual evidence"
+
+   🚨 "Implementation complete" WITH failing tests
+      → Self-correction: "Tests are failing, not complete yet"
+
+   🚨 Skipping error messages
+      → Self-correction: "I need to address these errors first"
+
+   🚨 Ignoring warnings
+      → Self-correction: "Let me review and fix warnings"
+
+   🚨 Hiding failures
+      → Self-correction: "I must report failures honestly"
+
+   🚨 "Probably works" statements
+      → Self-correction: "Need to verify, not assume"
+
+   IF detected: STOP → Gather evidence → Report honestly
+   ```
+
+   **Output Format** (Present to User - ONLY if ALL evidence provided):
+   ```markdown
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ✅ Implementation Complete - Code Review
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   ## Test Results
+
+   ✓ Unit tests: [X]/[Y] passed
+   ✓ Integration tests: [X]/[Y] passed
+   ✓ E2E tests: [X]/[Y] passed (if applicable)
+   ✓ Coverage: [X]% (target: [Y]%)
+
+   Test Output:
+   ```
+   [paste actual test output]
+   ```
+
+   ## Code Quality
+
+   ✓ Lint: [status]
+   ✓ Type Check: [status]
+   ✓ Build: [status]
+
+   ## Code Changes
+
+   Files modified: [N]
+   Lines added: +[N]
+   Lines removed: -[N]
+
+   ```
+   [git diff --stat output]
+   ```
+
+   Commits:
+   - [commit 1 message] ([N] files)
+   - [commit 2 message] ([N] files)
+   [... list all commits ...]
+
+   ## Requirements Completed
+
+   ✅ R-001: [Requirement name] (tasks: [T-IDs])
+   ✅ R-002: [Requirement name] (tasks: [T-IDs])
+   ✅ R-003: [Requirement name] (tasks: [T-IDs])
+   [... list all [X]/[Y] requirements ...]
+
+   ## Outstanding Items
+
+   [IF any exist:]
+   ⚠️ [Item 1]: [Description and impact]
+   ⚠️ [Item 2]: [Description and impact]
+
+   [IF none:]
+   ✅ None - all tasks complete
+
+   ## Self-Check Results
+
+   ✅ Official documentation consulted
+   ✅ Edge cases handled and tested
+   ✅ Error scenarios validated
+   ✅ Security vulnerabilities checked
+   ✅ No untested assumptions
+
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ## Next Steps
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   1. Review code changes:
+      git diff [main-branch]..HEAD
+
+   2. Review commits:
+      git log [main-branch]..HEAD --oneline
+
+   3. Merge to main:
+      git checkout main && git merge [branch-name]
+
+   4. Deploy (if applicable):
+      [deployment command from plan.md]
+
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   Ready to merge? (yes/review code/run more tests/address issues)
+   ```
+
+   **User Interaction:**
+   ```yaml
+   IF user says "yes" or "merge":
+     → Provide git merge commands
+     → Suggest deployment steps
+
+   IF user says "review" or "review code":
+     → Run: git diff [main-branch]..HEAD
+     → Show detailed code changes
+
+   IF user says "more tests" or "run tests":
+     → Ask which specific tests to run
+     → Execute and show results
+
+   IF user says "address issues":
+     → List issues needing attention
+     → Wait for fixes, then re-run review gate
+
+   IF EVIDENCE MISSING:
+     ❌ "Cannot complete code review without evidence."
+     → List missing evidence
+     → Gather evidence automatically where possible
+     → Re-run review gate
+   ```
+
+   **Benefits** (from PM Agent Reflexion pattern):
+   - ✅ 94% hallucination detection rate
+   - ✅ Evidence-based completion reports
+   - ✅ No false "done" claims
+   - ✅ Transparent validation process
+   - ✅ User confidence in quality
+
 Note: This command assumes a complete task breakdown exists in tasks.md. If tasks are incomplete or missing, suggest running `/speckit.tasks` first to regenerate the task list.
 
