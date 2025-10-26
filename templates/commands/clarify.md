@@ -19,6 +19,280 @@ Goal: Detect and reduce ambiguity or missing decision points in the active featu
 
 Note: This clarification workflow is expected to run (and be completed) BEFORE invoking `/speckit.plan`. If the user explicitly states they are skipping clarification (e.g., exploratory spike), you may proceed, but must warn that downstream rework risk increases.
 
+## Mode Selection
+
+**Default Mode**: Gap-Filling Clarification (normal workflow)
+**Optional Mode**: Challenge Mode (stress-test assumptions)
+
+**Detect Challenge Mode**:
+
+Check if user input contains `--challenge` flag:
+
+```yaml
+IF $ARGUMENTS contains "--challenge":
+  → Activate Challenge Mode (adversarial questioning)
+  → Skip normal gap-filling workflow
+  → Follow Challenge Mode execution steps (see below)
+
+ELSE:
+  → Normal Mode (gap-filling clarification)
+  → Follow standard execution steps
+```
+
+---
+
+### Challenge Mode Execution (Adversarial Stress-Testing)
+
+**Purpose**: Stress-test spec assumptions through adversarial questioning. Instead of filling gaps, CHALLENGE the spec's direction, assumptions, and approach to surface hidden risks and alternatives BEFORE committing to planning.
+
+**When to Use Challenge Mode**:
+- High-stakes features (security, payments, compliance, core infrastructure)
+- Features with many assumptions or unclear requirements
+- Features with significant resource commitments
+- When spec seems "too clean" (may be hiding complexity)
+- Before major architecture decisions
+
+**Challenge Mode Steps**:
+
+1. Run `{SCRIPT}` to load FEATURE_SPEC (same as normal mode)
+
+2. **Load and Analyze Spec**: Read spec.md completely and identify:
+   - Stated assumptions (explicit in spec)
+   - Implied assumptions (read between the lines)
+   - Approach/solution chosen (technical decisions)
+   - Scope boundaries (what's in/out)
+   - Risk statements (what's mentioned/missing)
+
+3. **Generate Challenge Questions** (3-5 adversarial questions):
+
+   **Question Categories**:
+
+   a. **Assumption Challenge**:
+      ```
+      ❓ Assumption Validation (Challenge)
+
+      The spec assumes [stated assumption]. But have we validated this?
+
+      Challenge: [Why this assumption might be wrong]
+
+      Alternative: [What if the opposite is true]
+
+      Question: How confident are we in this assumption? What's the evidence?
+
+      Options:
+      A) High confidence - validated with users/data
+      B) Medium confidence - based on best practices
+      C) Low confidence - educated guess
+      D) Should validate before proceeding
+      ```
+
+   b. **Alternative Exploration**:
+      ```
+      ❓ Approach Alternatives (Challenge)
+
+      The spec proposes [stated approach]. But what alternatives exist?
+
+      Current: [Summarize chosen approach]
+
+      Alternatives:
+      - [Alternative 1]: [Pros/cons]
+      - [Alternative 2]: [Pros/cons]
+      - [Simplest option]: [Pros/cons]
+
+      Question: What's the rationale for the chosen approach vs simpler alternatives?
+
+      Options:
+      A) Chosen approach is optimal - [reason]
+      B) Alternative [X] is better - [reason]
+      C) Need to compare alternatives first
+      D) Simplest approach sufficient
+      ```
+
+   c. **Simplification Pressure**:
+      ```
+      ❓ Scope Reduction (Challenge)
+
+      If we had 50% of the time/budget, what would we cut?
+
+      Current scope: [List key features from spec]
+
+      Question: What's the MINIMAL viable version?
+
+      Rate each feature:
+      - Must-have (breaks feature without it)
+      - Should-have (significantly degrades UX)
+      - Nice-to-have (polish, not critical)
+      - Gold-plating (over-engineered)
+
+      Options:
+      A) All current features are must-haves
+      B) [List features] could be deferred
+      C) Minimal version is just [core features]
+      D) Need to re-scope significantly
+      ```
+
+   d. **Risk Exposure**:
+      ```
+      ❓ Downside Scenarios (Challenge)
+
+      What's the worst case if our assumptions are wrong?
+
+      Scenarios to consider:
+      - User adoption 10x LOWER than expected
+      - User adoption 10x HIGHER than expected
+      - Security requirements more stringent
+      - Integration dependencies fail/change
+      - Timeline compressed by 50%
+
+      Question: What are the hidden risks not addressed in the spec?
+
+      Options:
+      A) Risks are well-covered in spec
+      B) [Specific risk] not addressed
+      C) Need contingency plans for [scenarios]
+      D) Spec is too optimistic
+      ```
+
+   e. **Competitive/Market Challenge**:
+      ```
+      ❓ Market Positioning (Challenge)
+
+      Why would users choose this over alternatives?
+
+      Current alternatives users have:
+      - [Existing solution 1]
+      - [Existing solution 2]
+      - [Do nothing / workaround]
+
+      Question: What's our unique value proposition?
+
+      Options:
+      A) Clear differentiation - [specific advantage]
+      B) Better UX than alternatives
+      C) Cheaper/faster than alternatives
+      D) Not clearly differentiated yet
+      ```
+
+4. **Present Challenge Questions** (one at a time, same interaction pattern as normal mode):
+   - Ask question
+   - Wait for user response
+   - Record answer
+   - Move to next question or user signals "done"
+
+5. **Generate Challenge Report**:
+
+   After questions complete, synthesize findings:
+
+   ```markdown
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   🔍 Spec Challenge Report
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   Feature: [Name]
+   Spec: [Path]
+   Challenge Mode: [N] adversarial questions asked
+
+   ## Assumptions Challenged
+
+   Assumption 1: [Stated assumption]
+   - Confidence: [High/Medium/Low]
+   - Evidence: [User's response]
+   - Risk if wrong: [Impact]
+   - Action: [Validate / Accept / Revise]
+
+   [Repeat for each assumption]
+
+   ## Alternatives Explored
+
+   Current Approach: [Summary]
+   - Rationale: [Why chosen]
+
+   Alternative 1: [Name]
+   - Pros: [...]
+   - Cons: [...]
+   - Decision: [Chosen / Rejected / Needs evaluation]
+
+   [Repeat for each alternative]
+
+   ## Scope Recommendations
+
+   Minimal Viable Version:
+   - Must-have: [List core features]
+   - Should-have: [List important features]
+   - Nice-to-have: [List polish features]
+   - Deferred: [List features to cut if needed]
+
+   ## Risks Identified
+
+   1. [Risk category]: [Description]
+      - Mitigation: [Strategy]
+      - Contingency: [Plan]
+
+   [Repeat for each risk]
+
+   ## Recommendations
+
+   Based on challenge analysis:
+
+   ✅ Proceed as-is: [If spec validated]
+     - Rationale: [Why assumptions hold]
+
+   ⚠️ Revise spec: [If issues found]
+     - Changes needed: [List specific revisions]
+     - Focus areas: [What to rethink]
+
+   ❌ Re-scope: [If fundamental issues]
+     - Core problems: [What's wrong]
+     - Suggested direction: [Alternative approach]
+
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ## Next Steps
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   [IF ✅ Proceed:]
+   1. Continue to planning: /speckit.plan
+   2. Update spec with challenge insights (optional)
+
+   [IF ⚠️ Revise:]
+   1. Update spec.md with recommended changes
+   2. Run /speckit.clarify again (normal mode)
+   3. Then proceed to /speckit.plan
+
+   [IF ❌ Re-scope:]
+   1. Major spec revision needed
+   2. Consider /speckit.specify [revised description]
+   3. Or manually update spec.md with new direction
+
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   Ready to proceed? (yes/revise/re-scope)
+   ```
+
+6. **Update Spec (Optional)**: Based on challenge findings, optionally update spec.md with:
+   - Challenge Insights section
+   - Validated Assumptions section
+   - Alternatives Considered section
+   - Risk Mitigation section
+
+7. **User Decision**: Wait for user to decide:
+   - Proceed to planning (spec validated)
+   - Revise spec (issues found)
+   - Re-scope (fundamental problems)
+
+**Benefits of Challenge Mode**:
+- Surfaces hidden assumptions early
+- Explores alternatives explicitly
+- Identifies simplification opportunities
+- Exposes hidden risks
+- Documents decision rationale
+- Prevents expensive late-stage pivots
+
+---
+
+### Standard Execution Steps (Normal Mode)
+
+If NOT in Challenge Mode, follow these steps:
+
 Execution steps:
 
 1. Run `{SCRIPT}` from repo root **once** (combined `--json --paths-only` mode / `-Json -PathsOnly`). Parse minimal JSON payload fields:
@@ -94,6 +368,108 @@ Execution steps:
     - Exclude questions already answered, trivial stylistic preferences, or plan-level execution details (unless blocking correctness).
     - Favor clarifications that reduce downstream rework risk or prevent misaligned acceptance tests.
     - If more than 5 categories remain unresolved, select the top 5 by (Impact * Uncertainty) heuristic.
+
+   **ENHANCEMENT: Context-Aware Question Selection** (Smart Questioning):
+
+   For EACH ambiguity identified, generate question VARIANTS from different perspectives, then select the BEST one based on context:
+
+   **Question Perspectives**:
+
+   - **Technical** (How/What): Specific implementation details, numbers, formats
+     - Example: "What's the target API response time? (<100ms / <500ms / <1s / <5s)"
+     - Best when: Spec mentions technical requirements but lacks specifics
+
+   - **User** (Who/Why): User priorities, workflows, experience impacts
+     - Example: "Which user workflows need the fastest response time? (search/filter / data export / all operations)"
+     - Best when: Multiple use cases exist with potentially different needs
+
+   - **Business** (Value/Tradeoff): Cost-benefit analysis, priority decisions, ROI
+     - Example: "What's the user impact of 500ms vs 2s response time? (critical / moderate / minimal)"
+     - Best when: Trade-offs exist between complexity and value
+
+   - **Risk** (What-if): Scale considerations, failure modes, edge cases
+     - Example: "What happens if API response time degrades under 10x load? (acceptable / degraded UX / critical failure)"
+     - Best when: Scalability or reliability concerns exist
+
+   **Context-Based Selection Algorithm**:
+
+   For each ambiguity, analyze the spec context to choose the best perspective:
+
+   ```yaml
+   IF spec mentions "real-time", "critical path", or "performance-sensitive":
+     → Choose Technical perspective (need specific numbers)
+     → Rationale: Precision required for technical implementation
+
+   ELSE IF spec has vague priorities ("fast", "good UX", "responsive"):
+     → Choose User perspective (understand what matters most)
+     → Rationale: Priorities unclear, need user-centric clarification
+
+   ELSE IF spec has competing concerns (speed vs cost, features vs time):
+     → Choose Business perspective (understand trade-offs)
+     → Rationale: Decision requires cost-benefit analysis
+
+   ELSE IF spec lacks error handling, scale considerations, or edge cases:
+     → Choose Risk perspective (surface hidden issues)
+     → Rationale: Resilience and scale not addressed
+
+   ELSE (default):
+     → Choose Technical perspective (most direct clarification)
+   ```
+
+   **Example: Performance Ambiguity**
+
+   Ambiguity detected: "The API should respond quickly"
+
+   Generated variants:
+   - Technical: "What's the target response time? (<100ms / <500ms / <1s / <5s)"
+   - User: "Which operations need fastest response? (search / export / all)"
+   - Business: "What's the user impact of slower response? (critical / moderate / minimal)"
+   - Risk: "What happens if response degrades under load?"
+
+   Context analysis:
+   - Spec mentions "search functionality" and "user experience"
+   - No "real-time" or "critical" keywords
+   - Multiple user workflows described
+
+   Selected: **User perspective**
+   Rationale: Multiple workflows exist, need to understand which ones prioritize speed
+
+   Final question:
+   ```
+   ❓ Performance Priorities (User Perspective)
+
+   Which user workflows require the fastest API response times?
+
+   This helps prioritize optimization efforts and set appropriate targets for different operations.
+
+   **Recommended:** Search/filter operations (typically interactive, users expect <500ms)
+
+   | Option | Description |
+   |--------|-------------|
+   | A | Search and filter operations (interactive queries) |
+   | B | Data export and report generation (background operations) |
+   | C | All operations equally (uniform performance target) |
+   | D | Real-time dashboard updates (continuous data flow) |
+   | Short | Specify other workflows (<=5 words) |
+
+   You can reply with the option letter, accept the recommendation ("yes"), or specify your own answer.
+   ```
+
+   **Question Annotation Format**:
+
+   When presenting questions, include perspective label to help user understand the question's purpose:
+
+   - `❓ [Topic] (Technical)` - For implementation specifics
+   - `❓ [Topic] (User Perspective)` - For user priorities and workflows
+   - `❓ [Topic] (Business Perspective)` - For value and trade-off decisions
+   - `❓ [Topic] (Risk Perspective)` - For scale and failure considerations
+
+   **Benefits of Context-Aware Selection**:
+   - Same 5-question limit (no workflow change)
+   - Questions reveal deeper insights (not just technical gaps)
+   - Smart selection based on context (not random perspective choice)
+   - Annotations help user understand WHY each question matters
+   - Reduces follow-up clarification rounds (get it right first time)
 
 4. Sequential questioning loop (interactive):
     - Present EXACTLY ONE question at a time.

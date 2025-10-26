@@ -19,7 +19,154 @@ The text the user typed after `/speckit.specify` in the triggering message **is*
 
 Given that feature description, do this:
 
-1. **Generate a concise short name** (2-4 words) for the branch:
+1. **Vagueness Detection & Pre-Spec Discovery** (Adaptive Dialogue):
+
+   **Purpose**: If the feature description is too high-level or vague, engage in brief discovery dialogue BEFORE generating the spec to build better understanding and prevent assumption-heavy specifications.
+
+   **Vagueness Detection Heuristics**:
+
+   Evaluate the user's feature description against these criteria:
+
+   - **Length**: < 30 words (insufficient detail)
+   - **Uncertainty markers**: Contains "maybe", "thinking about", "not sure", "possibly", "could", "might"
+   - **Generic terms without specifics**:
+     - "dashboard" (without saying what data/metrics)
+     - "authentication" (without specifying type: OAuth, JWT, sessions)
+     - "API" (without endpoints or purpose)
+     - "admin panel" (without specific admin functions)
+   - **Lack of concrete verbs**: "add something", "make it better", "improve"
+   - **Missing context**: Who/what/why/when are unclear
+
+   **Decision Flow**:
+
+   ```yaml
+   IF description meets ANY vagueness criteria:
+
+     Present discovery option to user:
+
+     "🤔 Your description seems high-level. To create a better spec, I can:
+
+     **A) Generate spec now** (fast, ~1 min, may include assumptions)
+     **B) Ask 3-5 discovery questions first** (better spec, ~2-3 min)
+
+     Type 'A' for fast generation, 'B' for discovery, or just 'proceed' to skip.
+
+     Recommendation: Choose B for important features or when requirements are unclear."
+
+     Wait for user response.
+
+     IF user responds with "A", "fast", "skip", or "proceed":
+       → Skip discovery, proceed to spec generation (note: will make informed assumptions)
+
+     ELSE (user chooses "B", "discovery", or "questions"):
+       → Run discovery dialogue (see below)
+
+   ELSE (description is detailed and specific):
+     → Skip detection entirely, proceed directly to Step 2 (short name generation)
+   ```
+
+   **Discovery Dialogue** (if user chooses discovery):
+
+   Ask 3-5 targeted questions to build understanding. Present questions ONE at a time, wait for each answer before proceeding.
+
+   **Question 1 (Outcome Focus)**:
+   ```
+   ❓ Outcome & Problem
+
+   What user outcome or problem does this feature solve?
+
+   Examples to guide your answer:
+   - "Users can't currently access protected resources" → Authentication needed
+   - "Users can't see real-time sales data" → Real-time dashboard needed
+   - "Admins spend hours manually approving requests" → Automated workflow needed
+
+   Your answer: [wait for response]
+   ```
+
+   **Question 2 (Scope Control)**:
+   ```
+   ❓ Scope & Priorities
+
+   What are the must-haves vs nice-to-haves for this feature?
+
+   Must-have: Core functionality without which the feature doesn't work
+   Nice-to-have: Enhancements that improve UX but aren't critical
+
+   Example:
+   - Must: Email/password login, password reset
+   - Nice: OAuth providers, 2FA, remember me
+
+   Your answer: [wait for response]
+   ```
+
+   **Question 3 (Risk Awareness)**:
+   ```
+   ❓ Scale & Risk Considerations
+
+   What happens if usage is 10x higher than expected?
+   (Or: What are the key technical risks or constraints?)
+
+   This helps identify:
+   - Performance bottlenecks to consider
+   - Scalability requirements
+   - Infrastructure needs
+
+   Example: "Need rate limiting, caching critical, async processing"
+
+   Your answer: [wait for response]
+   ```
+
+   **Optional Question 4** (if scope still unclear):
+   ```
+   ❓ Out of Scope
+
+   What's explicitly OUT of scope for this feature?
+
+   Clarifying what NOT to build is often as important as what to build.
+
+   Example: "No social login, no magic links, no biometric auth"
+
+   Your answer: [wait for response]
+   ```
+
+   **Optional Question 5** (if constraints mentioned):
+   ```
+   ❓ Constraints
+
+   What are the hard constraints (time, budget, technology, compliance)?
+
+   Example: "Must launch in 2 weeks, must use existing auth system, must comply with GDPR"
+
+   Your answer: [wait for response]
+   ```
+
+   **After Discovery Completion**:
+
+   Synthesize insights and store them for use during spec generation:
+
+   ```yaml
+   Discovery Insights:
+     user_outcome: [answer to Q1]
+     scope_must_haves: [answer to Q2 - must]
+     scope_nice_to_haves: [answer to Q2 - nice]
+     risks_and_scale: [answer to Q3]
+     out_of_scope: [answer to Q4 if asked]
+     constraints: [answer to Q5 if asked]
+   ```
+
+   These insights will be used to:
+   - Generate more accurate functional requirements
+   - Create User Outcome section in spec
+   - Define Scope Boundaries section
+   - Populate Risks & Assumptions section
+   - Reduce [NEEDS CLARIFICATION] markers
+
+   Output to user:
+   ```
+   ✅ Discovery complete! Generating spec with enriched understanding...
+   ```
+
+2. **Generate a concise short name** (2-4 words) for the branch:
    - Analyze the feature description and extract the most meaningful keywords
    - Create a 2-4 word short name that captures the essence of the feature
    - Use action-noun format when possible (e.g., "add-user-auth", "fix-payment-bug")
@@ -31,7 +178,7 @@ Given that feature description, do this:
      - "Create a dashboard for analytics" → "analytics-dashboard"
      - "Fix payment processing timeout bug" → "fix-payment-timeout"
 
-2. **Check for existing branches before creating new one**:
+3. **Check for existing branches before creating new one**:
    
    a. First, fetch all remote branches to ensure we have the latest information:
       ```bash
@@ -62,9 +209,9 @@ Given that feature description, do this:
    - The JSON output will contain BRANCH_NAME and SPEC_FILE paths
    - For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot")
 
-3. Load `templates/spec-template.md` to understand required sections.
+4. Load `templates/spec-template.md` to understand required sections.
 
-4. Follow this execution flow:
+5. Follow this execution flow:
 
     1. Parse user description from Input
        If empty: ERROR "No feature description provided"
@@ -90,9 +237,9 @@ Given that feature description, do this:
     7. Identify Key Entities (if data involved)
     8. Return: SUCCESS (spec ready for planning)
 
-5. Write the specification to SPEC_FILE using the template structure, replacing placeholders with concrete details derived from the feature description (arguments) while preserving section order and headings.
+6. Write the specification to SPEC_FILE using the template structure, replacing placeholders with concrete details derived from the feature description (arguments) while preserving section order and headings.
 
-6. **Specification Quality Validation**: After writing the initial spec, validate it against quality criteria:
+7. **Specification Quality Validation**: After writing the initial spec, validate it against quality criteria:
 
    a. **Create Spec Quality Checklist**: Generate a checklist file at `FEATURE_DIR/checklists/requirements.md` using the checklist template structure with these validation items:
 
@@ -184,7 +331,7 @@ Given that feature description, do this:
 
    d. **Update Checklist**: After each validation iteration, update the checklist file with current pass/fail status
 
-7. **Specification Review Gate** (Self-Check Pattern):
+8. **Specification Review Gate** (Self-Check Pattern):
 
    **Purpose**: Validate specification completeness and present review summary before proceeding.
 
@@ -423,7 +570,7 @@ Given that feature description, do this:
      - ✅ Explicit status (READY/NEEDS REVIEW/INCOMPLETE)
    ```
 
-8. Report completion with branch name, spec file path, checklist results, and readiness for the next phase (`/speckit.clarify` or `/speckit.plan`).
+9. Report completion with branch name, spec file path, checklist results, and readiness for the next phase (`/speckit.clarify` or `/speckit.plan`).
 
 **NOTE:** The script creates and checks out the new branch and initializes the spec file before writing.
 
