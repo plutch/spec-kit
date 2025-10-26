@@ -167,6 +167,366 @@ Execution steps:
    - If any Outstanding or Deferred remain, recommend whether to proceed to `/speckit.plan` or run `/speckit.clarify` again later post-plan.
    - Suggested next command.
 
+9. **Clarification Review Gate** (Evidence-Based Self-Check):
+
+   **Purpose**: Validate clarification effectiveness and assess readiness to proceed to planning phase.
+
+   **MANDATORY: The Four Clarification Questions** (MUST answer with ACTUAL evidence):
+
+   ❓ **"Were all critical ambiguities addressed?"**
+      ```yaml
+      Action Required:
+        - Review coverage summary table from Step 8
+        - Count: Resolved vs Outstanding vs Deferred categories
+        - IF any category remains "Outstanding" with HIGH impact: NOT ready ❌
+        - Show ACTUAL category status counts, not summaries
+
+      Expected Evidence Format:
+        Coverage Status:
+        ✓ Resolved: [X] categories (was Partial/Missing, now Clear)
+        ⚠️ Deferred: [Y] categories (better suited for planning phase)
+        ✓ Clear: [Z] categories (already sufficient)
+        ❌ Outstanding: [N] categories (still Partial/Missing)
+
+        Outstanding Categories (if any):
+        - [Category Name]: [Impact Level] - [Why still unresolved]
+
+      Readiness Determination:
+        IF Outstanding = 0 AND (Resolved + Clear) > 80% of taxonomy:
+          → ✅ READY to proceed to planning
+        IF Outstanding ≤ 2 AND all Outstanding are LOW impact:
+          → ⚠️ CAN PROCEED (with noted risks)
+        IF Outstanding > 2 OR any HIGH impact Outstanding:
+          → ❌ NOT READY (recommend another clarify pass)
+      ```
+
+   ❓ **"Are clarifications properly integrated into spec?"**
+      ```yaml
+      Action Required:
+        - Verify ## Clarifications section exists with Session YYYY-MM-DD
+        - Confirm all [X] Q&A bullets recorded (count from Step 4)
+        - Check each answer integrated into appropriate spec section
+        - Validate no contradictory statements remain
+
+      Expected Evidence Format:
+        Integration Status:
+        ✓ Clarifications section: [Present/Missing]
+        ✓ Q&A bullets recorded: [X]/[X] (all questions answered)
+        ✓ Sections updated: [list section names]
+        ✓ Contradictions removed: [Yes/No - if No, list them]
+
+      Validation Checklist:
+        - [ ] Each accepted answer appears in Clarifications section
+        - [ ] Each answer also integrated into relevant spec section
+        - [ ] No obsolete/conflicting text remains
+        - [ ] Terminology normalized across all updated sections
+        - [ ] Markdown structure valid (no broken headings)
+
+      IF any checklist item fails:
+        → ❌ Integration incomplete
+        → Fix integration issues before proceeding
+      ```
+
+   ❓ **"Did clarifications improve spec measurability?"**
+      ```yaml
+      Action Required:
+        - Compare spec BEFORE vs AFTER clarification
+        - Count vague adjectives remaining ("robust", "intuitive", "fast")
+        - Check if [NEEDS CLARIFICATION] markers reduced
+        - Validate acceptance criteria are more testable
+
+      Expected Evidence Format:
+        Measurability Improvements:
+        Before: [N] vague adjectives, [M] [NEEDS CLARIFICATION] markers
+        After: [N'] vague adjectives (-[N-N']), [M'] markers (-[M-M'])
+
+        Specific Improvements:
+        - Functional Requirements: [Example of vague → specific]
+        - Non-Functional: [Example of added measurable target]
+        - Data Model: [Example of clarified constraint/type]
+        - Edge Cases: [Example of added failure scenario]
+
+      Quality Check:
+        IF (vague adjectives reduced by ≥50%) AND (markers reduced to ≤3):
+          → ✅ Significant improvement
+        IF some improvement but markers still >3:
+          → ⚠️ Partial improvement (may need another pass)
+        IF no measurable change:
+          → ❌ Questions asked but spec not clarified
+      ```
+
+   ❓ **"Is there evidence of clarification impact?"**
+      ```yaml
+      Required Evidence (ALL must be provided):
+
+      1. Spec File Comparison (MANDATORY):
+         Before clarification line count: [N] lines
+         After clarification line count: [M] lines
+         Net change: [M-N] lines ([describe: additions in Clarifications + section updates])
+
+      2. Category Coverage Change (MANDATORY):
+         Run: Compare taxonomy status before/after
+         Output:
+           Categories changed from Partial→Clear: [list]
+           Categories changed from Missing→Clear: [list]
+           Categories still Partial/Missing: [list with reasons]
+
+      3. Questions Efficiency (MANDATORY):
+         Questions asked: [X]/5 quota used
+         Categories resolved per question: [Y]/[X] = [Y/X] ratio
+         High-impact categories resolved: [list]
+
+         Efficiency Validation:
+           IF ratio ≥ 1.5 (each question resolved 1-2 categories):
+             → ✅ Efficient questioning
+           IF ratio < 1.0:
+             → ⚠️ Low impact questions (review question selection)
+
+      4. Spec Diff Summary (MANDATORY):
+         Show actual file changes:
+         ```
+         git diff HEAD -- [FEATURE_SPEC path]
+         ```
+         Output: [paste relevant diff sections showing Q&A + integration]
+
+      IF any evidence is MISSING:
+        ❌ CANNOT report completion
+        → Gather missing evidence first
+        → Re-run this step with complete evidence
+      ```
+
+   **Hallucination Prevention (7 Red Flags for Clarification):**
+   ```yaml
+   Detect and BLOCK these patterns:
+
+   🚨 "All ambiguities resolved" WITHOUT showing coverage table
+      → Self-correction: "Wait, I need to show actual coverage status"
+
+   🚨 "Spec updated" WITHOUT showing what changed
+      → Self-correction: "Let me show the actual diff and integration"
+
+   🚨 "Questions answered" WITH Outstanding high-impact categories
+      → Self-correction: "High-impact gaps remain, not ready yet"
+
+   🚨 Claiming clarification WITHOUT reducing vague terms
+      → Self-correction: "Spec measurability hasn't improved"
+
+   🚨 Skipping integration validation
+      → Self-correction: "I need to verify all answers are in spec"
+
+   🚨 Hiding remaining ambiguities
+      → Self-correction: "I must report Outstanding categories honestly"
+
+   🚨 "Ready for planning" statements WITHOUT evidence
+      → Self-correction: "Need to verify readiness criteria first"
+
+   IF detected: STOP → Gather evidence → Report honestly
+   ```
+
+   **Determine Status**:
+
+   ✅ **READY for Planning**:
+   ```yaml
+   Criteria (ALL must be met):
+     - Outstanding categories = 0
+     - (Resolved + Clear) ≥ 80% of taxonomy categories
+     - All Q&A bullets recorded and integrated
+     - Measurability improved (markers ≤3, vague terms reduced)
+     - No contradictions in spec
+     - Git diff shows actual content changes
+
+   IF ALL criteria met:
+     → Proceed to Step 10 (present completion report)
+   ```
+
+   ⚠️ **CAN PROCEED** (with risks noted):
+   ```yaml
+   Criteria:
+     - Outstanding categories ≤ 2
+     - All Outstanding are LOW impact
+     - Most Q&A integrated (≥80%)
+     - Some measurability improvement visible
+
+   IF criteria met:
+     → Present risks to user
+     → Ask: "Low-impact gaps remain. Proceed to planning or run another clarify pass?"
+     → Wait for user decision before Step 10
+   ```
+
+   ❌ **NOT READY** (more clarification needed):
+   ```yaml
+   Criteria (ANY triggers NOT READY):
+     - Outstanding categories > 2
+     - Any Outstanding category is HIGH impact
+     - Q&A integration incomplete (<80%)
+     - No measurability improvement
+     - Contradictions remain in spec
+
+   IF NOT READY:
+     → Present issues to user with evidence
+     → Recommend: "Run /speckit.clarify again to address [specific categories]"
+     → STOP before Step 10 (do not proceed to planning)
+   ```
+
+   **Output Format** (Present to User - ONLY if evidence provided):
+   ```markdown
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   📋 Clarification Review Complete
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   Status: [✅ READY | ⚠️ CAN PROCEED | ❌ NOT READY]
+
+   Branch: [branch-name]
+   Spec: [path/to/spec.md]
+
+   ## Coverage Status
+
+   ✓ Resolved: [X] categories (Partial/Missing → Clear)
+   ✓ Clear: [Y] categories (already sufficient)
+   ⚠️ Deferred: [Z] categories (planning phase)
+   ❌ Outstanding: [N] categories
+
+   [IF Outstanding > 0:]
+   Outstanding Categories (need attention):
+   - [Category]: [Impact] - [Why unresolved]
+
+   ## Clarification Effectiveness
+
+   Questions Asked: [X]/5 quota used
+   Categories per Question: [Y]/[X] = [ratio] (target: ≥1.5)
+
+   Spec Changes:
+   - Lines added: +[N] (Clarifications + integrations)
+   - Sections updated: [list names]
+   - Vague terms reduced: [N] → [M] (-[N-M])
+   - [NEEDS CLARIFICATION] markers: [X] → [Y] (-[X-Y])
+
+   Integration Status:
+   ✅ All Q&A recorded in Clarifications section
+   ✅ All answers integrated into spec sections
+   ✅ No contradictions remaining
+   ✅ Terminology normalized
+
+   ## Measurability Improvements
+
+   [Show before/after examples:]
+   - Functional: "[vague statement]" → "[specific statement]"
+   - Non-Functional: "[missing target]" → "[measurable target: X ms]"
+   - Data Model: "[unclear type]" → "[explicit type with constraints]"
+
+   ## Readiness Assessment
+
+   [IF ✅ READY:]
+   ✅ All critical ambiguities resolved
+   ✅ Spec measurability significantly improved
+   ✅ No high-impact gaps remaining
+   ✅ Ready to proceed to planning phase
+
+   [IF ⚠️ CAN PROCEED:]
+   ⚠️ Minor gaps remain (low impact):
+      - [Gap 1]: [Why low impact]
+      - [Gap 2]: [Why low impact]
+
+   Risk: These gaps may require clarification during planning.
+
+   [IF ❌ NOT READY:]
+   ❌ Critical gaps remain:
+      - [Gap 1]: [HIGH impact] - [Why blocks planning]
+      - [Gap 2]: [HIGH impact] - [Why blocks planning]
+
+   Recommendation: Run /speckit.clarify again focusing on:
+      - [Specific category 1]
+      - [Specific category 2]
+
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ## Evidence: Spec Changes
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   ```diff
+   [Paste relevant git diff output showing:]
+   + ## Clarifications
+   + ### Session YYYY-MM-DD
+   + - Q: [question 1] → A: [answer 1]
+   + ... [and integration into spec sections]
+   ```
+
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ## Next Steps
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   [IF ✅ READY:]
+   1. Proceed to planning phase:
+      /speckit.plan
+
+   2. Or review spec changes:
+      git diff HEAD -- [FEATURE_SPEC]
+
+   [IF ⚠️ CAN PROCEED:]
+   Choose one:
+   1. Proceed with noted risks:
+      /speckit.plan
+
+   2. Address remaining gaps:
+      /speckit.clarify [focus on specific categories]
+
+   3. Review current spec state:
+      git diff HEAD -- [FEATURE_SPEC]
+
+   [IF ❌ NOT READY:]
+   REQUIRED: Address critical gaps before planning:
+   1. Run another clarify pass:
+      /speckit.clarify [targeting high-impact categories]
+
+   2. Review what needs clarification:
+      [List specific sections/questions to focus on]
+
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   Ready to proceed? (yes/review spec/run clarify again/address gaps)
+   ```
+
+   **User Interaction:**
+   ```yaml
+   IF user says "yes" or "proceed":
+     IF status = READY:
+       → Suggest: /speckit.plan
+     IF status = CAN PROCEED:
+       → Warn about risks, then suggest: /speckit.plan
+     IF status = NOT READY:
+       → Block: "Cannot proceed - critical gaps remain"
+       → Suggest: /speckit.clarify [with focus areas]
+
+   IF user says "review" or "review spec":
+     → Run: git diff HEAD -- [FEATURE_SPEC]
+     → Show detailed spec changes
+
+   IF user says "clarify again" or "run clarify":
+     → Suggest: /speckit.clarify [focus on Outstanding categories]
+     → List specific questions to target
+
+   IF user says "address gaps":
+     → List Outstanding categories with:
+        - Why they're important (impact)
+        - Suggested questions to ask
+        - Which spec sections need updating
+     → Ask: "Ready to run /speckit.clarify to address these?"
+
+   IF EVIDENCE MISSING:
+     ❌ "Cannot complete clarification review without evidence."
+     → List missing evidence
+     → Gather evidence automatically where possible
+     → Re-run review gate
+   ```
+
+   **Benefits** (from PM Agent Reflexion pattern):
+   - ✅ Prevents premature planning with unresolved ambiguities
+   - ✅ Evidence-based readiness assessment
+   - ✅ No false "ready" claims without coverage proof
+   - ✅ Transparent validation of clarification effectiveness
+   - ✅ User confidence in spec quality before planning
+
+10. Report final completion summary (after review gate passes).
+
 Behavior rules:
 
 - If no meaningful ambiguities found (or all potential questions would be low-impact), respond: "No critical ambiguities detected worth formal clarification." and suggest proceeding.
