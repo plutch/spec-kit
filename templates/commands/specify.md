@@ -636,3 +636,68 @@ Success criteria must be:
 - "Database can handle 1000 TPS" (implementation detail, use user-facing metric)
 - "React components render efficiently" (framework-specific)
 - "Redis cache hit rate above 80%" (technology-specific)
+
+## State Management Integration (Phase 1.2)
+
+After specification is written and validated:
+
+1. **Initialize Feature State**: Create state tracking file at `.specify/memory/features/SPEC_DIR_NAME/state.json`
+
+   ```json
+   {
+     "feature_num": "FEATURE_NUM",
+     "feature_name": "SPEC_DIR_NAME",
+     "branch_name": "BRANCH_NAME",
+     "spec_dir": "SPEC_DIR_NAME",
+     "phase": "SPECIFYING",
+     "progress": 15,
+     "created_at": "[ISO-8601-TIMESTAMP]",
+     "updated_at": "[ISO-8601-TIMESTAMP]",
+     "gates_passed": ["spec_created"],
+     "gates_failed": [],
+     "commands_executed": [
+       {
+         "command": "specify",
+         "timestamp": "[ISO-8601-TIMESTAMP]",
+         "success": true,
+         "clarifications_pending": [COUNT of [NEEDS CLARIFICATION] markers]
+       }
+     ],
+     "clarifications_count": 0,
+     "review_scores": {
+       "clarity": null,
+       "completeness": null,
+       "testability": null,
+       "consistency": null
+     },
+     "blockers": [],
+     "notes": "Initial spec created. Ready for clarification phase."
+   }
+   ```
+
+2. **Update PM Context**: Update `.specify/memory/pm_context.md` with new active feature
+
+3. **Update Next Actions**: Write `.specify/memory/next_actions.md`:
+
+   ```markdown
+   # Next Actions
+
+   **Updated**: [TIMESTAMP]
+   **Feature**: SPEC_DIR_NAME
+
+   ## Immediate (Next Command)
+
+   - `/speckit.clarify` - Clarify [COUNT] underspecified areas in spec
+
+   ## Prerequisites
+
+   - [x] Specification created
+   - [ ] Clarifications completed
+   - [ ] Plan created
+
+   ## Notes
+
+   Spec has [COUNT] [NEEDS CLARIFICATION] markers. Run `/speckit.clarify` to resolve them before planning.
+   ```
+
+**Note**: If `.specify/memory/` directory doesn't exist, create it with necessary structure (memory/, memory/features/).

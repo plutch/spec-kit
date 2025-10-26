@@ -1,0 +1,12 @@
+# PDCA (Plan-Do-Check-Act) Cycle Documentation
+
+Each feature gets a pdca/ subdirectory for tracking the continuous improvement cycle.
+
+Structure:
+```
+.specify/memory/features/000001-auth-system/pdca/
+  plan.md   - Hypothesis and design decisions
+  do.md     - Implementation notes and trials
+  check.md  - Evaluation and results
+  act.md    - Improvements and lessons for next cycle
+```

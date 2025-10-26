@@ -1,0 +1,2 @@
+# Feature-specific state directories
+# Each feature gets its own subdirectory for state tracking

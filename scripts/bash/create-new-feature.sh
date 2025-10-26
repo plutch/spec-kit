@@ -94,10 +94,11 @@ check_existing_branches() {
     git fetch --all --prune 2>/dev/null || true
     
     # Find all branches matching the pattern using git ls-remote (more reliable)
-    local remote_branches=$(git ls-remote --heads origin 2>/dev/null | grep -E "refs/heads/[0-9]+-${short_name}$" | sed 's/.*\/\([0-9]*\)-.*/\1/' | sort -n)
-    
-    # Also check local branches
-    local local_branches=$(git branch 2>/dev/null | grep -E "^[* ]*[0-9]+-${short_name}$" | sed 's/^[* ]*//' | sed 's/-.*//' | sort -n)
+    # Support both old pattern (###-name) and new pattern (feature/######-name)
+    local remote_branches=$(git ls-remote --heads origin 2>/dev/null | grep -E "refs/heads/(feature/)?[0-9]+-${short_name}$" | sed 's/.*\/\(feature\/\)\?\([0-9]*\)-.*/\2/' | sort -n)
+
+    # Also check local branches (support both patterns)
+    local local_branches=$(git branch 2>/dev/null | grep -E "^[* ]*(feature/)?[0-9]+-${short_name}$" | sed 's/^[* ]*//' | sed 's/feature\///' | sed 's/-.*//' | sort -n)
     
     # Check specs directory as well
     local spec_dirs=""
@@ -216,16 +217,16 @@ if [ -z "$BRANCH_NUMBER" ]; then
     fi
 fi
 
-FEATURE_NUM=$(printf "%03d" "$BRANCH_NUMBER")
-BRANCH_NAME="${FEATURE_NUM}-${BRANCH_SUFFIX}"
+FEATURE_NUM=$(printf "%06d" "$BRANCH_NUMBER")
+BRANCH_NAME="feature/${FEATURE_NUM}-${BRANCH_SUFFIX}"
 
 # GitHub enforces a 244-byte limit on branch names
 # Validate and truncate if necessary
 MAX_BRANCH_LENGTH=244
 if [ ${#BRANCH_NAME} -gt $MAX_BRANCH_LENGTH ]; then
     # Calculate how much we need to trim from suffix
-    # Account for: feature number (3) + hyphen (1) = 4 chars
-    MAX_SUFFIX_LENGTH=$((MAX_BRANCH_LENGTH - 4))
+    # Account for: feature/ (8) + feature number (6) + hyphen (1) = 15 chars
+    MAX_SUFFIX_LENGTH=$((MAX_BRANCH_LENGTH - 15))
     
     # Truncate suffix at word boundary if possible
     TRUNCATED_SUFFIX=$(echo "$BRANCH_SUFFIX" | cut -c1-$MAX_SUFFIX_LENGTH)
@@ -233,7 +234,7 @@ if [ ${#BRANCH_NAME} -gt $MAX_BRANCH_LENGTH ]; then
     TRUNCATED_SUFFIX=$(echo "$TRUNCATED_SUFFIX" | sed 's/-$//')
     
     ORIGINAL_BRANCH_NAME="$BRANCH_NAME"
-    BRANCH_NAME="${FEATURE_NUM}-${TRUNCATED_SUFFIX}"
+    BRANCH_NAME="feature/${FEATURE_NUM}-${TRUNCATED_SUFFIX}"
     
     >&2 echo "[specify] Warning: Branch name exceeded GitHub's 244-byte limit"
     >&2 echo "[specify] Original: $ORIGINAL_BRANCH_NAME (${#ORIGINAL_BRANCH_NAME} bytes)"
@@ -246,7 +247,9 @@ else
     >&2 echo "[specify] Warning: Git repository not detected; skipped branch creation for $BRANCH_NAME"
 fi
 
-FEATURE_DIR="$SPECS_DIR/$BRANCH_NAME"
+# Spec directory uses same number but without feature/ prefix for cleaner organization
+SPEC_DIR_NAME="${FEATURE_NUM}-${BRANCH_SUFFIX}"
+FEATURE_DIR="$SPECS_DIR/$SPEC_DIR_NAME"
 mkdir -p "$FEATURE_DIR"
 
 TEMPLATE="$REPO_ROOT/.specify/templates/spec-template.md"
@@ -293,13 +296,15 @@ EOF
 fi
 
 # Set the SPECIFY_FEATURE environment variable for the current session
-export SPECIFY_FEATURE="$BRANCH_NAME"
+# Use SPEC_DIR_NAME for consistency with spec directory structure
+export SPECIFY_FEATURE="$SPEC_DIR_NAME"
 
 if $JSON_MODE; then
-    printf '{"BRANCH_NAME":"%s","SPEC_FILE":"%s","FEATURE_NUM":"%s"}\n' "$BRANCH_NAME" "$SPEC_FILE" "$FEATURE_NUM"
+    printf '{"BRANCH_NAME":"%s","SPEC_FILE":"%s","FEATURE_NUM":"%s","SPEC_DIR_NAME":"%s"}\n' "$BRANCH_NAME" "$SPEC_FILE" "$FEATURE_NUM" "$SPEC_DIR_NAME"
 else
     echo "BRANCH_NAME: $BRANCH_NAME"
     echo "SPEC_FILE: $SPEC_FILE"
     echo "FEATURE_NUM: $FEATURE_NUM"
-    echo "SPECIFY_FEATURE environment variable set to: $BRANCH_NAME"
+    echo "SPEC_DIR_NAME: $SPEC_DIR_NAME"
+    echo "SPECIFY_FEATURE environment variable set to: $SPEC_DIR_NAME"
 fi

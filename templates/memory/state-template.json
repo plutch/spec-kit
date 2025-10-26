@@ -1,0 +1,22 @@
+{
+  "feature_num": "000000",
+  "feature_name": "feature-name",
+  "branch_name": "feature/000000-feature-name",
+  "spec_dir": "000000-feature-name",
+  "phase": "SPECIFYING",
+  "progress": 0,
+  "created_at": "ISO-8601-TIMESTAMP",
+  "updated_at": "ISO-8601-TIMESTAMP",
+  "gates_passed": [],
+  "gates_failed": [],
+  "commands_executed": [],
+  "clarifications_count": 0,
+  "review_scores": {
+    "clarity": null,
+    "completeness": null,
+    "testability": null,
+    "consistency": null
+  },
+  "blockers": [],
+  "notes": ""
+}

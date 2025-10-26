@@ -1,0 +1,23 @@
+{
+  "pattern_id": "auth_clarification_001",
+  "pattern_name": "authentication_clarification",
+  "trigger": "user mentions 'authentication' without specifying type",
+  "context": "vague authentication requirements",
+  "questions": [
+    "Auth type: OAuth/JWT/sessions/API keys/SAML?",
+    "Password policy requirements (length, complexity)?",
+    "Session timeout duration?",
+    "2FA/MFA required?",
+    "Password reset flow needed?",
+    "Remember me / persistent sessions?"
+  ],
+  "success_rate": 0.92,
+  "times_used": 12,
+  "learned_from_features": ["000001", "000005", "000012", "000023"],
+  "created_at": "2025-01-15T10:30:00Z",
+  "last_used": "2025-01-26T14:20:00Z",
+  "effectiveness_score": 8.5,
+  "notes": "High success rate. Questions 1-4 are critical, 5-6 can be deferred to planning."
+}
+{"pattern_id": "dashboard_clarification_002", "pattern_name": "dashboard_metrics", "trigger": "user mentions 'dashboard' without specifying metrics", "questions": ["Which metrics to display (specific data points)?", "Update frequency (real-time/hourly/daily)?", "User roles with different views?", "Export/download capability needed?"], "success_rate": 0.88, "times_used": 8, "learned_from_features": ["000003", "000008", "000015"], "effectiveness_score": 7.8}
+{"pattern_id": "api_clarification_003", "pattern_name": "api_design", "trigger": "user mentions 'API' without endpoints or purpose", "questions": ["REST/GraphQL/gRPC?", "Public/internal/partner API?", "Authentication method?", "Rate limiting requirements?", "Versioning strategy?"], "success_rate": 0.90, "times_used": 15, "learned_from_features": ["000002", "000006", "000011", "000018", "000024"], "effectiveness_score": 9.0}

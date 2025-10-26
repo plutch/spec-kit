@@ -76,28 +76,29 @@ function Get-NextBranchNumber {
     }
     
     # Find remote branches matching the pattern using git ls-remote
+    # Support both old pattern (###-name) and new pattern (feature/######-name)
     $remoteBranches = @()
     try {
         $remoteRefs = git ls-remote --heads origin 2>$null
         if ($remoteRefs) {
-            $remoteBranches = $remoteRefs | Where-Object { $_ -match "refs/heads/(\d+)-$([regex]::Escape($ShortName))$" } | ForEach-Object {
-                if ($_ -match "refs/heads/(\d+)-") {
-                    [int]$matches[1]
+            $remoteBranches = $remoteRefs | Where-Object { $_ -match "refs/heads/(feature/)?(\d+)-$([regex]::Escape($ShortName))$" } | ForEach-Object {
+                if ($_ -match "refs/heads/(feature/)?(\d+)-") {
+                    [int]$matches[2]
                 }
             }
         }
     } catch {
         # Ignore errors
     }
-    
-    # Check local branches
+
+    # Check local branches (support both patterns)
     $localBranches = @()
     try {
         $allBranches = git branch 2>$null
         if ($allBranches) {
-            $localBranches = $allBranches | Where-Object { $_ -match "^\*?\s*(\d+)-$([regex]::Escape($ShortName))$" } | ForEach-Object {
-                if ($_ -match "(\d+)-") {
-                    [int]$matches[1]
+            $localBranches = $allBranches | Where-Object { $_ -match "^\*?\s*(feature/)?(\d+)-$([regex]::Escape($ShortName))$" } | ForEach-Object {
+                if ($_ -match "(feature/)?(\d+)-") {
+                    [int]$matches[2]
                 }
             }
         }
@@ -227,16 +228,16 @@ if ($Number -eq 0) {
     }
 }
 
-$featureNum = ('{0:000}' -f $Number)
-$branchName = "$featureNum-$branchSuffix"
+$featureNum = ('{0:000000}' -f $Number)
+$branchName = "feature/$featureNum-$branchSuffix"
 
 # GitHub enforces a 244-byte limit on branch names
 # Validate and truncate if necessary
 $maxBranchLength = 244
 if ($branchName.Length -gt $maxBranchLength) {
     # Calculate how much we need to trim from suffix
-    # Account for: feature number (3) + hyphen (1) = 4 chars
-    $maxSuffixLength = $maxBranchLength - 4
+    # Account for: feature/ (8) + feature number (6) + hyphen (1) = 15 chars
+    $maxSuffixLength = $maxBranchLength - 15
     
     # Truncate suffix
     $truncatedSuffix = $branchSuffix.Substring(0, [Math]::Min($branchSuffix.Length, $maxSuffixLength))
@@ -244,7 +245,7 @@ if ($branchName.Length -gt $maxBranchLength) {
     $truncatedSuffix = $truncatedSuffix -replace '-$', ''
     
     $originalBranchName = $branchName
-    $branchName = "$featureNum-$truncatedSuffix"
+    $branchName = "feature/$featureNum-$truncatedSuffix"
     
     Write-Warning "[specify] Branch name exceeded GitHub's 244-byte limit"
     Write-Warning "[specify] Original: $originalBranchName ($($originalBranchName.Length) bytes)"
@@ -261,7 +262,9 @@ if ($hasGit) {
     Write-Warning "[specify] Warning: Git repository not detected; skipped branch creation for $branchName"
 }
 
-$featureDir = Join-Path $specsDir $branchName
+# Spec directory uses same number but without feature/ prefix for cleaner organization
+$specDirName = "$featureNum-$branchSuffix"
+$featureDir = Join-Path $specsDir $specDirName
 New-Item -ItemType Directory -Path $featureDir -Force | Out-Null
 
 $template = Join-Path $repoRoot '.specify/templates/spec-template.md'
@@ -313,13 +316,15 @@ if ($Complex) {
 }
 
 # Set the SPECIFY_FEATURE environment variable for the current session
-$env:SPECIFY_FEATURE = $branchName
+# Use specDirName for consistency with spec directory structure
+$env:SPECIFY_FEATURE = $specDirName
 
 if ($Json) {
-    $obj = [PSCustomObject]@{ 
+    $obj = [PSCustomObject]@{
         BRANCH_NAME = $branchName
         SPEC_FILE = $specFile
         FEATURE_NUM = $featureNum
+        SPEC_DIR_NAME = $specDirName
         HAS_GIT = $hasGit
     }
     $obj | ConvertTo-Json -Compress
@@ -327,7 +332,8 @@ if ($Json) {
     Write-Output "BRANCH_NAME: $branchName"
     Write-Output "SPEC_FILE: $specFile"
     Write-Output "FEATURE_NUM: $featureNum"
+    Write-Output "SPEC_DIR_NAME: $specDirName"
     Write-Output "HAS_GIT: $hasGit"
-    Write-Output "SPECIFY_FEATURE environment variable set to: $branchName"
+    Write-Output "SPECIFY_FEATURE environment variable set to: $specDirName"
 }
 
