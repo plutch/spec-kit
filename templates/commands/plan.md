@@ -521,6 +521,66 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 **Output**: data-model.md, /contracts/*, quickstart.md, agent-specific file
 
+### Phase 1.5: Supplementary Spec Discovery & Integration (v2.1)
+
+**Prerequisites:** Phase 1 complete
+
+**Purpose**: Auto-discover hierarchical specifications and integrate into plan.md
+
+1. **Discover supplementary specs**:
+   ```bash
+   # Find all *-SPEC.md files in feature directory
+   SUPP_SPECS=$(find "${SPECS_DIR}/${SPEC_DIR}" -maxdepth 1 -name "*-SPEC.md" -type f)
+
+   if [ -z "$SUPP_SPECS" ]; then
+     echo "No supplementary specs found (standard workflow)"
+   else
+     echo "Discovered supplementary specs:"
+     echo "$SUPP_SPECS" | while read -r spec; do
+       echo "  - $(basename "$spec")"
+     done
+   fi
+   ```
+
+2. **Parse supplementary spec metadata**:
+   - Extract frontmatter from each *-SPEC.md
+   - Parse: scope, functional_requirements, target_agents
+   - Validate: parent = "spec.md", required fields present
+
+3. **Generate "Supplementary Specifications" section**:
+   ```markdown
+   ## Supplementary Specifications
+
+   This feature includes detailed implementation guides beyond the core spec.md:
+
+   ### {SCOPE_DISPLAY}
+   - **[{SPEC_NAME}]({SPEC_NAME})**
+     - **Scope**: {SCOPE}
+     - **Coverage**: {FR_LIST}
+     - **Size**: {SIZE_KB}KB, {LINES} lines
+     - **Target Agents**: {TARGET_AGENTS}
+
+   ### Agent Usage Requirements
+
+   **CRITICAL**: All implementation tasks MUST reference relevant supplementary specs.
+
+   **Token Efficiency**: Load supplementary specs ONCE at session start, reference sections during implementation.
+   ```
+
+4. **Append to plan.md**:
+   - If supplementary specs exist, append "Supplementary Specifications" section
+   - Include metadata for each spec (size, scope, target agents)
+   - Add agent usage requirements
+
+5. **Validation (optional)**:
+   - Check frontmatter validity
+   - Warn if supplementary spec missing required fields
+   - Suggest `/speckit.validate-hierarchy` for strict validation
+
+**Output**: plan.md enhanced with supplementary spec references (if any exist)
+
+**Note**: This phase is optional and only runs if *-SPEC.md files are present in the feature directory.
+
 ## Key rules
 
 - Use absolute paths

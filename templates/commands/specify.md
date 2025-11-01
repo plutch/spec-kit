@@ -671,7 +671,35 @@ After specification is written and validated:
        "consistency": null
      },
      "blockers": [],
-     "notes": "Initial spec created. Ready for clarification phase."
+     "notes": "Initial spec created. Ready for clarification phase.",
+     "reconciliation_cycles": 0,
+     "gaps_identified": [],
+     "sync_reports": [],
+     "supplementary_specs": {
+       "enabled": false,
+       "specs": []
+     }
+   }
+   ```
+
+   **Note on Hierarchical Specs (v2.1)**: The `supplementary_specs` object tracks hierarchical specifications:
+   - `enabled`: Set to `true` when `/speckit.supplement` creates UI-SPEC.md, API-SPEC.md, or TECHNICAL-SPEC.md
+   - `specs`: Array of supplementary spec metadata (populated by supplement command)
+
+   Example after `/speckit.supplement ui-ux "..."`:
+   ```json
+   "supplementary_specs": {
+     "enabled": true,
+     "specs": [
+       {
+         "filename": "UI-SPEC.md",
+         "scope": "ui-ux-implementation",
+         "created_at": "[ISO-8601-TIMESTAMP]",
+         "target_agents": ["frontend-architect"],
+         "size_kb": 182,
+         "fr_coverage": "FR-001 through FR-080"
+       }
+     ]
    }
    ```
 

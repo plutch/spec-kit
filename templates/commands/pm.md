@@ -80,7 +80,7 @@ ELSE (confidence >= 70%):
 **Format Explanation**:
 - **Status emoji**: 🟢 (active), 🟡 (blocked), 🔴 (error), ⚫ (no feature)
 - **Branch**: Current git branch
-- **Phase emoji**: 📝 (SPECIFYING), 💭 (CLARIFYING), 📋 (PLANNING), ✅ (TASKING), 🔨 (IMPLEMENTING), ✓ (COMPLETED)
+- **Phase emoji**: 📝 (SPECIFYING), 💭 (CLARIFYING), 📋 (PLANNING), ✅ (TASKING), 🔨 (IMPLEMENTING), 🔄 (RECONCILING), 🧪 (VALIDATING), ✓ (COMPLETED)
 - **Progress**: Percentage based on phase completion
 - **Next action**: Recommended command to execute
 
@@ -110,8 +110,9 @@ Phase Progression:
   3. PLANNING       → plan.md generation
   4. TASKING        → tasks.md breakdown
   5. IMPLEMENTING   → implement command executing
-  6. VALIDATING     → tests running, validation phase
-  7. COMPLETED      → merged to main branch
+  6. RECONCILING    → gap closure, supplementary spec updates
+  7. VALIDATING     → tests running, validation phase
+  8. COMPLETED      → merged to main branch
 
 Progress Calculation:
   SPECIFYING:    0-15%    (spec exists but not clarified)
@@ -119,7 +120,8 @@ Progress Calculation:
   PLANNING:      30-50%   (plan.md exists)
   TASKING:       50-70%   (tasks.md exists)
   IMPLEMENTING:  70-90%   (tasks being executed)
-  VALIDATING:    90-95%   (tests running)
+  RECONCILING:   90-95%   (gaps identified, surgical edits)
+  VALIDATING:    95-98%   (tests running)
   COMPLETED:     100%     (merged)
 ```
 
@@ -151,8 +153,13 @@ Every command should update `state.json`:
 
 ```yaml
 IF phase == "SPECIFYING" AND spec.md exists:
-  → Recommend: /speckit.clarify
-  → Reason: "Spec created, clarify underspecified areas"
+  → Check spec size
+  → IF spec > 150KB OR FRs > 80:
+      Recommend: /speckit.supplement [scope] "description"
+      Reason: "Large spec detected - create supplementary specs"
+  → ELSE:
+      Recommend: /speckit.clarify
+      Reason: "Spec created, clarify underspecified areas"
 
 ELSE IF phase == "CLARIFYING" AND clarifications complete:
   → Recommend: /speckit.plan
@@ -163,7 +170,10 @@ ELSE IF phase == "PLANNING" AND plan.md exists:
     - [ ] Constitutional gates passed?
     - [ ] Simplicity gate passed?
     - [ ] Anti-abstraction gate passed?
-  → IF all passed:
+  → IF supplementary specs exist AND not validated:
+      Recommend: /speckit.validate-hierarchy
+      Reason: "Validate hierarchical spec integrity"
+  → ELSE IF all gates passed:
       Recommend: /speckit.tasks
   → ELSE:
       Recommend: Fix planning issues first
@@ -174,7 +184,21 @@ ELSE IF phase == "TASKING" AND tasks.md exists:
 
 ELSE IF phase == "IMPLEMENTING":
   → Check task progress
-  → Recommend: Continue implement or validate
+  → IF tasks complete:
+      Recommend: /speckit.reconcile
+      Reason: "Implementation done - close any gaps"
+  → ELSE:
+      Recommend: Continue implement
+
+ELSE IF phase == "RECONCILING":
+  → Check gap closure status
+  → IF supplementary specs modified:
+      Recommend: /speckit.validate-hierarchy
+      Reason: "Validate updated supplementary specs"
+  → ELSE IF gaps closed:
+      Recommend: Move to validating
+  → ELSE:
+      Recommend: Continue reconciling gaps
 
 ELSE IF phase == "VALIDATING":
   → Recommend: Fix test failures or merge
@@ -249,6 +273,20 @@ Example Integration:
     → phase = "CLARIFYING"
     → progress = 30
     → clarifications_count = 5
+
+  /speckit.supplement completes:
+    → supplementary_specs.enabled = true
+    → supplementary_specs.specs += {filename, scope, target_agents}
+
+  /speckit.reconcile completes:
+    → phase = "RECONCILING"
+    → progress = 95
+    → reconciliation_cycles += 1
+    → gaps_identified = [...]
+
+  /speckit.validate-hierarchy completes:
+    → validation_passed = true/false
+    → If failed: block workflow (strict mode)
 ```
 
 ## PDCA Integration (Future)

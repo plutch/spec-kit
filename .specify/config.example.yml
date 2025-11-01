@@ -166,6 +166,44 @@ specify:
     max_quality_iterations: 3
     auto_create_checklists: true
 
+  # Supplementary Specifications (v2.1 - Hierarchical Specs)
+  supplementary_specs:
+    enabled: true
+    patterns: ["*-SPEC.md"]  # Files matching this pattern are treated as supplementary specs
+    require_parent_reference: true  # Enforce parent field in frontmatter
+    validate_fr_coverage: true  # Warn if FRs not mapped
+
+    # Agent routing: which agents auto-load which specs
+    agent_routing:
+      frontend-architect:
+        - UI-SPEC.md
+      backend-architect:
+        - API-SPEC.md
+      system-architect:
+        - TECHNICAL-SPEC.md
+        - API-SPEC.md
+      postgres-entity-architect:
+        - TECHNICAL-SPEC.md
+
+    # Validation settings (STRICT mode per user decision)
+    validation:
+      strict_mode: true  # Errors block workflow (exit code 1)
+      run_after_plan: true  # Auto-validate after /speckit.plan
+      run_before_implement: true  # Block /speckit.implement if validation fails
+
+    # Template settings
+    templates:
+      ui_spec: ".specify/templates/supplementary-spec-template.md"
+      api_spec: ".specify/templates/supplementary-spec-template.md"
+      technical_spec: ".specify/templates/supplementary-spec-template.md"
+
+# Reconcile command settings (v2.1)
+reconcile:
+  max_clarifying_questions: 5  # Maximum questions to ask during reconciliation
+  max_clarification_markers: 3  # Maximum [NEEDS CLARIFICATION] markers to add
+  require_integration_tests: true  # Always add integration tests for wiring gaps
+  edit_mode: "append"  # Append-only edits (preserve existing structure)
+
 plan:
   # Planning preferences
   planning:

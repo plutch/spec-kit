@@ -100,13 +100,29 @@ IMPLEMENTING:
   Check: Task completion status
   Next:
     IF tasks incomplete: Continue implement
-    ELSE: validate/merge
+    ELSE: Move to reconcile
+
+RECONCILING:
+  Required:
+    - Implementation complete
+  Check:
+    - Gap report provided
+    - Supplementary specs exist
+  Next:
+    IF gaps remain: Continue reconcile
+    ELSE IF supplementary specs modified: validate-hierarchy
+    ELSE: Move to validating
 
 VALIDATING:
-  Check: Test results
+  Required:
+    - Reconciliation complete (if applicable)
+  Check:
+    - Test results
+    - Hierarchical spec validation (if applicable)
   Next:
-    IF tests passing: merge/complete
-    ELSE: Fix failures
+    IF validation fails: Fix errors
+    ELSE IF tests passing: merge/complete
+    ELSE: Fix test failures
 
 COMPLETED:
   Next: New feature or celebrate
@@ -172,12 +188,34 @@ ELSE IF phase == "TASKING":
     → Reason: "Tasks defined, begin implementation"
 
 ELSE IF phase == "IMPLEMENTING":
-  → Recommend: Continue implementation or validate
-  → Note: "Check task progress in tasks.md"
+  → Check task completion
+  → IF tasks complete:
+      → Recommend: /speckit.reconcile
+      → Reason: "Implementation done - identify and close gaps"
+  → ELSE:
+      → Recommend: Continue implementation
+      → Note: "Check task progress in tasks.md"
+
+ELSE IF phase == "RECONCILING":
+  → Check for supplementary specs
+  → IF supplementary specs exist AND modified:
+      → Recommend: /speckit.validate-hierarchy
+      → Reason: "Validate updated hierarchical specs (strict mode)"
+  → ELSE IF gaps remain:
+      → Recommend: Continue /speckit.reconcile
+      → Note: "Address remaining gaps from gap report"
+  → ELSE:
+      → Recommend: Move to validation
+      → Reason: "Gaps closed, ready for testing"
 
 ELSE IF phase == "VALIDATING":
-  → Recommend: Fix test failures or create PR
-  → Note: "Run tests to verify functionality"
+  → Check for hierarchical specs
+  → IF supplementary specs exist AND not validated:
+      → Recommend: /speckit.validate-hierarchy
+      → Reason: "Validate hierarchical spec integrity (blocks workflow)"
+  → ELSE:
+      → Recommend: Fix test failures or create PR
+      → Note: "Run tests to verify functionality"
 
 ELSE IF phase == "COMPLETED":
   → Congratulate user
@@ -256,7 +294,26 @@ Prerequisites:
 Run: /speckit.plan [tech stack details]
 ```
 
-### Example 3: Blocker Detected
+### Example 3: Reconciling Phase
+
+```
+User: /speckit.next
+
+📍 000003-billing-console
+🔹 Phase: RECONCILING (92%)
+
+Prerequisites:
+  ✅ Implementation complete
+  ✅ Supplementary specs exist (UI-SPEC.md, API-SPEC.md)
+  ⚠️ Gaps identified (missing navigation)
+
+🎯 Next: /speckit.validate-hierarchy
+💡 Reason: Supplementary specs modified - validate hierarchy (strict mode)
+
+After validation, continue to testing.
+```
+
+### Example 4: Blocker Detected
 
 ```
 User: /speckit.next
@@ -277,7 +334,7 @@ User: /speckit.next
 Fix issues, then re-run: /speckit.plan
 ```
 
-### Example 4: No Active Feature
+### Example 5: No Active Feature
 
 ```
 User: /speckit.next
@@ -291,7 +348,7 @@ Or switch to existing feature branch:
 git checkout feature/000001-auth-system
 ```
 
-### Example 5: Multiple Features
+### Example 6: Multiple Features
 
 ```
 User: /speckit.next

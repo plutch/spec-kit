@@ -18,5 +18,16 @@
     "consistency": null
   },
   "blockers": [],
-  "notes": ""
+  "notes": "",
+
+  "_comment_v2.1_reconcile": "New in v2.1: Reconciliation tracking",
+  "reconciliation_cycles": 0,
+  "gaps_identified": [],
+  "sync_reports": [],
+
+  "_comment_v2.1_hierarchical": "New in v2.1: Hierarchical specifications tracking",
+  "supplementary_specs": {
+    "enabled": false,
+    "specs": []
+  }
 }
