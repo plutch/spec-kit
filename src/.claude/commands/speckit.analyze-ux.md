@@ -212,7 +212,280 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Use forgiving date formats (accepts "01/15/25", "1-15-2025", "Jan 15")
    - Add keyboard shortcuts for power users
 
-7. **Generate Analysis Report**: Create concise, actionable output
+7. **Generate Structured UX Recommendations**: Convert UX scores into actionable, prioritized improvement recommendations
+
+   **Purpose**: Transform UX scores into specific, actionable fixes following Nielsen's heuristic evaluation format.
+
+   **Recommendation Structure**:
+
+   For each UX dimension scoring <7/10, generate recommendations:
+
+   ```markdown
+   ### [Severity]: [Dimension] Issues (Score: [X]/10)
+
+   **Heuristic Violated**: [Nielsen Heuristic or WCAG Guideline]
+
+   **Problem**:
+   - [Specific issue from spec.md with section reference]
+   - [Specific issue from spec.md with section reference]
+   - [Specific issue from spec.md with section reference]
+
+   **Recommended Fix**:
+   [Numbered list of specific, actionable steps]
+
+   **Example** (from similar feature):
+   [Concrete example or pattern reference]
+
+   **Impact**: +[N]% [dimension] score ([current]/10 → [target]/10)
+   ```
+
+   **Severity Prioritization**:
+   1. **🔴 CRITICAL**: Scores 0-4/10 (WCAG Level A/AA violations, task-blocking issues)
+   2. **🟠 MAJOR**: Scores 4-6/10 (significant usability problems, efficiency gaps)
+   3. **🟡 MEDIUM**: Scores 6-7/10 (minor friction, optimization opportunities)
+
+   **Nielsen's Heuristic Categories**:
+   1. Visibility of system status
+   2. Match between system and real world
+   3. User control and freedom
+   4. Consistency and standards
+   5. Error prevention
+   6. Recognition rather than recall
+   7. Flexibility and efficiency of use
+   8. Aesthetic and minimalist design
+   9. Help users recognize, diagnose, and recover from errors
+   10. Help and documentation
+
+   **WCAG 2.1 AA Guidelines** (for Accessibility dimension):
+   - Guideline 1.1: Text Alternatives
+   - Guideline 1.3: Adaptable
+   - Guideline 2.1: Keyboard Accessible
+   - Guideline 2.4: Navigable
+   - Guideline 3.2: Predictable
+   - Guideline 4.1: Compatible
+
+   ---
+
+   **Quick Wins Identification**:
+
+   **Criteria for Quick Wins**:
+   - **High Impact**: Improves score by ≥2 points
+   - **Low Effort**: ≤4 hours development time
+   - **Clear Implementation**: Well-documented pattern or example
+
+   **Format**:
+   ```markdown
+   ## Quick Wins (High Impact, Low Effort)
+
+   1. **[Fix Title]** ([N] hours dev, +[M] points [dimension])
+      - Problem: [Brief description]
+      - Fix: [One-sentence action]
+      - Example: [Reference or pattern]
+
+   2. **[Fix Title]** ([N] hours dev, +[M] points [dimension])
+      [Same format]
+
+   3-5. [Additional quick wins, max 5 total]
+   ```
+
+   ---
+
+   **Summary**:
+
+   **Total Improvements**: [N] critical, [M] major, [P] medium
+   **Expected Score Gain**: [Current]/10 → [Target]/10 (+[X]%)
+   **Development Effort**: ~[N] hours
+   **User Time Saved**: ~[X]% per task (from efficiency improvements)
+
+8. **Generate Analysis Report**: Create concise, actionable output
+
+9. **UX Analysis Review Gate (Evidence-Based Self-Check)**
+
+**Purpose**: Validate UX analysis completeness before presenting results.
+
+### Evidence Collection (Mandatory)
+
+❓ **"Were all 5 UX dimensions scored?"**
+Action Required:
+  - Verify all 5 UX scores calculated (Usability, Efficiency, Accessibility, Error Prevention, Delight)
+  - Show ACTUAL scores with justifications
+  - Report: Score for each dimension + overall
+
+Expected Evidence:
+  ✓ Usability score: [X]/10 - [Nielsen heuristic assessment]
+  ✓ Efficiency score: [X]/10 - [Task completion assessment]
+  ✓ Accessibility score: [X]/10 - [WCAG 2.1 AA compliance]
+  ✓ Error Prevention score: [X]/10 - [Error handling assessment]
+  ✓ Delight score: [X]/10 - [User satisfaction assessment]
+  ✓ Overall UX quality: [X.X]/10 (average of 5 dimensions)
+
+❓ **"Was WCAG 2.1 AA compliance checked?"**
+Action Required:
+  - Verify WCAG guidelines validated
+  - Show ACTUAL guideline violations (if any)
+  - Report: Compliance status + specific violations
+
+Expected Evidence:
+  ✓ WCAG compliance status: [🟢 Compliant | 🟡 Minor Gaps | 🔴 Violations]
+  ✓ Specific violations: [List WCAG guideline numbers if violations found]
+  ✓ Accessibility gaps: [List missing features: keyboard nav, ARIA, contrast, etc.]
+
+❓ **"Were usability issues prioritized?"**
+Action Required:
+  - Count issues by severity (🔴/🟠/🟡/🟢/ℹ️)
+  - Show ACTUAL severity breakdown
+  - Report: Impact prioritization
+
+Expected Evidence:
+  ✓ 🔴 CRITICAL: [N] issues (WCAG violations, task-blocking)
+  ✓ 🟠 MAJOR: [N] issues (significant friction)
+  ✓ 🟡 MEDIUM: [N] issues (efficiency opportunities)
+  ✓ 🟢 LOW: [N] issues (delight enhancements)
+  ✓ ℹ️ INFO: [N] observations
+  ✓ Total issues flagged: ≤5 (top issues only)
+
+❓ **"Are recommendations specific and actionable?"**
+Action Required:
+  - Show top 3-5 recommendations with section references
+  - Verify heuristics/guidelines cited (Nielsen or WCAG)
+  - Check quick wins identified (high impact, low effort)
+
+Expected Evidence:
+  Recommendations Summary:
+  ✓ Critical: [N] (WCAG violations, task blockers)
+  ✓ Major: [M] (usability/efficiency issues)
+  ✓ Medium: [P] (optimization opportunities)
+  ✓ Quick Wins: [Q] identified (≤4 hours, ≥2 points impact)
+  Total expected improvement: [X]% ([Current]/10 → [Target]/10)
+
+IF any evidence is MISSING:
+  ❌ CANNOT report completion
+  → Gather missing evidence first
+  → Re-run this step with complete evidence
+
+### Hallucination Prevention (7 Red Flags for UX Analysis)
+
+```yaml
+Detect and BLOCK these patterns:
+
+🚨 "UX score X/10" WITHOUT showing dimension breakdown
+   → Self-correction: "Wait, I need to show all 5 UX dimension scores"
+
+🚨 "Accessibility issues" WITHOUT citing WCAG guidelines
+   → Self-correction: "Must reference specific WCAG 2.1 AA guidelines"
+
+🚨 "Usability problems" WITHOUT specific examples from spec
+   → Self-correction: "Need to quote actual spec sections with issues"
+
+🚨 "Recommendations provided" WITHOUT impact estimates
+   → Self-correction: "Must explain expected impact (time saved, errors prevented)"
+
+🚨 Scoring >7/10 WITHOUT justification for high-quality features
+   → Self-correction: "High scores need evidence of excellent UX patterns"
+
+🚨 Generic Nielsen heuristics NOT tied to actual spec
+   → Self-correction: "Must apply heuristics to specific spec content"
+
+🚨 Missing quick wins (high-impact, low-effort improvements)
+   → Self-correction: "I should identify at least 3-5 quick wins"
+
+IF detected: STOP → Gather evidence → Report honestly
+```
+
+### Determine Status
+
+✅ **UX READY**:
+```yaml
+Criteria (ALL must be met):
+  - All 5 UX dimensions scored with justifications
+  - WCAG 2.1 AA compliance validated (no Level A/AA violations)
+  - No 🔴 CRITICAL UX issues found
+  - Top 5 issues identified with severity and recommendations
+  - Overall UX quality ≥ 7/10
+  - Quick wins identified
+
+IF ALL criteria met:
+  → Proceed with recommendation: /speckit.clarify or /speckit.plan
+```
+
+⚠️ **NEEDS REVIEW** (can proceed with awareness):
+```yaml
+Criteria:
+  - Overall UX quality 4-6/10
+  - Minor WCAG gaps (not Level A/AA violations)
+  - Minor UX issues (🟠 MAJOR or 🟡 MEDIUM only)
+  - Recommendations actionable but non-blocking
+
+IF criteria met:
+  → Present issues to user
+  → Recommend: /speckit.clarify --ux for comprehensive UX review
+```
+
+❌ **NOT READY** (more work needed):
+```yaml
+Criteria (ANY triggers NOT READY):
+  - 🔴 CRITICAL UX issues (WCAG Level A/AA violations, task-blocking)
+  - Overall UX quality < 4/10
+  - Missing accessibility features (keyboard nav, screen reader support)
+  - Mobile optimization missing for mobile-first app
+  - Analysis incomplete (feature not interface-heavy, skip UX analysis)
+
+IF NOT READY:
+  → Present critical UX issues with evidence
+  → Recommend: "Revise spec to address WCAG violations and task-blocking issues"
+  → STOP workflow progression
+```
+
+### Output Format (Present to User - ONLY if evidence provided)
+
+```markdown
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎨 UX Quality Analysis Review
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Status: [✅ UX READY | ⚠️ NEEDS REVIEW | ❌ NOT READY]
+
+**Spec Analyzed**: specs/[FEATURE]/spec.md
+
+**UX Quality Scores**:
+  - Usability: [X]/10 - [Nielsen heuristic assessment]
+  - Efficiency: [X]/10 - [Task completion assessment]
+  - Accessibility: [X]/10 - [WCAG 2.1 AA compliance]
+  - Error Prevention: [X]/10 - [Error handling assessment]
+  - Delight: [X]/10 - [User satisfaction assessment]
+
+**Overall UX Quality**: [X.X]/10
+
+**WCAG 2.1 AA Compliance**: [🟢 Compliant | 🟡 Minor Gaps | 🔴 Violations]
+**Mobile Optimization**: [🟢 Optimized | 🟡 Partial | 🔴 Desktop-Only]
+
+**Issues by Severity**:
+  - 🔴 CRITICAL: [N] (WCAG violations, task-blocking)
+  - 🟠 MAJOR: [N] (significant friction)
+  - 🟡 MEDIUM: [N] (efficiency opportunities)
+  - 🟢 LOW: [N] (delight enhancements)
+  - ℹ️ INFO: [N]
+
+**Recommendations Summary**:
+  - 🔴 CRITICAL: [N] (WCAG violations, task blockers)
+  - 🟠 MAJOR: [M] (usability/efficiency issues)
+  - 🟡 MEDIUM: [P] (optimization opportunities)
+  - Quick Wins: [Q] identified (≤4 hours, ≥2 points impact)
+  - Expected improvement: [Current]/10 → [Target]/10 (+[X]%)
+
+**Top Recommendations**:
+  1. [Severity] [Issue] - [Fix] (+[N] points [dimension])
+  2. [Severity] [Issue] - [Fix] (+[N] points [dimension])
+  3. [Severity] [Issue] - [Fix] (+[N] points [dimension])
+
+**Quick Wins** (High Impact, Low Effort):
+  - [Quick win 1]: [X] hours dev, +[N] points [dimension]
+  - [Quick win 2]: [X] hours dev, +[N] points [dimension]
+  - [Quick win 3]: [X] hours dev, +[N] points [dimension]
+
+Next Action: [Proceed to clarify/plan OR Fix WCAG violations]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
 
 ---
 
@@ -248,61 +521,66 @@ Analyzed: [DATE]
 
 ---
 
-## Top UX Issues (By Impact)
+## UX Recommendations (Prioritized by Impact)
 
-### 1. [🔴 CRITICAL | 🟠 MAJOR | 🟡 MEDIUM | 🟢 LOW | ℹ️ INFO] [Issue Title]
+### 🔴 CRITICAL: [Dimension] Issues (Score: [X]/10)
 
-**Heuristic Violated**: [Nielsen's heuristic #X or WCAG guideline Y.Z.Z]
+**Heuristic Violated**: [Nielsen Heuristic or WCAG Guideline]
 
-**Location**: [Screen/flow reference - e.g., "Invoice Creation > Line Item Entry"]
+**Problem**:
+- [Specific issue from spec.md with section reference]
+- [Specific issue from spec.md with section reference]
+- [Specific issue from spec.md with section reference]
 
-**Issue**:
-> [Quote relevant spec text if applicable]
+**Recommended Fix**:
+1. [Specific, actionable step]
+2. [Specific, actionable step]
+3. [Specific, actionable step]
 
-[Description of the UX problem]
+**Example** (from similar feature):
+[Concrete example or pattern reference]
 
-**User Scenario**:
-```
-User: [Persona - e.g., "Rosa, accountant at small retail shop"]
-Goal: [What user is trying to accomplish]
-Friction Point: [Specific UX issue]
-Consequence: [Impact - e.g., "Abandons task, uses paper invoice"]
-```
-
-**Impact**:
-- **User**: [How this affects end users - time, errors, frustration]
-- **Technical**: [What could break or fail]
-- **Business**: [Abandonment risk, support costs, compliance risk]
-
-**Recommendation**: [Specific, actionable fix with UX pattern reference]
-
-**Pattern**: [e.g., "Inline editing (Cooper)", "Forgiving formats (Wroblewski)", "Progressive disclosure (Tidwell)"]
+**Impact**: +[N]% [dimension] score ([current]/10 → [target]/10)
 
 ---
 
-### 2. [Severity] [Issue Title]
+### 🟠 MAJOR: [Dimension] Issues (Score: [X]/10)
 
-[Same format as #1]
+[Same format as CRITICAL]
 
 ---
 
-[... Repeat for top 5 issues ...]
+### 🟡 MEDIUM: [Dimension] Issues (Score: [X]/10)
+
+[Same format as CRITICAL]
 
 ---
 
 ## Quick Wins (High Impact, Low Effort)
 
-1. **[Quick win title]** - [What to change] → [Expected impact]
-   - Effort: [Low/Very Low]
-   - Impact: [Specific measurable improvement]
+1. **[Fix Title]** ([N] hours dev, +[M] points [dimension])
+   - Problem: [Brief description]
+   - Fix: [One-sentence action]
+   - Example: [Reference or pattern]
 
-2. **[Quick win title]** - [What to change] → [Expected impact]
-   - Effort: [Low/Very Low]
-   - Impact: [Specific measurable improvement]
+2. **[Fix Title]** ([N] hours dev, +[M] points [dimension])
+   - Problem: [Brief description]
+   - Fix: [One-sentence action]
+   - Example: [Reference or pattern]
 
-3. **[Quick win title]** - [What to change] → [Expected impact]
-   - Effort: [Low/Very Low]
-   - Impact: [Specific measurable improvement]
+3. **[Fix Title]** ([N] hours dev, +[M] points [dimension])
+   - Problem: [Brief description]
+   - Fix: [One-sentence action]
+   - Example: [Reference or pattern]
+
+---
+
+## Summary
+
+**Total Improvements**: [N] critical, [M] major, [P] medium
+**Expected Score Gain**: [Current]/10 → [Target]/10 (+[X]%)
+**Development Effort**: ~[N] hours
+**User Time Saved**: ~[X]% per task (from efficiency improvements)
 
 ---
 

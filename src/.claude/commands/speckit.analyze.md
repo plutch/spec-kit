@@ -148,6 +148,173 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 5. **Generate Analysis Report**: Create concise, actionable output
 
+6. **Analysis Review Gate (Evidence-Based Self-Check)**
+
+**Purpose**: Validate analysis completeness before presenting results.
+
+### Evidence Collection (Mandatory)
+
+❓ **"Was spec.md fully analyzed?"**
+Action Required:
+  - Verify spec.md was read completely
+  - Show ACTUAL file size, line count, sections analyzed
+  - Report: File path, size (KB), line count, sections
+
+Expected Evidence:
+  ✓ File path: specs/[FEATURE]/spec.md
+  ✓ File size: [SIZE]KB
+  ✓ Line count: [N] lines
+  ✓ Sections analyzed: [List main sections]
+
+❓ **"Were quality scores calculated?"**
+Action Required:
+  - Verify all 4 dimension scores calculated (Clarity, Completeness, Testability, Consistency)
+  - Show ACTUAL scores with justifications
+  - Report: Score for each dimension + overall
+
+Expected Evidence:
+  ✓ Clarity score: [X]/10 - [Justification]
+  ✓ Completeness score: [X]/10 - [Justification]
+  ✓ Testability score: [X]/10 - [Justification]
+  ✓ Consistency score: [X]/10 - [Justification]
+  ✓ Overall quality: [X.X]/10 (average of 4 dimensions)
+
+❓ **"Were issues categorized by severity?"**
+Action Required:
+  - Count issues by severity (🔴/🟠/🟡/🟢/ℹ️)
+  - Show ACTUAL count for each severity
+  - Report: Severity breakdown
+
+Expected Evidence:
+  ✓ 🔴 CRITICAL: [N] issues
+  ✓ 🟠 MAJOR: [N] issues
+  ✓ 🟡 MEDIUM: [N] issues
+  ✓ 🟢 LOW: [N] issues
+  ✓ ℹ️ INFO: [N] issues
+  ✓ Total issues flagged: ≤5 (top issues only)
+
+❓ **"Were recommendations actionable?"**
+Action Required:
+  - Verify top 3-5 recommendations have section references
+  - Show ACTUAL recommendations with locations
+  - Report: Recommendations with section/FR references
+
+Expected Evidence:
+  ✓ Recommendation 1: [Action] → [Section reference: FR-XXX or Section Y]
+  ✓ Recommendation 2: [Action] → [Section reference]
+  ✓ Recommendation 3: [Action] → [Section reference]
+  ✓ All recommendations are specific and actionable
+
+IF any evidence is MISSING:
+  ❌ CANNOT report completion
+  → Gather missing evidence first
+  → Re-run this step with complete evidence
+
+### Hallucination Prevention (7 Red Flags for Analysis)
+
+```yaml
+Detect and BLOCK these patterns:
+
+🚨 "Analysis complete" WITHOUT showing what was analyzed
+   → Self-correction: "Wait, I need to show file size and sections analyzed"
+
+🚨 "Quality score X/10" WITHOUT showing calculation basis
+   → Self-correction: "I need to justify each dimension score"
+
+🚨 "Found N issues" WITHOUT showing severity breakdown
+   → Self-correction: "Must categorize issues by severity (🔴/🟠/🟡/🟢/ℹ️)"
+
+🚨 "Recommendations provided" WITHOUT specific section references
+   → Self-correction: "Need to link recommendations to actual spec sections"
+
+🚨 Claiming "no issues" for specs >100 lines
+   → Self-correction: "Large specs always have improvement opportunities"
+
+🚨 Generic feedback NOT tied to actual spec content
+   → Self-correction: "Must quote actual spec text in issue descriptions"
+
+🚨 "Ready for planning" WITHOUT critical issue resolution
+   → Self-correction: "CRITICAL issues block workflow, must report them"
+
+IF detected: STOP → Gather evidence → Report honestly
+```
+
+### Determine Status
+
+✅ **READY for Planning**:
+```yaml
+Criteria (ALL must be met):
+  - All sections of spec.md analyzed
+  - All 4 quality scores calculated with justifications
+  - No 🔴 CRITICAL issues found
+  - Top 5 issues identified with severity and recommendations
+  - Overall quality score ≥ 7/10
+
+IF ALL criteria met:
+  → Proceed with recommendation: /speckit.clarify or /speckit.plan
+```
+
+⚠️ **NEEDS REVIEW** (can proceed with awareness):
+```yaml
+Criteria:
+  - Overall quality score 4-6/10
+  - Minor issues present (🟠 MAJOR or 🟡 MEDIUM only)
+  - Recommendations actionable but non-blocking
+
+IF criteria met:
+  → Present issues to user
+  → Recommend: /speckit.clarify --expert for comprehensive review
+```
+
+❌ **NOT READY** (more work needed):
+```yaml
+Criteria (ANY triggers NOT READY):
+  - 🔴 CRITICAL issues found (security, data loss, compliance gaps)
+  - Overall quality score < 4/10
+  - Missing required sections in spec (Functional Requirements, User Stories)
+  - Analysis incomplete (spec not fully read)
+
+IF NOT READY:
+  → Present critical issues with evidence
+  → Recommend: "Revise spec to address critical issues before proceeding"
+  → STOP workflow progression
+```
+
+### Output Format (Present to User - ONLY if evidence provided)
+
+```markdown
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 Specification Quality Analysis Review
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Status: [✅ READY | ⚠️ NEEDS REVIEW | ❌ NOT READY]
+
+**Spec Analyzed**: specs/[FEATURE]/spec.md ([SIZE]KB, [N] lines)
+
+**Quality Scores**:
+  - Clarity: [X]/10 - [Brief assessment]
+  - Completeness: [X]/10 - [Brief assessment]
+  - Testability: [X]/10 - [Brief assessment]
+  - Consistency: [X]/10 - [Brief assessment]
+
+**Overall Quality**: [X.X]/10
+
+**Issues by Severity**:
+  - 🔴 CRITICAL: [N]
+  - 🟠 MAJOR: [N]
+  - 🟡 MEDIUM: [N]
+  - 🟢 LOW: [N]
+  - ℹ️ INFO: [N]
+
+**Top Recommendations**:
+  1. [Action 1] → [Section: FR-XXX or Section Y]
+  2. [Action 2] → [Section: FR-XXX or Section Y]
+  3. [Action 3] → [Section: FR-XXX or Section Y]
+
+Next Action: [Proceed to clarify/plan OR Fix critical issues]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
 ---
 
 ## Output Format

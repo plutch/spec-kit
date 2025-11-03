@@ -146,7 +146,175 @@ Prerequisites:
 [OPTIONAL_NOTES]
 ```
 
-### 6. Recommendation Logic
+### 6. Next Action Review Gate (Evidence-Based Self-Check)
+
+**Purpose**: Validate recommendation accuracy before presenting to user.
+
+### Evidence Collection (Mandatory)
+
+❓ **"Was active feature identified?"**
+Action Required:
+  - Verify feature directory/ID determined
+  - Show ACTUAL feature ID and branch
+  - Report: Feature number, name, branch
+
+Expected Evidence:
+  ✓ Feature ID: 000XXX-feature-name
+  ✓ Git branch: feature/000XXX-feature-name (or env var/directory)
+  ✓ Feature directory exists: .specify/memory/features/000XXX-feature-name/
+
+❓ **"Was current phase validated?"**
+Action Required:
+  - Read state.json phase field
+  - Verify phase matches file evidence
+  - Report: Phase and supporting files
+
+Expected Evidence:
+  ✓ Phase from state.json: [SPECIFYING|CLARIFYING|PLANNING|...]
+  ✓ File evidence matches:
+    - SPECIFYING: spec.md exists
+    - CLARIFYING: spec.md + clarifications
+    - PLANNING: plan.md exists
+    - TASKING: tasks.md exists
+    - IMPLEMENTING: tasks in progress
+  ✓ No phase-file contradictions
+
+❓ **"Is next action appropriate for phase?"**
+Action Required:
+  - Map phase → next command
+  - Check entry criteria for next command
+  - Report: Next command and reason
+
+Expected Evidence:
+  ✓ Next command: /speckit.[COMMAND]
+  ✓ Entry criteria met (files exist, gates passed)
+  ✓ Reason matches phase logic
+
+❓ **"Are phase transition criteria met?"**
+Action Required:
+  - Check prerequisites for phase transition
+  - Verify no blockers present
+  - Report: Prerequisites status
+
+Expected Evidence:
+  ✓ Prerequisites checked:
+    - Required files exist
+    - Quality gates passed (if applicable)
+    - No blockers in state.json
+  ✓ Blockers: None OR [List blockers with fixes]
+
+IF any evidence is MISSING:
+  ❌ CANNOT recommend action
+  → Gather missing evidence first
+  → Re-run this step with complete evidence
+
+### Hallucination Prevention (7 Red Flags for Next Action)
+
+```yaml
+Detect and BLOCK these patterns:
+
+🚨 "Next: /speckit.tasks" WITHOUT verifying plan.md exists
+   → Self-correction: "Wait, I need to check if plan.md actually exists"
+
+🚨 "Ready for planning" WITH >3 [NEEDS CLARIFICATION] markers
+   → Self-correction: "Clarifications not complete, cannot proceed"
+
+🚨 "Proceed to implement" WITHOUT checking task completion
+   → Self-correction: "I need to verify tasks.md status first"
+
+🚨 Recommending action WITHOUT validating entry criteria
+   → Self-correction: "Must check prerequisites for recommended command"
+
+🚨 "No blockers" WITHOUT reading state.json gates_failed
+   → Self-correction: "I need to check for blocked gates"
+
+🚨 Generic recommendation NOT based on actual phase
+   → Self-correction: "Must use phase-specific logic, not guessing"
+
+🚨 "Next action clear" WITHOUT showing reason
+   → Self-correction: "Need to explain WHY this is the next step"
+
+IF detected: STOP → Gather evidence → Report honestly
+```
+
+### Determine Status
+
+✅ **READY (Clear Next Action)**:
+```yaml
+Criteria (ALL must be met):
+  - Active feature identified
+  - Phase validated against file evidence
+  - Next action determined from phase logic
+  - Entry criteria for next command met
+  - No blockers present
+
+IF ALL criteria met:
+  → Present next action recommendation
+```
+
+⚠️ **NEEDS REVIEW** (User Decision Required):
+```yaml
+Criteria:
+  - Minor blockers present (non-critical)
+  - Multiple valid next actions
+  - Phase unclear (state-file mismatch)
+
+IF criteria met:
+  → Present options to user
+  → Ask for clarification or decision
+```
+
+❌ **NOT READY** (Blockers Present):
+```yaml
+Criteria (ANY triggers NOT READY):
+  - No active feature found
+  - State file missing or corrupted
+  - Critical blockers in state.json (gates_failed)
+  - Phase-file contradiction (e.g., PLANNING but no plan.md)
+
+IF NOT READY:
+  → Present blockers with evidence
+  → Recommend: "Fix issues before proceeding"
+  → STOP workflow progression
+```
+
+### Output Format (Present to User - ONLY if evidence provided)
+
+```markdown
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 Next Action Recommendation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Status: [✅ READY | ⚠️ NEEDS REVIEW | ❌ NOT READY]
+
+**Feature**: [000XXX-feature-name]
+**Branch**: [feature/000XXX-feature-name]
+**Phase**: [PHASE] ([PROGRESS]%)
+
+**Prerequisites**:
+  [✅ | ❌] [Prerequisite 1]
+  [✅ | ❌] [Prerequisite 2]
+  [...]
+
+🎯 **Next**: /speckit.[COMMAND]
+💡 **Reason**: [Why this is the appropriate next step]
+
+[IF blockers present]
+🚨 **Blockers**:
+  1. [Blocker description]
+     Fix: [Suggested resolution]
+
+[IF phase unclear]
+⚠️ **State Mismatch**:
+  State says: [PHASE]
+  Reality: [Actual file state]
+  Fix: [Resolution steps]
+
+Next Action: [Run recommended command OR Fix blockers]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 7. Recommendation Logic
 
 ```yaml
 IF phase == "SPECIFYING":

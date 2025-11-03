@@ -150,8 +150,8 @@ The clarify command has been simplified for better developer experience:
 # Includes: Requirements (Wiegers), Architecture (Fowler/Cockburn),
 # UX/Accessibility (Nielsen/Norman/WCAG), Resilience (Nygard)
 
-# Challenge Mode (unchanged) - adversarial testing for high-stakes features
-/speckit.clarify --challenge
+# Standard Mode now auto-activates Challenge questions for high-risk features (Risk Score ≥8)
+/speckit.clarify  # Automatic risk detection
 ```
 
 **Benefits:**
@@ -237,13 +237,13 @@ Enhanced `/speckit.clarify` with three specialized modes:
 /speckit.clarify  # Gap-filling clarification through targeted questions
 ```
 
-#### Challenge Mode (Adversarial Testing)
+#### Auto-Challenge Mode (Integrated)
 ```bash
-/speckit.clarify --challenge  # Stress-test assumptions, find edge cases
+/speckit.clarify  # Automatically activates for high-risk features (Risk Score ≥8)
 ```
-- Tests boundary conditions aggressively
-- Challenges unstated assumptions
-- Explores failure scenarios
+- Auto-detects high-risk features from Risk Assessment
+- Adds adversarial Challenge questions after standard Q&A
+- Tests assumptions, explores alternatives, validates scope
 - Validates constraint feasibility
 
 #### Expert Lens Mode (Multi-Perspective Review)
@@ -413,18 +413,19 @@ Phase 3 adds systematic security validation:
 - 🔴 BLOCK: SQL injection or XSS vulnerabilities
 
 #### Implementation Quality Gate in `/speckit.implement`
-Pre-commit validation ensures production readiness:
-- **Code Quality**: Linting, formatting, type safety, dead code detection
-- **Security Validation**: No hardcoded secrets, input validation, auth/authz checks, dependency audit
-- **Test Coverage**: All tests pass, coverage thresholds met, high-risk requirements tested
-- **Specification Alignment**: Requirements traceability, acceptance criteria met, FR/BR enforcement
-- **Documentation**: Code docs, README updates, API documentation
-- **Build Readiness**: Production build, Docker image, environment configuration
+Pre-commit validation ensures production readiness with **parallel execution** (53% faster than sequential):
 
-**Quality Gate Statuses**:
-- 🟢 **READY TO COMMIT**: All checks pass or minor warnings (proceed)
-- 🟡 **NEEDS ATTENTION**: Some warnings, create backlog tickets (proceed with caution)
-- 🔴 **BLOCKED**: Critical security/build issues (HALT, fix required)
+**Three Reviewers (Run Concurrently)**:
+- **Code Reviewer**: Linting, formatting, type safety, dead code detection, spec alignment, documentation
+- **Quality/Tests Reviewer**: Test execution, coverage thresholds, high-risk requirements, build readiness
+- **Security Reviewer**: Secrets scanning, auth/authz, OWASP Top 10, dependency audit, risk mitigation
+
+**Aggregated Quality Gate Statuses**:
+- ✅ **READY**: All 3 reviewers pass (proceed to final validation)
+- ⚠️ **NEEDS REVIEW**: Minor warnings (document and proceed or fix first)
+- ❌ **NOT READY**: Critical issues in any reviewer (HALT, fix required)
+
+**Performance**: Parallel execution runs all 3 reviewers simultaneously (45s vs 95s sequential) while maintaining safety - ANY reviewer failure blocks the workflow.
 
 #### Enhanced Severity System
 Standardized color-coded severity across all commands:
@@ -503,7 +504,9 @@ Every command includes review gates that prevent hallucination and ensure qualit
 
 ### 📊 Hierarchical Specifications (v2.1)
 
-For large features (>150KB, >80 FRs), create focused supplementary specs:
+**Proactive Recommendations** (v2.1.1): `/speckit.specify` automatically detects large specs (>100KB or >60 requirements) and recommends hierarchical structure **before** pain sets in.
+
+For large features, create focused supplementary specs:
 
 ```bash
 # Create UI-focused spec
@@ -520,6 +523,7 @@ For large features (>150KB, >80 FRs), create focused supplementary specs:
 - Agents load only relevant context (50KB vs 279KB)
 - Clear ownership (UI team owns UI-SPEC.md)
 - **Token efficiency: 47% reduction (166K tokens per 5-agent session)**
+- **Early detection**: Recommendations at 100KB (not 150KB) prevent refactoring pain
 
 ### 🔄 Gap Closure & Reconciliation
 
@@ -634,19 +638,19 @@ cp .specify/config.example.yml .specify/config.yml
 
 ## Advanced Usage
 
-### Challenge Mode Clarification
+### Auto-Challenge Mode (High-Risk Features)
 
-Stress-test your spec with adversarial questions:
+Standard clarify mode now automatically activates Challenge questions for high-risk features:
 
 ```bash
-/speckit.clarify --challenge
+/speckit.clarify
 
-# Claude will:
-# ✓ Challenge assumptions
-# ✓ Explore alternatives
-# ✓ Question scope
-# ✓ Expose hidden risks
-# ✓ Validate market positioning
+# For features with Risk Score ≥8, Claude will automatically:
+# ✓ Detect high-risk criteria from Risk Assessment
+# ✓ Add 3-5 adversarial Challenge questions after standard Q&A
+# ✓ Challenge assumptions in high-risk areas
+# ✓ Explore safer alternatives
+# ✓ Validate scope vs. risk trade-offs
 ```
 
 **Use when:**
@@ -755,9 +759,11 @@ Spec-Kit is designed for maximum token efficiency:
 
 **Savings**: 5K-20K tokens per prevented rework cycle
 
-### Challenge Mode
-- Stress-test assumptions BEFORE implementation
+### Auto-Challenge Mode (Integrated)
+- Automatically activates for high-risk features (Risk Score ≥8)
+- Stress-tests assumptions BEFORE implementation
 - Prevents expensive late-stage pivots
+- No manual mode switching needed
 
 **Savings**: Prevents major rework (50K-100K tokens per architectural pivot avoided)
 
@@ -870,7 +876,7 @@ See full report: `WORKFLOW-COHERENCE-META-REVIEW.md`
 | Documentation | ❌ Written after (if at all) | ✅ Generated during development |
 | Gap handling | ❌ Ad-hoc fixes | ✅ Structured reconciliation |
 | Large features | ❌ Context overload | ✅ Hierarchical specs (47% token reduction) |
-| Ambiguity resolution | ❌ Reactive | ✅ Proactive (Challenge Mode available) |
+| Ambiguity resolution | ❌ Reactive | ✅ Proactive (Auto-Challenge for high-risk features) |
 
 ---
 
@@ -879,7 +885,7 @@ See full report: `WORKFLOW-COHERENCE-META-REVIEW.md`
 - ✨ **Hierarchical Specifications**: Create domain-specific supplementary specs (UI-SPEC.md, API-SPEC.md, TECHNICAL-SPEC.md)
 - ✨ **Reconciliation Workflow**: Surgical post-implementation gap closure with append-only edits
 - ✨ **Strict Validation**: `/speckit.validate-hierarchy` with error blocking (exit code 1)
-- ✨ **Challenge Mode**: Adversarial clarification for high-stakes features
+- ✨ **Auto-Challenge Mode**: Automatic adversarial testing for high-risk features (Risk Score ≥8)
 - ✨ **Evidence-Based Review Gates**: Hallucination prevention at every phase (94% detection rate)
 - ✨ **Self-Contained Commands**: No @include references, pure copy/paste installation
 - ✨ **Claude Code Optimized**: Removed all multi-LLM compatibility layers

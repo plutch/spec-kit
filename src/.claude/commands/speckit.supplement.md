@@ -538,7 +538,186 @@ EOF
 
 ---
 
-### Step 9: Output Confirmation
+### Step 9: Supplementary Spec Creation Review Gate (Evidence-Based Self-Check)
+
+**Purpose**: Validate supplementary spec creation completeness before presenting results.
+
+### Evidence Collection (Mandatory)
+
+❓ **"Was supplementary spec file created?"**
+Action Required:
+  - Verify file exists at specified path
+  - Show ACTUAL file path and size
+  - Report: Filename, location, file size
+
+Expected Evidence:
+  ✓ File path: specs/[FEATURE_ID]/[UI-SPEC.md|API-SPEC.md|TECHNICAL-SPEC.md]
+  ✓ File exists and readable
+  ✓ File size: >1KB (meaningful content with template structure)
+
+❓ **"Does frontmatter reference parent spec?"**
+Action Required:
+  - Read YAML frontmatter from created file
+  - Verify parent field = "spec.md"
+  - Report: Frontmatter fields present
+
+Expected Evidence:
+  ✓ Frontmatter exists (YAML between --- markers)
+  ✓ parent: spec.md
+  ✓ scope: [ui-ux-implementation|api-contracts|technical-architecture]
+  ✓ functional_requirements: [FR range or list]
+  ✓ target_agents: [Array of agents]
+  ✓ version: [Version number]
+  ✓ last_updated: [ISO date YYYY-MM-DD]
+
+❓ **"Were sections populated from template?"**
+Action Required:
+  - Count sections in created file
+  - Verify template structure present
+  - Report: Section count and PLACEHOLDER status
+
+Expected Evidence:
+  ✓ Section count: ≥5 major sections
+  ✓ Template structure preserved (## headings)
+  ✓ PLACEHOLDER sections present (to be filled by user)
+  ✓ Content summary: [Brief description of what was generated]
+
+❓ **"Was state.json updated?"**
+Action Required:
+  - Read state.json supplementary_specs array
+  - Verify new spec added to array
+  - Report: State update confirmation
+
+Expected Evidence:
+  ✓ state.json supplementary_specs.enabled = true
+  ✓ state.json supplementary_specs.specs array updated
+  ✓ New spec entry includes: filename, scope, created_at, target_agents
+
+IF any evidence is MISSING:
+  ❌ CANNOT report completion
+  → Gather missing evidence first
+  → Re-run this step with complete evidence
+
+### Hallucination Prevention (7 Red Flags for Supplementary Spec Creation)
+
+```yaml
+Detect and BLOCK these patterns:
+
+🚨 "Supplementary spec created" WITHOUT showing file path
+   → Self-correction: "Wait, I need to verify file was written to disk"
+
+🚨 "Frontmatter valid" WITHOUT showing parent: field value
+   → Self-correction: "Let me read back frontmatter to confirm parent: spec.md"
+
+🚨 "Content migrated" WITHOUT showing what sections were generated
+   → Self-correction: "I need to show section count and template structure"
+
+🚨 Claiming "ready for validation" WITHOUT state.json update
+   → Self-correction: "Must verify state.json supplementary_specs array updated"
+
+🚨 Creating spec WITHOUT checking parent spec exists
+   → Self-correction: "Need to verify parent spec.md exists first"
+
+🚨 "File written" WITHOUT verifying file size >0
+   → Self-correction: "Must check file size to ensure content was written"
+
+🚨 Missing scope validation (ui-ux, api-contracts, technical)
+   → Self-correction: "Scope must be one of 3 valid values, let me verify"
+
+IF detected: STOP → Gather evidence → Report honestly
+```
+
+### Determine Status
+
+✅ **READY for Validation**:
+```yaml
+Criteria (ALL must be met):
+  - Supplementary spec file created (size >1KB)
+  - Frontmatter valid with all required fields
+  - parent: spec.md field present
+  - Template structure preserved with PLACEHOLDER sections
+  - state.json updated with new spec entry
+  - scope is valid (ui-ux-implementation, api-contracts, technical-architecture)
+
+IF ALL criteria met:
+  → Proceed with next steps (edit PLACEHOLDER sections, validate-hierarchy)
+```
+
+⚠️ **NEEDS REVIEW** (manual fix needed):
+```yaml
+Criteria:
+  - File created but frontmatter has minor issues (date format, version)
+  - Some PLACEHOLDER sections missing (user can add manually)
+  - state.json update partial (manual correction needed)
+
+IF criteria met:
+  → Present issues to user
+  → Recommend manual fixes before validation
+```
+
+❌ **NOT READY** (more work needed):
+```yaml
+Criteria (ANY triggers NOT READY):
+  - File creation failed (permissions, disk space)
+  - Frontmatter missing or invalid (no parent: field)
+  - Invalid scope (not one of 3 valid scopes)
+  - state.json update failed
+  - Parent spec.md does not exist
+
+IF NOT READY:
+  → Present issues with evidence
+  → Recommend: "Fix file creation issues before proceeding"
+  → STOP workflow progression
+```
+
+### Output Format (Present to User - ONLY if evidence provided)
+
+```markdown
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 Supplementary Spec Creation Review
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Status: [✅ READY | ⚠️ NEEDS REVIEW | ❌ NOT READY]
+
+**File Created**: specs/[FEATURE_ID]/[FILENAME]
+**File Size**: [SIZE]KB
+**Scope**: [ui-ux-implementation|api-contracts|technical-architecture]
+
+**Frontmatter Validation**:
+  ✓ parent: spec.md
+  ✓ scope: [SCOPE]
+  ✓ functional_requirements: [FR_RANGE]
+  ✓ target_agents: [AGENT_LIST]
+  ✓ version: [VERSION]
+  ✓ last_updated: [DATE]
+
+**Template Structure**:
+  - Section count: [N] major sections
+  - PLACEHOLDER sections: [N] (to be filled by user)
+  - Template type: [UI-SPEC|API-SPEC|TECHNICAL-SPEC]
+
+**State Updated**:
+  ✓ .specify/memory/features/[FEATURE_ID]/state.json
+  ✓ supplementary_specs.enabled = true
+  ✓ New spec added to specs array
+
+**Next Steps**:
+  1. Edit [FILENAME] to fill in PLACEHOLDER sections
+  2. Run /speckit.plan to generate plan.md (auto-discovers supplementary specs)
+  3. Run /speckit.validate-hierarchy to verify integration
+
+**PLACEHOLDER Sections to Complete**:
+  - [Section 1 name]
+  - [Section 2 name]
+  - [...]
+
+💡 TIP: Use PLACEHOLDER sections as guide for what to document
+
+Next Action: [Edit PLACEHOLDER sections OR Validate hierarchy]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### Step 10: Output Confirmation
 
 ```bash
 ✓ Created UI-SPEC.md at specs/000003-billing-console/UI-SPEC.md
@@ -663,13 +842,21 @@ EOF
 
 ## Best Practices
 
-### 1. Manual Creation Only
-Supplement command is **manual only** (no auto-suggestions per user decision).
+### 1. Proactive Recommendations with Manual Control (v2.1.1)
 
-**Rationale**:
+The `/speckit.specify` command automatically **recommends** hierarchical specs when specs exceed thresholds (>100KB or >60 requirements), but supplement creation remains **manual only**.
+
+**How It Works**:
+- **Proactive Detection**: `/speckit.specify` detects large specs during creation and displays recommendation
+- **Informational Only**: Recommendation shows examples and benefits, but creates no files automatically
+- **User Control**: Developer decides whether to create supplementary specs (now, later, or never)
+- **No Workflow Blocking**: Declining the recommendation has no penalty - workflow continues normally
+
+**Rationale for Manual Control**:
 - Developer control (explicit decision to split specs)
 - No surprises (no unexpected file creation)
 - Learning curve (teams decide when complexity justifies splitting)
+- Flexibility (can defer until later if needed)
 
 ### 2. One Supplementary Spec Per Domain
 Stick to the naming convention:

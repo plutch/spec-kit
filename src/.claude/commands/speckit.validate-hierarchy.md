@@ -371,6 +371,198 @@ fi
 
 ---
 
+## Validation Review Gate (Evidence-Based Self-Check)
+
+**Purpose**: Validate hierarchical spec validation completeness before presenting results.
+
+### Evidence Collection (Mandatory)
+
+❓ **"Were all supplementary specs discovered?"**
+Action Required:
+  - List all *-SPEC.md files found in feature directory
+  - Show ACTUAL file paths
+  - Report: Count and filenames
+
+Expected Evidence:
+  ✓ File discovery completed (find command executed)
+  ✓ Supplementary spec count: [N] files
+  ✓ File list: [UI-SPEC.md, API-SPEC.md, TECHNICAL-SPEC.md...]
+
+❓ **"Did all validation checks execute?"**
+Action Required:
+  - Verify all 6 check types ran
+  - Show ACTUAL check results (PASS/FAIL for each)
+  - Report: Check execution summary
+
+Expected Evidence:
+  ✓ Check 1 - Parent Spec Exists: [PASS/FAIL]
+  ✓ Check 2 - Frontmatter Validation: [PASS/FAIL]
+  ✓ Check 3 - FR Coverage Validation: [PASS/FAIL]
+  ✓ Check 4 - plan.md Integration: [PASS/SKIP]
+  ✓ Check 5 - tasks.md Integration: [PASS/SKIP]
+  ✓ Check 6 - Orphaned Spec Detection: [PASS/FAIL]
+
+❓ **"Are errors surfaced with evidence?"**
+Action Required:
+  - Count errors by check type
+  - Show ACTUAL error messages
+  - Report: Error count and descriptions
+
+Expected Evidence:
+  ✓ Total errors: [N]
+  ✓ Error breakdown by check:
+    - Frontmatter errors: [N]
+    - FR coverage errors: [N]
+    - Integration errors: [N]
+    - Orphaned specs: [N]
+  ✓ Error messages include: File path, specific issue, resolution steps
+
+❓ **"Is strict mode enforced correctly?"**
+Action Required:
+  - Verify strict mode blocking logic
+  - Show ACTUAL exit code/status
+  - Report: Blocking status if errors found
+
+Expected Evidence:
+  ✓ Strict mode: ENABLED (errors block workflow)
+  ✓ Exit status: [0 = no errors, 1 = errors found, blocks workflow]
+  ✓ IF errors > 0: Workflow BLOCKED with error list
+
+IF any evidence is MISSING:
+  ❌ CANNOT report completion
+  → Gather missing evidence first
+  → Re-run this step with complete evidence
+
+### Hallucination Prevention (7 Red Flags for Validation)
+
+```yaml
+Detect and BLOCK these patterns:
+
+🚨 "Validation passed" WITHOUT showing which checks ran
+   → Self-correction: "Wait, I need to show all 6 check results"
+
+🚨 "No errors" WITHOUT showing file discovery count
+   → Self-correction: "Must show how many supplementary specs were found"
+
+🚨 "Hierarchy valid" WITHOUT checking frontmatter
+   → Self-correction: "Need to verify YAML frontmatter for each spec"
+
+🚨 Claiming "all specs validated" WITHOUT file list
+   → Self-correction: "I must list actual supplementary spec files found"
+
+🚨 "Ready to proceed" WITH errors in strict mode
+   → Self-correction: "Errors BLOCK workflow in strict mode, cannot proceed"
+
+🚨 Skipping circular dependency check
+   → Self-correction: "Must check for circular parent references"
+
+🚨 "Validation complete" WITHOUT showing check-by-check results
+   → Self-correction: "Need detailed check results for transparency"
+
+IF detected: STOP → Gather evidence → Report honestly
+```
+
+### Determine Status
+
+✅ **READY (Validation Passed)**:
+```yaml
+Criteria (ALL must be met):
+  - All supplementary specs discovered and listed
+  - All 6 validation checks executed
+  - No errors found (error count = 0)
+  - Frontmatter valid for all specs
+  - FR coverage verified
+  - Integration checks passed (or skipped if files missing)
+  - No orphaned specs detected
+
+IF ALL criteria met:
+  → Workflow can continue
+  → Present success report
+```
+
+⚠️ **WARNINGS Present (Non-Strict Mode)**:
+```yaml
+Criteria:
+  - Validation checks passed
+  - Minor warnings present (non-blocking)
+  - tasks.md has no references to supplementary specs (warning only)
+  - File size warnings (spec too small, likely incomplete)
+
+IF criteria met:
+  → Present warnings to user
+  → Workflow can continue with awareness
+```
+
+❌ **NOT READY (Errors Block Workflow)**:
+```yaml
+Criteria (ANY triggers NOT READY in STRICT MODE):
+  - Frontmatter missing or invalid (no parent: field)
+  - FR coverage mismatch (spec references non-existent FRs)
+  - plan.md missing supplementary spec references
+  - Orphaned specs (not referenced in workflow files)
+  - Parent spec.md not found
+
+IF NOT READY:
+  → Exit code 1 (blocks CI/CD)
+  → Present errors with resolution steps
+  → Recommend: "Fix errors before continuing workflow"
+  → STOP workflow progression
+```
+
+### Output Format (Present to User - ONLY if evidence provided)
+
+```markdown
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 Hierarchical Spec Validation Review
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Status: [✅ READY | ⚠️ WARNINGS | ❌ NOT READY]
+
+**Feature**: specs/[FEATURE_ID]/
+**Mode**: STRICT (errors block workflow)
+**Exit Code**: [0 = success, 1 = failure]
+
+**Supplementary Specs Discovered**: [N]
+  - [UI-SPEC.md]
+  - [API-SPEC.md]
+  - [TECHNICAL-SPEC.md]
+
+**Validation Checks Executed**:
+  [✅ PASS | ❌ FAIL | ⚠️ SKIP] Check 1 - Parent Spec Exists
+  [✅ PASS | ❌ FAIL | ⚠️ SKIP] Check 2 - Frontmatter Validation
+  [✅ PASS | ❌ FAIL | ⚠️ SKIP] Check 3 - FR Coverage Validation
+  [✅ PASS | ❌ FAIL | ⚠️ SKIP] Check 4 - plan.md Integration
+  [✅ PASS | ❌ FAIL | ⚠️ SKIP] Check 5 - tasks.md Integration
+  [✅ PASS | ❌ FAIL | ⚠️ SKIP] Check 6 - Orphaned Spec Detection
+
+**Error Summary**:
+  - Total errors: [N]
+  - Frontmatter errors: [N]
+  - FR coverage errors: [N]
+  - Integration errors: [N]
+  - Orphaned specs: [N]
+
+[IF errors > 0]
+**Errors Found**:
+1. [Error description]
+   File: [SPEC_FILE]
+   Fix: [Resolution steps]
+
+2. [Error description]
+   File: [SPEC_FILE]
+   Fix: [Resolution steps]
+
+[IF warnings > 0]
+**Warnings**:
+- [Warning 1]
+- [Warning 2]
+
+Next Action: [Workflow continues OR Fix errors before proceeding]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
 ## Validation Report
 
 **Output Format**:

@@ -298,7 +298,7 @@ You **MUST** consider the user input before proceeding (if not empty).
      → Proceed to Step 7 (present completion report)
    ```
 
-   ⚠️ **CAN PROCEED** (with risks noted):
+   ⚠️ **NEEDS REVIEW** (with risks noted):
    ```yaml
    Criteria:
      - ≥90% user story coverage (minor gaps documented)
@@ -334,7 +334,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    ✅ Task List Review Complete
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-   Status: [✅ READY | ⚠️ CAN PROCEED | ❌ NOT READY]
+   Status: [✅ READY | ⚠️ NEEDS REVIEW | ❌ NOT READY]
 
    Branch: [branch-name]
    Tasks: [path/to/tasks.md]
@@ -399,7 +399,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    ✅ MVP scope clear and testable
    ✅ Ready to proceed to implementation (/speckit.implement)
 
-   [IF ⚠️ CAN PROCEED:]
+   [IF ⚠️ NEEDS REVIEW:]
    ⚠️ Minor issues detected:
       - [Issue 1]: [Why low impact]
       - [Issue 2]: [Why low impact]
@@ -464,7 +464,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    3. Or start with MVP first:
       /speckit.implement [MVP scope: User Story 1]
 
-   [IF ⚠️ CAN PROCEED:]
+   [IF ⚠️ NEEDS REVIEW:]
    Choose one:
    1. Proceed with noted risks:
       /speckit.implement
@@ -504,7 +504,7 @@ You **MUST** consider the user input before proceeding (if not empty).
      IF status = READY:
        → Suggest: /speckit.implement
        → Or: /speckit.implement [MVP scope]
-     IF status = CAN PROCEED:
+     IF status = NEEDS REVIEW:
        → Warn about risks, then suggest: /speckit.implement
      IF status = NOT READY:
        → Block: "Cannot proceed - critical issues in task list"

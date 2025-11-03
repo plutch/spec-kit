@@ -471,6 +471,100 @@ Given that feature description, do this:
 
       **Append Risk Assessment to spec.md** under "## Risk Assessment" section
 
+7.5. **Large Spec Detection** (Proactive Supplement Recommendation):
+
+   **Purpose**: Detect complex multi-domain specifications early and recommend hierarchical spec structure to improve maintainability, token efficiency, and team ownership.
+
+   **Detection Logic**:
+
+   After the spec file is written and validated, check if it exceeds recommended complexity thresholds:
+
+   ```bash
+   # Calculate spec size and requirement count
+   SPEC_SIZE_KB=$(du -k "${FEATURE_SPEC}" | cut -f1)
+   FR_COUNT=$(grep -c "^### FR-" "${FEATURE_SPEC}" || echo 0)
+   NFR_COUNT=$(grep -c "^### NFR-" "${FEATURE_SPEC}" || echo 0)
+   TOTAL_REQUIREMENTS=$((FR_COUNT + NFR_COUNT))
+
+   # Check if spec exceeds recommended thresholds
+   if [ "$SPEC_SIZE_KB" -gt 100 ] || [ "$TOTAL_REQUIREMENTS" -gt 60 ]; then
+     echo ""
+     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+     echo "💡 RECOMMENDATION: Large Specification Detected"
+     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+     echo ""
+     echo "Spec Size: ${SPEC_SIZE_KB}KB (threshold: 100KB)"
+     echo "Requirements: ${TOTAL_REQUIREMENTS} (threshold: 60)"
+     echo ""
+     echo "Consider creating supplementary specs for domain-specific details:"
+     echo ""
+     echo "  /speckit.supplement ui-ux \"UI/UX implementation details\""
+     echo "    → Creates UI-SPEC.md for interface-specific requirements"
+     echo ""
+     echo "  /speckit.supplement api-contracts \"REST API contracts\""
+     echo "    → Creates API-SPEC.md for endpoint specifications"
+     echo ""
+     echo "  /speckit.supplement technical \"Architecture and infrastructure\""
+     echo "    → Creates TECHNICAL-SPEC.md for technical decisions"
+     echo ""
+     echo "Benefits:"
+     echo "  - ✅ Token efficiency (~47% reduction for agents reading specs)"
+     echo "  - ✅ Clear ownership (UI team owns UI-SPEC.md, Backend team owns API-SPEC.md)"
+     echo "  - ✅ Maintainability (update domains independently)"
+     echo "  - ✅ Better organization (complex features stay manageable)"
+     echo ""
+     echo "You can:"
+     echo "  A) Create supplementary specs now (recommended for multi-domain features)"
+     echo "  B) Continue with single spec.md (acceptable for focused features)"
+     echo ""
+     echo "Note: You can always run /speckit.supplement later if needed."
+     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+     echo ""
+   fi
+   ```
+
+   **Thresholds Explained**:
+
+   - **Size Threshold: 100KB**
+     - Rationale: Early warning (before hitting 150KB pain point)
+     - Benefit: User can proactively split specs before pain becomes acute
+     - Context: Allows for natural growth without immediate action
+
+   - **Requirements Threshold: 60 FRs/NFRs**
+     - Rationale: ~60 requirements often indicate multi-domain features
+     - Benefit: Suggests domain separation even if file size is manageable
+     - Context: Quality-based signal (not just file size)
+
+   - **Triggering Logic**: `IF size > 100KB OR requirements > 60`
+     - Detects both large files AND complex features
+     - Either condition triggers recommendation
+     - User always has final say
+
+   **User Decision Flow**:
+
+   ```yaml
+   IF large spec detected:
+     → Display recommendation with examples
+     → User decides:
+       A) Run /speckit.supplement → Create hierarchical specs now
+       B) Continue → Keep single spec.md (no penalty)
+       C) Defer → Run /speckit.supplement later when needed
+
+     → Preserve user control (no automatic file creation)
+     → No workflow blocking (recommendation only)
+   ```
+
+   **CRITICAL - Manual Control Preserved**:
+
+   - ✅ Display recommendation with clear examples
+   - ✅ Show benefits (token efficiency, ownership, maintainability)
+   - ✅ Let user choose (A/B/C decision)
+   - ❌ **DO NOT** create supplementary spec files automatically
+   - ❌ **DO NOT** block workflow if user declines
+   - ❌ **DO NOT** require action before proceeding
+
+   This is a **recommendation only** - the user retains full control over whether to create supplementary specs.
+
    d. **Create Spec Quality Checklist**: Generate a checklist file at `FEATURE_DIR/checklists/requirements.md` using the checklist template structure with these validation items:
 
       ```markdown
@@ -566,6 +660,29 @@ Given that feature description, do this:
    **Purpose**: Validate specification completeness and present review summary before proceeding.
 
    **Self-Evaluation Checklist** (MUST answer honestly):
+
+   ❓ **"Was large spec detection executed?"**
+      ```yaml
+      Action Required:
+        - Check if spec size > 100KB or requirements > 60
+        - Show ACTUAL spec size and requirement count
+        - Report: Recommendation displayed (if applicable) or not needed
+
+      Expected Evidence:
+        Spec Analysis:
+        ✓ Size: [N]KB (threshold: 100KB)
+        ✓ Requirements: [M] total (threshold: 60)
+        ✓ Recommendation: [DISPLAYED / NOT NEEDED]
+
+        IF recommendation displayed:
+          → User notified of hierarchical spec option
+          → Examples provided (/speckit.supplement commands)
+          → Benefits communicated (token efficiency, ownership)
+
+        IF not needed (size ≤100KB AND requirements ≤60):
+          → Spec size manageable for single file
+          → No proactive recommendation required
+      ```
 
    ❓ **"Are all requirements included?"**
       ```yaml
@@ -668,7 +785,7 @@ Given that feature description, do this:
      - 1-3 [NEEDS CLARIFICATION] markers present
      - Minor ambiguities found
 
-   ❌ INCOMPLETE:
+   ❌ NOT READY:
      - Multiple critical checklist failures
      - >3 [NEEDS CLARIFICATION] markers
      - Major sections missing
@@ -680,13 +797,21 @@ Given that feature description, do this:
    📋 Specification Review Complete
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-   Status: [✅ READY | ⚠️ NEEDS REVIEW | ❌ INCOMPLETE]
+   Status: [✅ READY | ⚠️ NEEDS REVIEW | ❌ NOT READY]
 
    Branch: [branch-name]
    Spec: [path/to/spec.md]
    Checklist: [path/to/checklists/requirements.md]
 
    ## Self-Check Results
+
+   Large Spec Detection:
+   ✓ Size: [N]KB (threshold: 100KB)
+   ✓ Requirements: [M] total (threshold: 60)
+   [IF size >100KB OR requirements >60:]
+   💡 Recommendation displayed: Consider hierarchical specs (/speckit.supplement)
+   [ELSE:]
+   ✅ Spec size manageable for single file
 
    Requirements Coverage:
    ✅ All requirements from description included ([N] total)
@@ -743,7 +868,7 @@ Given that feature description, do this:
    2. Address clarifications: /speckit.clarify
    3. OR proceed if acceptable: /speckit.plan
 
-   [IF ❌ INCOMPLETE:]
+   [IF ❌ NOT READY:]
    1. Review spec: [spec.md path]
    2. Address critical issues: [list specific actions]
    3. Re-run: /speckit.specify (to regenerate)
@@ -759,7 +884,7 @@ Given that feature description, do this:
      → Suggest next command based on status:
         - If READY with no clarifications → /speckit.plan
         - If clarifications exist → /speckit.clarify
-        - If INCOMPLETE → List required fixes
+        - If NOT READY → List required fixes
 
    IF user says "review" or "review spec":
      → Provide spec file path
@@ -797,7 +922,7 @@ Given that feature description, do this:
    Hallucination Prevention:
      - ✅ Forces self-check against actual requirements
      - ✅ No claiming "complete" without evidence
-     - ✅ Explicit status (READY/NEEDS REVIEW/INCOMPLETE)
+     - ✅ Explicit status (READY/NEEDS REVIEW/NOT READY)
    ```
 
 9. Report completion with branch name, spec file path, checklist results, and readiness for the next phase (`/speckit.clarify` or `/speckit.plan`).

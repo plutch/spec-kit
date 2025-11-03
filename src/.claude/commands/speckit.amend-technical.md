@@ -245,7 +245,195 @@ TECHNICAL.md has been amended. The following files MUST be regenerated:
 # Verify all internal links work
 ```
 
-### 11. Update Constitutional Compliance (If Cross-Project)
+### 11. ADR Amendment Review Gate (Evidence-Based Self-Check)
+
+**Purpose**: Validate TECHNICAL.md amendment completeness before presenting results.
+
+### Evidence Collection (Mandatory)
+
+❓ **"Was ADR file created/verified?"**
+Action Required:
+  - Verify ADR file exists at specified path
+  - Show ACTUAL ADR path and size
+  - Report: ADR number, title, file location
+
+Expected Evidence:
+  ✓ ADR path: specs/###-feature/decisions/adr-NNN-*.md OR ADR/ADR-NNN-*.md
+  ✓ ADR exists and readable
+  ✓ ADR number: NNN
+
+❓ **"Does ADR follow template structure?"**
+Action Required:
+  - Check ADR has required sections
+  - Show ACTUAL sections present
+  - Report: Context, Decision, Consequences sections verified
+
+Expected Evidence:
+  ✓ ADR has ## Context section
+  ✓ ADR has ## Decision section
+  ✓ ADR has ## Consequences section
+  ✓ ADR documents FROM → TO change
+
+❓ **"Was TECHNICAL.md amended correctly?"**
+Action Required:
+  - Verify strikethrough applied to old constraint
+  - Show ACTUAL amendment diff
+  - Report: Section amended, old → new change
+
+Expected Evidence:
+  ✓ Old constraint marked: ~~old text~~ **DEPRECATED** via [ADR-NNN]
+  ✓ New constraint documented
+  ✓ ADR link is valid markdown format
+  ✓ Date in ISO format (YYYY-MM-DD)
+
+❓ **"Was Decision History updated?"**
+Action Required:
+  - Verify new entry added to Decision History section
+  - Show ACTUAL history entry
+  - Report: Date, trigger, change, ADR link, impact
+
+Expected Evidence:
+  ✓ Decision History entry added
+  ✓ Entry includes: Date, Trigger, Change, ADR link, Impact
+  ✓ Chronological order maintained
+  ✓ Business rules referenced (if applicable)
+
+IF any evidence is MISSING:
+  ❌ CANNOT report completion
+  → Gather missing evidence first
+  → Re-run this step with complete evidence
+
+### Hallucination Prevention (7 Red Flags for ADR Amendment)
+
+```yaml
+Detect and BLOCK these patterns:
+
+🚨 "ADR created" WITHOUT showing file path
+   → Self-correction: "Wait, I need to verify ADR file exists"
+
+🚨 "Template followed" WITHOUT checking required sections
+   → Self-correction: "Let me verify Context, Decision, Consequences exist"
+
+🚨 "TECHNICAL.md amended" WITHOUT showing actual diff
+   → Self-correction: "I need to show old → new change"
+
+🚨 "Decision documented" WITHOUT consequences section
+   → Self-correction: "Must verify Consequences section exists in ADR"
+
+🚨 Claiming "complete" WITHOUT state.json update
+   → Self-correction: "Need to verify last_adr_number incremented"
+
+🚨 Creating ADR WITHOUT unique number
+   → Self-correction: "Must check existing ADRs to assign next number"
+
+🚨 "File written" WITHOUT verifying content
+   → Self-correction: "I need to read back file to confirm write succeeded"
+
+IF detected: STOP → Gather evidence → Report honestly
+```
+
+### Determine Status
+
+✅ **READY for Commit**:
+```yaml
+Criteria (ALL must be met):
+  - ADR file created with valid template structure
+  - TECHNICAL.md amended with strikethrough ~~old~~ → new
+  - ADR link is valid and points to correct file
+  - Decision History entry added with all required fields
+  - Date in ISO format (YYYY-MM-DD)
+  - State.json updated (last_adr_number incremented)
+
+IF ALL criteria met:
+  → Proceed to final summary output
+```
+
+⚠️ **NEEDS REVIEW** (can proceed with warnings):
+```yaml
+Criteria:
+  - Missing optional sections in ADR (Status, Alternatives Considered)
+  - Technical debt not tracked (if applicable)
+  - Regeneration scope unclear (user decision needed)
+
+IF criteria met:
+  → Present warnings to user
+  → Ask for confirmation before committing
+```
+
+❌ **NOT READY** (more work needed):
+```yaml
+Criteria (ANY triggers NOT READY):
+  - ADR file creation failed
+  - ADR missing required sections (Context, Decision, Consequences)
+  - TECHNICAL.md not amended (old constraint not marked deprecated)
+  - Decision History entry missing
+  - Invalid ADR link or date format
+
+IF NOT READY:
+  → Present issues with evidence
+  → Recommend: "Fix ADR/TECHNICAL.md issues before proceeding"
+  → STOP workflow progression
+```
+
+### Output Format (Present to User - ONLY if evidence provided)
+
+```markdown
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 TECHNICAL.md Amendment Review Complete
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Status: [✅ READY | ⚠️ NEEDS REVIEW | ❌ NOT READY]
+
+**ADR Created**: [ADR-NNN - Title]
+**Path**: [path/to/adr-NNN.md]
+**Template Sections**:
+  ✓ Context
+  ✓ Decision
+  ✓ Consequences
+
+**TECHNICAL.md Amended**:
+**File**: [path/to/TECHNICAL.md]
+**Section**: [Section Name]
+**Change**: ~~Old constraint~~ → New constraint
+**ADR Link**: [ADR-NNN](path/to/adr-NNN.md) (YYYY-MM-DD)
+
+**Decision History Entry**:
+```markdown
+#### YYYY-MM-DD: [Brief Change Description]
+- **Trigger**: [Blocker/need that triggered change]
+- **Change**: ~~Old approach~~ → New approach
+- **ADR**: [ADR-NNN - Title](decisions/adr-NNN.md)
+- **Impact**: [Timeline/scope impact]
+- **Business Rules**: [BR-* IDs if applicable]
+```
+
+**State Updated**:
+  ✓ last_adr_number: [N-1] → [N]
+
+**Regeneration Required**:
+[IF change affects implementation]
+  - plan.md: Run /plan --regenerate
+  - tasks.md: Run /tasks
+
+[IF change only documents past decision]
+  - No regeneration needed (already implemented)
+
+Next Action: [Commit with suggested message OR Regenerate plan/tasks]
+
+**Suggested Commit Message**:
+```
+docs(technical): amend TECHNICAL.md per ADR-NNN
+
+~~Old approach~~ → New approach
+
+- Trigger: [Brief blocker description]
+- ADR: ADR-NNN
+- Impact: [Brief timeline/scope impact]
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 12. Update Constitutional Compliance (If Cross-Project)
 
 **If this is cross-project TECHNICAL.md** (`.specify/TECHNICAL.md`):
 

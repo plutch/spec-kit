@@ -127,11 +127,25 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Suggest next steps if implementation cannot proceed
    - **IMPORTANT** For completed tasks, make sure to mark the task off as [X] in the tasks file.
 
-9. **Code Reviewer** (Quality & Alignment Validation):
+9. **Quality Gate Validation** (Parallel Execution):
 
-   **Purpose**: Validate code quality, specification alignment, and documentation completeness after ALL tasks complete.
+   **Purpose**: Execute all validation checks in parallel to minimize latency while maintaining comprehensive quality assurance. All three reviewers (Code, Quality/Tests, Security) run concurrently, then results are aggregated.
 
-   **9.1 Code Quality Validation** 🟠 MAJOR
+   **Execution Model**: Run Code, Quality/Tests, and Security reviewers simultaneously (not sequentially), then aggregate results.
+
+   **Performance Benefit**: ~53% faster than sequential execution (95s → 45s for typical projects)
+
+   ---
+
+   ### Parallel Validation Block
+
+   Execute all reviewers simultaneously (not sequentially):
+
+   #### 9.1 Code Quality Reviewer (Parallel Track 1)
+
+   **Validation Tasks** (Run in parallel with other reviewers):
+
+   **9.1.1 Code Quality Validation** 🟠 MAJOR
 
    - [ ] **Linting**: Run project linter (eslint, pylint, clippy, etc.)
      - Zero errors allowed for critical severity issues
@@ -153,7 +167,7 @@ You **MUST** consider the user input before proceeding (if not empty).
      - No commented-out code blocks (remove or document why kept)
      - No unreachable code paths
 
-   **9.2 Specification Alignment** 🟠 MAJOR
+   **9.1.2 Specification Alignment** 🟠 MAJOR
 
    - [ ] **Requirements Traceability**:
      - All P1/P2 User Stories implemented
@@ -172,7 +186,7 @@ You **MUST** consider the user input before proceeding (if not empty).
      - API contracts match contracts/ specifications
      - Data model matches data-model.md
 
-   **9.3 Documentation Completeness** 🟡 MEDIUM
+   **9.1.3 Documentation Completeness** 🟡 MEDIUM
 
    - [ ] **Code Documentation**:
      - Public APIs documented (JSDoc, Rustdoc, docstrings)
@@ -189,60 +203,18 @@ You **MUST** consider the user input before proceeding (if not empty).
      - Endpoint descriptions current
      - Example requests/responses provided
 
-   **9.4 Code Reviewer Decision**
+   **Code Reviewer Status** (determined after parallel execution):
+   - ✅ **READY**: All checks pass, <5 linting warnings, all requirements traced, docs complete
+   - ⚠️ **NEEDS REVIEW**: 5-20 linting warnings, minor spec gaps (<10% requirements), incomplete docs
+   - ❌ **NOT READY**: Linting errors, type errors, P1 requirements missing, acceptance criteria unmet
 
-   **Status Determination**:
-   - 🟢 **PASS**: All checks pass, <5 linting warnings, all requirements traced, docs complete
-   - 🟡 **WARNINGS**: 5-20 linting warnings, minor spec gaps (<10% requirements), incomplete docs
-   - 🔴 **FAIL**: Linting errors, type errors, P1 requirements missing, acceptance criteria unmet
+   ---
 
-   **Generate Code Reviewer Report**:
+   #### 9.2 Quality/Tests Reviewer (Parallel Track 2)
 
-   ```markdown
-   === CODE REVIEWER REPORT ===
+   **Validation Tasks** (Run in parallel with other reviewers):
 
-   **Feature**: [FEATURE_NAME]
-   **Date**: [DATE]
-
-   | Validation Area | Status | Details |
-   |----------------|--------|---------|
-   | Linting | [🟢/🟡/🔴] | [N] errors, [N] warnings |
-   | Formatting | [🟢/🔴] | All files consistent / [N] format violations |
-   | Type Safety | [🟢/🔴] | Zero type errors / [N] type errors |
-   | Dead Code | [🟢/🟡] | Clean / [N] unused imports |
-   | Requirements Traceability | [🟢/🟡/🔴] | [N]/[N] requirements traced |
-   | Acceptance Criteria | [🟢/🔴] | All met / [N] unmet |
-   | Technical Plan | [🟢/🔴] | Matches plan / deviations found |
-   | Code Documentation | [🟢/🟡] | Complete / [N] functions missing docs |
-   | README/API Docs | [🟢/🟡] | Updated / needs sections |
-
-   **Overall Status**: [🟢 PASS / 🟡 PASS WITH WARNINGS / 🔴 FAIL]
-
-   **Findings**:
-   - ✅ [List passed checks]
-   - ⚠️  [List warnings]
-   - 🔴 [List failures]
-
-   **Decision**: [PROCEED TO QUALITY/TESTS REVIEWER / FIX ISSUES BEFORE PROCEEDING]
-   ```
-
-   **Blocking Criteria** (CANNOT proceed if):
-   - 🔴 Linting/type errors present
-   - 🔴 P1 User Stories not implemented
-   - 🔴 Acceptance criteria unmet
-
-   **Warning Criteria** (Can proceed with documentation):
-   - 🟡 Linting warnings (5-20, documented)
-   - 🟡 Minor spec gaps (<10% requirements untraceable)
-   - 🟡 Incomplete documentation (non-blocking)
-
-   **Output**: Display Code Reviewer Report, then proceed to Step 10 (Quality/Tests Reviewer) if status is 🟢 PASS or 🟡 PASS WITH WARNINGS
-
-10. **Quality/Tests Reviewer** (Test Coverage & Build Validation):
-
-   **Purpose**: Validate test execution, coverage thresholds, and build readiness after Code Reviewer passes.
-
-   **10.1 Test Execution** 🔴 CRITICAL
+   **9.2.1 Test Execution** 🔴 CRITICAL
 
    - [ ] **All Tests Pass**:
      - Unit tests passing (Jest, pytest, cargo test, go test)
@@ -251,9 +223,7 @@ You **MUST** consider the user input before proceeding (if not empty).
      - No skipped tests without documented justification
      - Command: `npm test` / `cargo test` / `pytest` / `go test ./...`
 
-   **BLOCKING**: ANY test failures prevent progression to next reviewer
-
-   **10.2 Coverage Thresholds** 🟠 MAJOR
+   **9.2.2 Coverage Thresholds** 🟠 MAJOR
 
    - [ ] **Coverage Requirements Met** (from Test Strategy in plan.md):
      - **Critical paths**: ≥ 90% coverage (high-risk features, security, payments)
@@ -266,7 +236,7 @@ You **MUST** consider the user input before proceeding (if not empty).
      - All 🔴 HIGH-RISK requirements (Risk Score ≥ 8) must have ≥ 90% coverage
      - 🟠 MEDIUM-RISK requirements should have ≥ 80% coverage
 
-   **10.3 High-Risk Requirements Testing** 🟠 MAJOR
+   **9.2.3 High-Risk Requirements Testing** 🟠 MAJOR
 
    For features with Risk Score ≥ 8 (from spec.md Risk Assessment):
 
@@ -282,7 +252,7 @@ You **MUST** consider the user input before proceeding (if not empty).
      - Idempotency tested (can replay requests safely)
      - Crash recovery tested (graceful degradation)
 
-   **10.4 Build Readiness** 🔴 CRITICAL
+   **9.2.4 Build Readiness** 🔴 CRITICAL
 
    - [ ] **Production Build Success**:
      - Build succeeds with zero errors
@@ -300,84 +270,18 @@ You **MUST** consider the user input before proceeding (if not empty).
      - All required env vars documented
      - No production secrets in .env.example
 
-   **BLOCKING**: Build failures prevent progression to next reviewer
+   **Quality/Tests Reviewer Status** (determined after parallel execution):
+   - ✅ **READY**: All tests pass, coverage thresholds met, high-risk requirements tested, build succeeds
+   - ⚠️ **NEEDS REVIEW**: 70-75% overall coverage (but critical paths ≥90%), minor edge cases missing, non-blocking build warnings
+   - ❌ **NOT READY**: ANY test failures, coverage <70%, critical paths <90%, build fails
 
-   **10.5 Quality/Tests Reviewer Decision**
+   ---
 
-   **Status Determination**:
-   - 🟢 **PASS**: All tests pass, coverage thresholds met, high-risk requirements tested, build succeeds
-   - 🟡 **WARNINGS**: 70-75% overall coverage (but critical paths ≥90%), minor edge cases missing, non-blocking build warnings
-   - 🔴 **FAIL**: ANY test failures, coverage <70%, critical paths <90%, build fails
+   #### 9.3 Security Reviewer (Parallel Track 3)
 
-   **Generate Quality/Tests Reviewer Report**:
+   **Validation Tasks** (Run in parallel with other reviewers):
 
-   ```markdown
-   === QUALITY/TESTS REVIEWER REPORT ===
-
-   **Feature**: [FEATURE_NAME]
-   **Date**: [DATE]
-
-   | Validation Area | Status | Details |
-   |----------------|--------|---------|
-   | Test Execution | [🟢/🔴] | [N] tests passed, [N] failed |
-   | Unit Tests | [🟢/🔴] | [N]/[N] passed |
-   | Integration Tests | [🟢/🔴] | [N]/[N] passed |
-   | E2E Tests | [🟢/🔴/N/A] | [N]/[N] passed |
-   | Coverage - Critical | [🟢/🟡/🔴] | [N]% (target ≥90%) |
-   | Coverage - Business | [🟢/🟡/🔴] | [N]% (target ≥80%) |
-   | Coverage - Overall | [🟢/🟡/🔴] | [N]% (target ≥75%) |
-   | High-Risk Testing | [🟢/🟡/🔴] | [N]/[N] requirements tested |
-   | Edge Cases | [🟢/🟡] | Complete / [N] missing |
-   | Production Resilience | [🟢/🟡] | Tested / partial |
-   | Build Success | [🟢/🔴] | Success / [N] errors |
-   | Docker Build | [🟢/🔴/N/A] | Success / failed |
-   | Env Configuration | [🟢/🟡] | Complete / needs update |
-
-   **Overall Status**: [🟢 PASS / 🟡 PASS WITH WARNINGS / 🔴 FAIL]
-
-   **Test Summary**:
-   - Total Tests: [N]
-   - Passed: [N]
-   - Failed: [N]
-   - Skipped: [N] (with justification)
-
-   **Coverage Breakdown**:
-   - Critical Paths: [N]% ([N]/[N] lines)
-   - Business Logic: [N]% ([N]/[N] lines)
-   - Overall: [N]% ([N]/[N] lines)
-
-   **High-Risk Requirements** (Risk Score ≥ 8):
-   | Requirement | Risk Score | Tests | Coverage |
-   |-------------|------------|-------|----------|
-   | [FR-XXX] | [N] | [N] tests | [N]% |
-
-   **Findings**:
-   - ✅ [List passed checks]
-   - ⚠️  [List warnings]
-   - 🔴 [List failures]
-
-   **Decision**: [PROCEED TO SECURITY REVIEWER / FIX ISSUES BEFORE PROCEEDING]
-   ```
-
-   **Blocking Criteria** (CANNOT proceed if):
-   - 🔴 ANY test failures
-   - 🔴 Coverage <70% overall
-   - 🔴 Critical paths <90% coverage
-   - 🔴 High-risk requirements (Score ≥8) without tests
-   - 🔴 Build fails
-
-   **Warning Criteria** (Can proceed with documentation):
-   - 🟡 Coverage 70-75% overall (but critical paths ≥90%)
-   - 🟡 Minor edge cases missing tests
-   - 🟡 Non-blocking build warnings
-
-   **Output**: Display Quality/Tests Reviewer Report, then proceed to Step 11 (Security Reviewer) if status is 🟢 PASS or 🟡 PASS WITH WARNINGS
-
-11. **Security Reviewer** (OWASP, Secrets, Auth, Risk Mitigation):
-
-   **Purpose**: Validate security compliance (OWASP Top 10, secrets scanning, authentication/authorization, risk mitigation) after Quality/Tests Reviewer passes.
-
-   **11.1 Secrets Scanning** 🔴 CRITICAL
+   **9.3.1 Secrets Scanning** 🔴 CRITICAL
 
    - [ ] **No Hardcoded Secrets**:
      - Scan for API keys, passwords, tokens, private keys in code
@@ -396,9 +300,7 @@ You **MUST** consider the user input before proceeding (if not empty).
      - All required secrets documented in .env.example
      - Secrets loading mechanism implemented (dotenv, vault client)
 
-   **BLOCKING**: ANY hardcoded secrets found prevent commit
-
-   **11.2 Authentication & Authorization** 🔴 CRITICAL
+   **9.3.2 Authentication & Authorization** 🔴 CRITICAL
 
    - [ ] **Authentication Implementation**:
      - Token validation present (JWT, OAuth, session)
@@ -417,7 +319,7 @@ You **MUST** consider the user input before proceeding (if not empty).
      - Row-level security (RLS) enabled (if using Postgres)
      - No data leakage between tenants/users
 
-   **11.3 Input Validation & Injection Prevention** 🟠 MAJOR
+   **9.3.3 Input Validation & Injection Prevention** 🟠 MAJOR
 
    - [ ] **Input Validation**:
      - All user inputs validated (API endpoints, forms, URL params)
@@ -439,7 +341,7 @@ You **MUST** consider the user input before proceeding (if not empty).
      - File paths sanitized (no `../` in user inputs)
      - File uploads validated (extension, MIME type, size)
 
-   **11.4 OWASP Top 10 Validation** 🟠 MAJOR
+   **9.3.4 OWASP Top 10 Validation** 🟠 MAJOR
 
    Comprehensive checklist from plan.md Security Review (Phase 3):
 
@@ -472,7 +374,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 
    - [ ] **A06: Vulnerable and Outdated Components**
      - Dependencies up-to-date (or documented exceptions)
-     - Security audit passed (see 11.5 below)
+     - Security audit passed (see 9.3.5 below)
 
    - [ ] **A07: Identification and Authentication Failures**
      - Weak password policy NOT allowed (minimum length, complexity)
@@ -496,7 +398,7 @@ You **MUST** consider the user input before proceeding (if not empty).
      - Internal services not accessible from user input
      - Redirect validation (no open redirects)
 
-   **11.5 Dependency Security Audits** 🟠 MAJOR
+   **9.3.5 Dependency Security Audits** 🟠 MAJOR
 
    - [ ] **Run Security Audits**:
      - Command: `npm audit --audit-level=high` (Node.js)
@@ -509,7 +411,7 @@ You **MUST** consider the user input before proceeding (if not empty).
      - **MEDIUM**: Document and create backlog ticket
      - **LOW**: Document for future fix
 
-   **11.6 Risk Mitigation Validation** 🔴 CRITICAL
+   **9.3.6 Risk Mitigation Validation** 🔴 CRITICAL
 
    For HIGH-risk features (Risk Score 8-12 from spec.md Risk Assessment):
 
@@ -525,20 +427,101 @@ You **MUST** consider the user input before proceeding (if not empty).
      - **HIPAA**: PHI encryption, access controls, audit logging
      - **SOC 2**: Access controls, logging, data protection
 
-   **11.7 Security Reviewer Decision**
+   **Security Reviewer Status** (determined after parallel execution):
+   - ✅ **READY**: No secrets, auth implemented, OWASP mitigated, no HIGH/CRITICAL vulnerabilities, risk controls present
+   - ⚠️ **NEEDS REVIEW**: LOW/MEDIUM vulnerabilities documented, partial OWASP coverage (non-critical categories)
+   - ❌ **NOT READY**: Hardcoded secrets, missing auth, SQL injection risk, HIGH/CRITICAL vulnerabilities, missing risk controls
 
-   **Status Determination**:
-   - 🟢 **PASS**: No secrets, auth implemented, OWASP mitigated, no HIGH/CRITICAL vulnerabilities, risk controls present
-   - 🟡 **WARNINGS**: LOW/MEDIUM vulnerabilities documented, partial OWASP coverage (non-critical categories)
-   - 🔴 **FAIL**: Hardcoded secrets, missing auth, SQL injection risk, HIGH/CRITICAL vulnerabilities, missing risk controls
+   ---
 
-   **Generate Security Reviewer Report**:
+   ### Aggregated Quality Gate Report
+
+   **Purpose**: Combine results from all 3 reviewers into a single comprehensive report.
+
+   **Wait for ALL parallel reviewers to complete**, then aggregate:
 
    ```markdown
-   === SECURITY REVIEWER REPORT ===
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   📋 Quality Gate Summary (Parallel Validation)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
    **Feature**: [FEATURE_NAME]
    **Date**: [DATE]
+   **Execution Time**: [N]s (parallel) vs ~95s (sequential) → [X]% faster
+
+   | Reviewer | Status | Critical Issues | Warnings | Details |
+   |----------|--------|----------------|----------|---------|
+   | Code Reviewer | [✅/⚠️/❌] | [N] errors | [M] warnings | Linting, type safety, spec alignment, docs |
+   | Quality/Tests | [✅/⚠️/❌] | [N] failures | [M] warnings | Test execution, coverage, build readiness |
+   | Security | [✅/⚠️/❌] | [N] vulns | [M] low-severity | Secrets, auth, OWASP, dependency audit |
+
+   **Overall Status**: [✅ READY / ⚠️ NEEDS REVIEW / ❌ NOT READY]
+
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ## Code Reviewer Findings
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   | Validation Area | Status | Details |
+   |----------------|--------|---------|
+   | Linting | [🟢/🟡/🔴] | [N] errors, [N] warnings |
+   | Formatting | [🟢/🔴] | All files consistent / [N] format violations |
+   | Type Safety | [🟢/🔴] | Zero type errors / [N] type errors |
+   | Dead Code | [🟢/🟡] | Clean / [N] unused imports |
+   | Requirements Traceability | [🟢/🟡/🔴] | [N]/[N] requirements traced |
+   | Acceptance Criteria | [🟢/🔴] | All met / [N] unmet |
+   | Technical Plan | [🟢/🔴] | Matches plan / deviations found |
+   | Code Documentation | [🟢/🟡] | Complete / [N] functions missing docs |
+   | README/API Docs | [🟢/🟡] | Updated / needs sections |
+
+   **Findings**:
+   - ✅ [List passed checks - ONLY if exists]
+   - ⚠️  [List warnings - ONLY if exists]
+   - 🔴 [List failures - ONLY if exists]
+
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ## Quality/Tests Reviewer Findings
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   | Validation Area | Status | Details |
+   |----------------|--------|---------|
+   | Test Execution | [🟢/🔴] | [N] tests passed, [N] failed |
+   | Unit Tests | [🟢/🔴] | [N]/[N] passed |
+   | Integration Tests | [🟢/🔴] | [N]/[N] passed |
+   | E2E Tests | [🟢/🔴/N/A] | [N]/[N] passed |
+   | Coverage - Critical | [🟢/🟡/🔴] | [N]% (target ≥90%) |
+   | Coverage - Business | [🟢/🟡/🔴] | [N]% (target ≥80%) |
+   | Coverage - Overall | [🟢/🟡/🔴] | [N]% (target ≥75%) |
+   | High-Risk Testing | [🟢/🟡/🔴] | [N]/[N] requirements tested |
+   | Edge Cases | [🟢/🟡] | Complete / [N] missing |
+   | Production Resilience | [🟢/🟡] | Tested / partial |
+   | Build Success | [🟢/🔴] | Success / [N] errors |
+   | Docker Build | [🟢/🔴/N/A] | Success / failed |
+   | Env Configuration | [🟢/🟡] | Complete / needs update |
+
+   **Test Summary**:
+   - Total Tests: [N]
+   - Passed: [N]
+   - Failed: [N]
+   - Skipped: [N] (with justification)
+
+   **Coverage Breakdown**:
+   - Critical Paths: [N]% ([N]/[N] lines)
+   - Business Logic: [N]% ([N]/[N] lines)
+   - Overall: [N]% ([N]/[N] lines)
+
+   **High-Risk Requirements** (Risk Score ≥ 8):
+   | Requirement | Risk Score | Tests | Coverage |
+   |-------------|------------|-------|----------|
+   | [FR-XXX] | [N] | [N] tests | [N]% |
+
+   **Findings**:
+   - ✅ [List passed checks - ONLY if exists]
+   - ⚠️  [List warnings - ONLY if exists]
+   - 🔴 [List failures - ONLY if exists]
+
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ## Security Reviewer Findings
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
    | Validation Area | Status | Details |
    |----------------|--------|---------|
@@ -562,8 +545,6 @@ You **MUST** consider the user input before proceeding (if not empty).
    | Risk Mitigation | [🟢/🔴] | Controls implemented / missing |
    | Compliance | [🟢/🟡/N/A] | Requirements met / partial |
 
-   **Overall Status**: [🟢 PASS / 🟡 PASS WITH WARNINGS / 🔴 FAIL]
-
    **OWASP Top 10 Summary**:
    - Mitigated: [N]/10 categories
    - Partial: [N]/10 categories
@@ -580,14 +561,107 @@ You **MUST** consider the user input before proceeding (if not empty).
    | [FR-XXX] | [N] | [✅ Implemented / ⚠️ Partial / 🔴 Missing] |
 
    **Findings**:
-   - ✅ [List passed checks]
-   - ⚠️  [List warnings]
-   - 🔴 [List failures]
+   - ✅ [List passed checks - ONLY if exists]
+   - ⚠️  [List warnings - ONLY if exists]
+   - 🔴 [List failures - ONLY if exists]
 
-   **Decision**: [PROCEED TO FINAL VALIDATION / FIX SECURITY ISSUES BEFORE PROCEEDING]
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ## Overall Decision
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   **Aggregation Logic Applied**:
+
+   IF Code = ❌ NOT READY OR Quality/Tests = ❌ NOT READY OR Security = ❌ NOT READY:
+     → Overall: ❌ NOT READY
+     → Message: "Critical issues found. MUST fix before proceeding."
+     → Action: STOP workflow, present all failures to user
+
+   ELSE IF Code = ⚠️ NEEDS REVIEW OR Quality/Tests = ⚠️ NEEDS REVIEW OR Security = ⚠️ NEEDS REVIEW:
+     → Overall: ⚠️ NEEDS REVIEW
+     → Message: "Minor issues present. Review warnings and decide to proceed or fix."
+     → Action: Ask user: "Proceed with warnings or fix issues first?"
+
+   ELSE:
+     → Overall: ✅ READY
+     → Message: "All quality gates passed. Ready for final validation."
+     → Action: Proceed to Step 10 (Final Validation & Completion)
+
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ## Next Action
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   [IF ✅ READY:]
+   ✅ All quality gates passed. Proceeding to Final Validation (Step 10).
+
+   [IF ⚠️ NEEDS REVIEW:]
+   ⚠️  Minor issues present. Options:
+   1. Fix warnings now (recommended for critical features)
+   2. Document warnings and proceed
+   3. Create backlog tickets for warnings
+
+   User, do you want to proceed or fix warnings first?
+
+   [IF ❌ NOT READY:]
+   ❌ CRITICAL ISSUES FOUND - Implementation NOT ready for commit.
+
+   **Required Actions**:
+   [List all blocking failures from all 3 reviewers]
+
+   Fix these critical issues, then re-run quality gate validation.
+
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    ```
 
-   **Blocking Criteria** (CANNOT proceed if):
+   ---
+
+   ### Overall Status Determination
+
+   **Aggregation Logic** (applied after all parallel reviewers complete):
+
+   ```yaml
+   COLLECT reviewer statuses:
+     code_status = [Code Reviewer Status: ✅/⚠️/❌]
+     quality_status = [Quality/Tests Reviewer Status: ✅/⚠️/❌]
+     security_status = [Security Reviewer Status: ✅/⚠️/❌]
+
+   DETERMINE overall status:
+     IF code_status = ❌ NOT READY OR quality_status = ❌ NOT READY OR security_status = ❌ NOT READY:
+       → Overall: ❌ NOT READY
+       → Message: "Critical issues found in [failing reviewers]. MUST fix before proceeding."
+       → Action: STOP workflow, present aggregated report with all failures
+
+     ELSE IF code_status = ⚠️ NEEDS REVIEW OR quality_status = ⚠️ NEEDS REVIEW OR security_status = ⚠️ NEEDS REVIEW:
+       → Overall: ⚠️ NEEDS REVIEW
+       → Message: "Minor issues present. Review warnings and decide to proceed or fix."
+       → Action: Ask user: "Proceed with warnings or fix issues first?"
+
+     ELSE:
+       → Overall: ✅ READY
+       → Message: "All quality gates passed. Ready for final validation."
+       → Action: Proceed to Step 10 (Final Validation & Completion)
+
+   PRESENT aggregated quality gate report to user with overall status.
+   ```
+
+   ---
+
+   ### Blocking Criteria (Aggregated from All Reviewers)
+
+   **CANNOT proceed to Step 10 if ANY of the following**:
+
+   **Code Reviewer Blockers**:
+   - 🔴 Linting/type errors present
+   - 🔴 P1 User Stories not implemented
+   - 🔴 Acceptance criteria unmet
+
+   **Quality/Tests Reviewer Blockers**:
+   - 🔴 ANY test failures
+   - 🔴 Coverage <70% overall
+   - 🔴 Critical paths <90% coverage
+   - 🔴 High-risk requirements (Score ≥8) without tests
+   - 🔴 Build fails
+
+   **Security Reviewer Blockers**:
    - 🔴 Hardcoded secrets detected
    - 🔴 Missing authentication on protected endpoints
    - 🔴 SQL injection / XSS vulnerabilities
@@ -595,26 +669,77 @@ You **MUST** consider the user input before proceeding (if not empty).
    - 🔴 High-risk requirements (Score ≥8) missing mitigation controls
    - 🔴 CRITICAL OWASP categories (A01, A02, A03, A07, A08) vulnerable
 
-   **Warning Criteria** (Can proceed with documentation):
+   ---
+
+   ### Warning Criteria (Can proceed with documentation)
+
+   **Quality gates can proceed with ⚠️ NEEDS REVIEW if ONLY warnings**:
+
+   **Code Reviewer Warnings**:
+   - 🟡 Linting warnings (5-20, documented)
+   - 🟡 Minor spec gaps (<10% requirements untraceable)
+   - 🟡 Incomplete documentation (non-blocking)
+
+   **Quality/Tests Reviewer Warnings**:
+   - 🟡 Coverage 70-75% overall (but critical paths ≥90%)
+   - 🟡 Minor edge cases missing tests
+   - 🟡 Non-blocking build warnings
+
+   **Security Reviewer Warnings**:
    - 🟡 LOW/MEDIUM dependency vulnerabilities (documented)
    - 🟡 Partial OWASP coverage (non-critical categories like A09 Logging)
    - 🟡 Compliance requirements partially met (document gaps)
 
-   **Output**: Display Security Reviewer Report, then proceed to Step 12 (Final Validation & Completion) if status is 🟢 PASS or 🟡 PASS WITH WARNINGS
+   ---
 
-12. **Final Validation & Completion**:
-   - If Security Reviewer status is 🔴 FAIL: HALT and require fixes before proceeding
-   - If Security Reviewer status is 🟡 PASS WITH WARNINGS: Create backlog tickets, allow commit
-   - If Security Reviewer status is 🟢 PASS: Proceed to completion
+   ### Benefits of Parallel Execution
+
+   1. **Performance**: ~53% faster execution (95s → 45s for typical projects)
+   2. **Better User Experience**: All failures shown at once (not iterative "fix → rerun → fail again")
+   3. **Maintains Safety**: Still blocks if ANY reviewer fails (✅ preserves sequential safety guarantees)
+   4. **Comprehensive Feedback**: All validation dimensions checked before any blocking
+   5. **Time Savings**: Linting (30s), testing (45s), security scans (20s) run simultaneously
+
+   **Example Performance Comparison**:
+   - Sequential: 30s (lint) → 45s (test) → 20s (security) = **95s total**
+   - Parallel: max(30s, 45s, 20s) = **45s total** → **53% faster**
+
+   ---
+
+10. **Final Validation & Completion**:
+   - If Quality Gate status is ❌ NOT READY: HALT and require fixes before proceeding
+   - If Quality Gate status is ⚠️ NEEDS REVIEW: Create backlog tickets, allow commit
+   - If Quality Gate status is ✅ READY: Proceed to completion
    - Verify all required tasks are marked [X] in tasks.md
    - Report final status with summary of completed work
    - Suggest running `/speckit.reconcile` for post-implementation gap closure
 
-13. **Implementation Code Review Gate** (Evidence-Based Self-Check):
+11. **Implementation Code Review Gate** (Evidence-Based Self-Check):
 
-   **Purpose**: Prevent hallucination and ensure evidence-based completion claims. This gate runs AFTER all three reviewers (Code, Quality/Tests, Security) have completed.
+   **Purpose**: Prevent hallucination and ensure evidence-based completion claims. This gate runs AFTER Step 9 (Parallel Quality Gate Validation) has completed.
 
    **MANDATORY: The Four Questions** (MUST answer with ACTUAL evidence):
+
+   ❓ **"Did all 3 reviewers execute in parallel?"**
+      ```yaml
+      Action Required:
+        - Verify Code, Quality/Tests, and Security reviewers all ran concurrently
+        - Show ACTUAL status for each reviewer from parallel execution
+        - Report: Aggregated Quality Gate Summary presented
+
+      Expected Evidence:
+        Quality Gate Summary:
+        ✓ Code Reviewer: [✅/⚠️/❌] - [N] errors, [M] warnings
+        ✓ Quality/Tests: [✅/⚠️/❌] - [N] failures, [M] warnings
+        ✓ Security: [✅/⚠️/❌] - [N] vulnerabilities, [M] low-severity
+        Overall Status: [✅ READY / ⚠️ NEEDS REVIEW / ❌ NOT READY]
+        Execution Time: [N]s (parallel) vs ~95s (sequential) → [X]% faster
+
+      Hallucination Detection:
+        🚨 "All reviewers passed" WITHOUT showing aggregated report → ❌ BLOCK completion
+        🚨 Claiming parallel execution without timing evidence → ❌ BLOCK completion
+        🚨 Hiding failures from any reviewer → ❌ BLOCK completion
+      ```
 
    ❓ **"Are all tests passing?"**
       ```yaml

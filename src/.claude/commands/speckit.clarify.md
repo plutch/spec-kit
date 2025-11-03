@@ -22,303 +22,58 @@ Note: This clarification workflow is expected to run (and be completed) BEFORE i
 ## Mode Selection
 
 **Available Modes**:
+
 1. **Standard Mode** (Default): Iterative Q&A with integrated edge case detection
-2. **Challenge Mode** (`--challenge`): Adversarial stress-testing for high-stakes features
-3. **Expert Lens Mode** (`--deep`): Multi-perspective expert review (Requirements, Architecture, UX, Production Resilience)
+   - Auto-activates Challenge questions for high-risk features (Risk Score ≥8)
+   - 5 standard questions + 3-5 Challenge questions (if high-risk)
+   - Use for: ALL features (most common)
+
+2. **Expert Lens Mode** (`--expert`, `--deep`, `--review`): Multi-perspective expert review
+   - 4-lens analysis: Requirements, Architecture, UX, Resilience
+   - Severity-prioritized findings (🔴 CRITICAL, 🟠 MAJOR)
+   - WCAG 2.1 AA compliance check
+   - Use for: Complex features, regulatory requirements, pre-implementation gate
 
 **Mode Detection**:
 
 ```yaml
-IF $ARGUMENTS contains "--challenge":
-  → Activate Challenge Mode (adversarial questioning)
-  → Follow Challenge Mode execution steps
-
-ELSE IF $ARGUMENTS contains "--deep" OR "--expert" OR "--review":
+IF $ARGUMENTS contains "--expert" OR "--deep" OR "--review":
   → Activate Expert Lens Mode (multi-expert review)
   → Follow Expert Lens execution steps
-
 ELSE:
   → Standard Mode (iterative Q&A + edge case detection)
+  → Auto-detect high-risk features and add Challenge questions
   → Follow standard execution steps
 ```
 
 ## Usage Examples
 
 ```bash
-# Standard clarification with edge case detection (most common)
+# Standard clarification (auto-detects high-risk features)
 /speckit.clarify
 
-# Adversarial stress-testing for high-stakes features
-/speckit.clarify --challenge
-
 # Comprehensive expert review (requirements, architecture, UX, resilience)
-/speckit.clarify --deep
+/speckit.clarify --expert
 ```
 
 **When to Use Each Mode**:
 
-- **Standard Mode** (default): Use for ALL features. Automatically includes edge case detection.
+- **Standard Mode** (default): Use for ALL features
   - Identifies ambiguities through iterative Q&A (max 5 questions)
   - Scans for boundary conditions, error handling, state transitions
-  - Best for: Regular clarification needs, most features
+  - **Auto-activates Challenge questions** for high-risk features (Risk Score ≥8)
+  - Best for: Regular clarification needs, most features (90%+ of use cases)
 
-- **Challenge Mode** (`--challenge`): Use for HIGH-STAKES features only
-  - Adversarially questions assumptions, alternatives, scope, risks
-  - Forces validation of unstated assumptions
-  - Best for: Payment systems, security features, compliance, major architecture decisions
-
-- **Expert Lens Mode** (`--deep`): Use for COMPLEX or USER-FACING features
+- **Expert Lens Mode** (`--expert`): Use for complex or interface-heavy features
   - 4-lens review: Requirements (Wiegers), Architecture (Fowler/Cockburn), UX (Nielsen/Norman), Resilience (Nygard)
   - Comprehensive quality assessment including WCAG 2.1 AA accessibility
-  - Best for: Interface-heavy features, regulatory requirements, complex workflows
-
----
-
-### Challenge Mode Execution (Adversarial Stress-Testing)
-
-**Purpose**: Stress-test spec assumptions through adversarial questioning. Instead of filling gaps, CHALLENGE the spec's direction, assumptions, and approach to surface hidden risks and alternatives BEFORE committing to planning.
-
-**When to Use Challenge Mode**:
-- High-stakes features (security, payments, compliance, core infrastructure)
-- Features with many assumptions or unclear requirements
-- Features with significant resource commitments
-- When spec seems "too clean" (may be hiding complexity)
-- Before major architecture decisions
-
-**Challenge Mode Steps**:
-
-1. Run `{SCRIPT}` to load FEATURE_SPEC (same as normal mode)
-
-2. **Load and Analyze Spec**: Read spec.md completely and identify:
-   - Stated assumptions (explicit in spec)
-   - Implied assumptions (read between the lines)
-   - Approach/solution chosen (technical decisions)
-   - Scope boundaries (what's in/out)
-   - Risk statements (what's mentioned/missing)
-
-3. **Generate Challenge Questions** (3-5 adversarial questions):
-
-   **Question Categories**:
-
-   a. **Assumption Challenge**:
-      ```
-      ❓ Assumption Validation (Challenge)
-
-      The spec assumes [stated assumption]. But have we validated this?
-
-      Challenge: [Why this assumption might be wrong]
-
-      Alternative: [What if the opposite is true]
-
-      Question: How confident are we in this assumption? What's the evidence?
-
-      Options:
-      A) High confidence - validated with users/data
-      B) Medium confidence - based on best practices
-      C) Low confidence - educated guess
-      D) Should validate before proceeding
-      ```
-
-   b. **Alternative Exploration**:
-      ```
-      ❓ Approach Alternatives (Challenge)
-
-      The spec proposes [stated approach]. But what alternatives exist?
-
-      Current: [Summarize chosen approach]
-
-      Alternatives:
-      - [Alternative 1]: [Pros/cons]
-      - [Alternative 2]: [Pros/cons]
-      - [Simplest option]: [Pros/cons]
-
-      Question: What's the rationale for the chosen approach vs simpler alternatives?
-
-      Options:
-      A) Chosen approach is optimal - [reason]
-      B) Alternative [X] is better - [reason]
-      C) Need to compare alternatives first
-      D) Simplest approach sufficient
-      ```
-
-   c. **Simplification Pressure**:
-      ```
-      ❓ Scope Reduction (Challenge)
-
-      If we had 50% of the time/budget, what would we cut?
-
-      Current scope: [List key features from spec]
-
-      Question: What's the MINIMAL viable version?
-
-      Rate each feature:
-      - Must-have (breaks feature without it)
-      - Should-have (significantly degrades UX)
-      - Nice-to-have (polish, not critical)
-      - Gold-plating (over-engineered)
-
-      Options:
-      A) All current features are must-haves
-      B) [List features] could be deferred
-      C) Minimal version is just [core features]
-      D) Need to re-scope significantly
-      ```
-
-   d. **Risk Exposure**:
-      ```
-      ❓ Downside Scenarios (Challenge)
-
-      What's the worst case if our assumptions are wrong?
-
-      Scenarios to consider:
-      - User adoption 10x LOWER than expected
-      - User adoption 10x HIGHER than expected
-      - Security requirements more stringent
-      - Integration dependencies fail/change
-      - Timeline compressed by 50%
-
-      Question: What are the hidden risks not addressed in the spec?
-
-      Options:
-      A) Risks are well-covered in spec
-      B) [Specific risk] not addressed
-      C) Need contingency plans for [scenarios]
-      D) Spec is too optimistic
-      ```
-
-   e. **Competitive/Market Challenge**:
-      ```
-      ❓ Market Positioning (Challenge)
-
-      Why would users choose this over alternatives?
-
-      Current alternatives users have:
-      - [Existing solution 1]
-      - [Existing solution 2]
-      - [Do nothing / workaround]
-
-      Question: What's our unique value proposition?
-
-      Options:
-      A) Clear differentiation - [specific advantage]
-      B) Better UX than alternatives
-      C) Cheaper/faster than alternatives
-      D) Not clearly differentiated yet
-      ```
-
-4. **Present Challenge Questions** (one at a time, same interaction pattern as normal mode):
-   - Ask question
-   - Wait for user response
-   - Record answer
-   - Move to next question or user signals "done"
-
-5. **Generate Challenge Report**:
-
-   After questions complete, synthesize findings:
-
-   ```markdown
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   🔍 Spec Challenge Report
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-   Feature: [Name]
-   Spec: [Path]
-   Challenge Mode: [N] adversarial questions asked
-
-   ## Assumptions Challenged
-
-   Assumption 1: [Stated assumption]
-   - Confidence: [High/Medium/Low]
-   - Evidence: [User's response]
-   - Risk if wrong: [Impact]
-   - Action: [Validate / Accept / Revise]
-
-   [Repeat for each assumption]
-
-   ## Alternatives Explored
-
-   Current Approach: [Summary]
-   - Rationale: [Why chosen]
-
-   Alternative 1: [Name]
-   - Pros: [...]
-   - Cons: [...]
-   - Decision: [Chosen / Rejected / Needs evaluation]
-
-   [Repeat for each alternative]
-
-   ## Scope Recommendations
-
-   Minimal Viable Version:
-   - Must-have: [List core features]
-   - Should-have: [List important features]
-   - Nice-to-have: [List polish features]
-   - Deferred: [List features to cut if needed]
-
-   ## Risks Identified
-
-   1. [Risk category]: [Description]
-      - Mitigation: [Strategy]
-      - Contingency: [Plan]
-
-   [Repeat for each risk]
-
-   ## Recommendations
-
-   Based on challenge analysis:
-
-   ✅ Proceed as-is: [If spec validated]
-     - Rationale: [Why assumptions hold]
-
-   ⚠️ Revise spec: [If issues found]
-     - Changes needed: [List specific revisions]
-     - Focus areas: [What to rethink]
-
-   ❌ Re-scope: [If fundamental issues]
-     - Core problems: [What's wrong]
-     - Suggested direction: [Alternative approach]
-
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   ## Next Steps
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-   [IF ✅ Proceed:]
-   1. Continue to planning: /speckit.plan
-   2. Update spec with challenge insights (optional)
-
-   [IF ⚠️ Revise:]
-   1. Update spec.md with recommended changes
-   2. Run /speckit.clarify again (normal mode)
-   3. Then proceed to /speckit.plan
-
-   [IF ❌ Re-scope:]
-   1. Major spec revision needed
-   2. Consider /speckit.specify [revised description]
-   3. Or manually update spec.md with new direction
-
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-   Ready to proceed? (yes/revise/re-scope)
-   ```
-
-6. **Update Spec (Optional)**: Based on challenge findings, optionally update spec.md with:
-   - Challenge Insights section
-   - Validated Assumptions section
-   - Alternatives Considered section
-   - Risk Mitigation section
-
-7. **User Decision**: Wait for user to decide:
-   - Proceed to planning (spec validated)
-   - Revise spec (issues found)
-   - Re-scope (fundamental problems)
-
-**Benefits of Challenge Mode**:
-- Surfaces hidden assumptions early
-- Explores alternatives explicitly
-- Identifies simplification opportunities
-- Exposes hidden risks
-- Documents decision rationale
-- Prevents expensive late-stage pivots
+  - Severity-prioritized findings (🔴 CRITICAL, 🟠 MAJOR, 🟡 MEDIUM)
+  - Best for: Complex workflows, regulatory requirements, pre-implementation quality gate
+
+**Deprecated Modes** (v2.1.1):
+- `--challenge`: Merged into Standard Mode with auto-activation for high-risk features
+- `--edge-cases`: Merged into Standard Mode (always active)
+- `--ux`: Use `/speckit.analyze-ux` instead for UX-specific analysis
 
 ---
 
@@ -527,6 +282,95 @@ Execution steps:
    - For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
 2. Load the current spec file. Perform a structured ambiguity & coverage scan using this taxonomy. For each category, mark status: Clear / Partial / Missing. Produce an internal coverage map used for prioritization (do not output raw map unless no questions will be asked).
+
+2.5. **Auto-Detect High-Risk Features (Challenge Mode Integration)**
+
+   **Purpose**: Automatically activate adversarial Challenge questions for high-risk features to surface hidden risks and validate assumptions.
+
+   **Risk Detection**:
+
+   Check if spec.md contains a "## Risk Assessment" section:
+
+   ```bash
+   # Pseudo-code for risk detection logic
+   if grep -q "## Risk Assessment" "${FEATURE_SPEC}"; then
+     # Extract risk scores (look for "Score: X/12" or "Score: X")
+     high_risk_criteria=$(grep -E "Score: ([8-9]|1[0-2])" "${FEATURE_SPEC}" | wc -l)
+
+     if [ "$high_risk_criteria" -gt 0 ]; then
+       echo "⚠️ HIGH-RISK FEATURE DETECTED"
+       echo "Risk criteria with score ≥8: ${high_risk_criteria}"
+       echo "Auto-activating Challenge Mode questions for extra scrutiny"
+       CHALLENGE_MODE_ACTIVE=true
+     else
+       echo "Standard risk profile detected"
+       CHALLENGE_MODE_ACTIVE=false
+     fi
+   else
+     echo "No Risk Assessment found - using Standard Mode only"
+     CHALLENGE_MODE_ACTIVE=false
+   fi
+   ```
+
+   **IF CHALLENGE_MODE_ACTIVE = true**:
+
+   After standard Q&A questions (max 5), generate 3-5 **Challenge Questions** (adversarial stress-testing):
+
+   **Challenge Question Categories**:
+
+   a. **Assumption Challenge**:
+      ```
+      ❓ Assumption Validation (Challenge)
+
+      The spec assumes [stated assumption from high-risk area]. But have we validated this?
+
+      Challenge: [Why this assumption might be wrong in high-risk context]
+      Alternative: [What if the opposite is true]
+      Question: How confident are we? What's the evidence?
+
+      Options:
+      A) High confidence - validated with users/data
+      B) Medium confidence - based on best practices
+      C) Low confidence - educated guess
+      D) Should validate before proceeding
+      ```
+
+   b. **Alternative Approach**:
+      ```
+      ❓ Alternative Approach (Challenge)
+
+      The spec proposes [approach from high-risk requirement]. But are there safer alternatives?
+
+      Challenge: [What could go wrong with current approach]
+      Alternative: [Lower-risk approach, trade-offs]
+      Question: Have we considered [safer alternative]? Why not?
+
+      Options:
+      A) Current approach is safest
+      B) Alternative is worth considering
+      C) Should prototype both approaches
+      D) Risk mitigation strategy needed
+      ```
+
+   c. **Scope Challenge**:
+      ```
+      ❓ Scope Validation (Challenge)
+
+      The spec includes [high-risk feature]. Is this scope justified given the risk?
+
+      Challenge: [Could we ship without this high-risk element]
+      Question: What's the minimum viable version that reduces risk?
+
+      Options:
+      A) Full scope necessary for MVP
+      B) Could phase implementation
+      C) Should descope high-risk parts
+      D) Need risk mitigation controls
+      ```
+
+   **Output**: Challenge Q&A section appended to standard clarifications in spec.md
+
+   **Note**: Challenge questions are ADDITIONAL to standard questions. Standard questions focus on ambiguities; Challenge questions focus on validating high-risk assumptions.
 
    Functional Scope & Behavior:
    - Core user goals & success criteria
@@ -803,7 +647,7 @@ Execution steps:
         IF Outstanding = 0 AND (Resolved + Clear) > 80% of taxonomy:
           → ✅ READY to proceed to planning
         IF Outstanding ≤ 2 AND all Outstanding are LOW impact:
-          → ⚠️ CAN PROCEED (with noted risks)
+          → ⚠️ NEEDS REVIEW (with noted risks)
         IF Outstanding > 2 OR any HIGH impact Outstanding:
           → ❌ NOT READY (recommend another clarify pass)
       ```
@@ -947,7 +791,7 @@ Execution steps:
      → Proceed to Step 10 (present completion report)
    ```
 
-   ⚠️ **CAN PROCEED** (with risks noted):
+   ⚠️ **NEEDS REVIEW** (with risks noted):
    ```yaml
    Criteria:
      - Outstanding categories ≤ 2
@@ -982,10 +826,18 @@ Execution steps:
    📋 Clarification Review Complete
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-   Status: [✅ READY | ⚠️ CAN PROCEED | ❌ NOT READY]
+   Status: [✅ READY | ⚠️ NEEDS REVIEW | ❌ NOT READY]
 
    Branch: [branch-name]
    Spec: [path/to/spec.md]
+
+   **Challenge Mode**: [✅ ACTIVATED (Risk Score ≥8) | ⚪ NOT ACTIVATED (standard risk)]
+
+   [IF Challenge Mode activated:]
+   High-Risk Criteria Detected: [N] items with Risk Score ≥8
+   Challenge Questions Asked: [N]
+   Assumptions Validated: [N/N]
+   Risk Mitigation Strategies: [Added to spec]
 
    ## Coverage Status
 
@@ -1030,7 +882,7 @@ Execution steps:
    ✅ No high-impact gaps remaining
    ✅ Ready to proceed to planning phase
 
-   [IF ⚠️ CAN PROCEED:]
+   [IF ⚠️ NEEDS REVIEW:]
    ⚠️ Minor gaps remain (low impact):
       - [Gap 1]: [Why low impact]
       - [Gap 2]: [Why low impact]
@@ -1069,7 +921,7 @@ Execution steps:
    2. Or review spec changes:
       git diff HEAD -- [FEATURE_SPEC]
 
-   [IF ⚠️ CAN PROCEED:]
+   [IF ⚠️ NEEDS REVIEW:]
    Choose one:
    1. Proceed with noted risks:
       /speckit.plan
@@ -1098,7 +950,7 @@ Execution steps:
    IF user says "yes" or "proceed":
      IF status = READY:
        → Suggest: /speckit.plan
-     IF status = CAN PROCEED:
+     IF status = NEEDS REVIEW:
        → Warn about risks, then suggest: /speckit.plan
      IF status = NOT READY:
        → Block: "Cannot proceed - critical gaps remain"

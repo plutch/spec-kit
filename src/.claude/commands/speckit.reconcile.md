@@ -15,7 +15,7 @@ The reconcile command addresses post-implementation gaps that emerge after `/spe
 - Incomplete integration tasks
 - Missing wiring or documentation
 
-Unlike a full specification amendment, reconcile performs **surgical, append-only edits** to maintain specification integrity while closing gaps.
+Unlike a full specification amendment, reconcile performs **surgical edits with version tracking** to maintain specification integrity while closing gaps. Edits can be append-only OR replaced with version history annotations to prevent strikethrough accumulation.
 
 ---
 
@@ -253,27 +253,69 @@ Severity Levels:
 
 #### MANDATORY: The Four Reconciliation Questions
 
-##### ❓ Question 1: Were all surgical edits append-only?
+##### ❓ Question 1: Were all surgical edits append-only OR replaced with version history?
 
 **Action Required**:
 - Review git diff for modified files
-- Verify no deletions occurred (strikethrough is acceptable for versioning)
+- Verify edits use acceptable patterns:
+  ✅ Append-only (new sections added)
+  ✅ Replacement with version annotation (clean updates with version history)
+  ✅ Strikethrough for minor inline edits (limited to <3 versions)
 - Check [NEEDS CLARIFICATION] markers added, not removed
 
 **Expected Evidence Format**:
 ```bash
 Run: git diff specs/[FEATURE_ID]/
 Output: Show additions (+) and modifications
-Verification: Count deletions (-) = 0 OR only strikethrough formatting
+Verification: Check for version annotations OR limited strikethrough
 ```
 
 **Readiness Determination**:
 ```yaml
-IF deletions found (not strikethrough):
-  → ❌ NOT APPEND-ONLY
-IF only additions/strikethrough:
-  → ✅ APPEND-ONLY VERIFIED
+IF silent deletions found (no version annotation):
+  → ❌ NOT ACCEPTABLE (audit trail lost)
+IF excessive strikethrough (>3 versions shown):
+  → ⚠️ NEEDS CONSOLIDATION (use version history instead)
+IF append-only OR version history replacements:
+  → ✅ ACCEPTABLE PATTERN
 ```
+
+---
+
+#### Version History Pattern (Recommended for Multi-Cycle Reconciliation)
+
+**When to Use**:
+- Updating existing sections/requirements across multiple reconciliation cycles
+- Replacing outdated acceptance criteria or assumptions
+- Consolidating accumulated strikethrough (>3 versions)
+
+**Pattern**:
+```markdown
+### [Section Title] (v[N], Updated: YYYY-MM-DD)
+[Current clean content without strikethrough]
+
+**Version History**:
+- v[N] (YYYY-MM-DD): [What changed in this version] (Reconcile Cycle [N])
+- v[N-1] (YYYY-MM-DD): [Previous version changes] (Reconcile Cycle [N-1])
+- v1 (YYYY-MM-DD): [Original content] (Original spec)
+```
+
+**Example**:
+```markdown
+### AC-015: Export Billing Data (v3, Updated: 2025-11-03)
+Users can export billing data to CSV, PDF, Excel, and JSON formats.
+
+**Version History**:
+- v3 (2025-11-03): Added Excel and JSON export (Reconcile Cycle 3)
+- v2 (2025-11-01): Added PDF export (Reconcile Cycle 1)
+- v1 (2025-10-15): CSV export only (Original spec)
+```
+
+**Benefits**:
+- ✅ Clean, readable specs (no accumulated strikethrough)
+- ✅ Full audit trail (version history section)
+- ✅ Clear current state (latest version at top)
+- ✅ Maintainable over time (consolidates history)
 
 ---
 
@@ -377,8 +419,8 @@ Detect and BLOCK these patterns:
 🚨 "All gaps closed" WITHOUT showing which specs were modified
    → Self-correction: "Let me verify files actually changed"
 
-🚨 "Append-only edits" WITH deletions in git diff
-   → Self-correction: "Found deletions - not append-only, need to fix"
+🚨 "Append-only edits" WITH silent deletions (no version annotation)
+   → Self-correction: "Found deletions without version history - need to add version annotation or use strikethrough"
 
 🚨 Claiming "gaps addressed" WITHOUT mapping to Gap Report
    → Self-correction: "Need to map each gap to specific edit"
@@ -402,7 +444,10 @@ IF detected: STOP → Gather evidence → Report honestly
 ##### ✅ **READY for VALIDATING or COMPLETED**
 
 **Criteria (ALL must be met)**:
-- [ ] All surgical edits are append-only (strikethrough OK for versioning)
+- [ ] All surgical edits follow acceptable patterns:
+  - Append-only (new sections added), OR
+  - Replacement with version history annotation, OR
+  - Strikethrough for minor inline edits (<3 versions)
 - [ ] [NEEDS CLARIFICATION] markers ≤ 3
 - [ ] Integration tests added for all 🔴 CRITICAL gaps
 - [ ] Modified files are syntactically valid (markdown, YAML frontmatter)
@@ -412,7 +457,7 @@ IF detected: STOP → Gather evidence → Report honestly
 
 ---
 
-##### ⚠️ **CAN PROCEED** (with risks noted)
+##### ⚠️ **NEEDS REVIEW** (with risks noted)
 
 **Criteria**:
 - Some 🟠 MAJOR gaps lack integration tests (acceptable if documented)
@@ -429,7 +474,8 @@ IF detected: STOP → Gather evidence → Report honestly
 ##### ❌ **NOT READY** (more reconciliation work needed)
 
 **Criteria (ANY triggers NOT READY)**:
-- Surgical edits contain deletions (not append-only)
+- Silent deletions (no version annotation or strikethrough)
+- Excessive strikethrough (>3 versions without consolidation)
 - [NEEDS CLARIFICATION] markers > 3 (constraint violated)
 - 🔴 CRITICAL gaps lack integration tests (blocking)
 - Modified files have syntax errors (invalid YAML, broken markdown)

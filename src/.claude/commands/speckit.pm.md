@@ -74,25 +74,210 @@ Examples:
 - 1/4 checks pass: 25% → BLOCK (insufficient context)
 - 0/4 checks pass: 0% → BLOCK (no context)
 
-Threshold: ≥70% (requires 3 or 4 checks passing)
+Threshold: ≥75% (requires 3 or 4 checks passing)
+NOTE: This is Fix C2 - confidence threshold raised from 70% to 75%
 ```
 
 **Decision Logic**:
 
 ```yaml
-IF confidence < 70% (0-2 checks passed):
+IF confidence < 75% (0-2 checks passed):
   → STOP execution immediately
   → Report which checks failed with specific details
   → Request user to fix issues
   → DO NOT guess or make assumptions
   → Output format: "❌ Low Confidence ([X]%) - [Failed Check Details]"
 
-ELSE IF confidence >= 70% (3-4 checks passed):
-  → High confidence - proceed to output
-  → Output symbol-based status
+ELSE IF confidence >= 75% (3-4 checks passed):
+  → High confidence - proceed to review gate
+  → Gather evidence for review gate
 ```
 
-### Output - Minimal Status (When Confidence >= 70%)
+### PM Agent Review Gate (Evidence-Based Self-Check)
+
+**Purpose**: Validate session context restoration completeness before presenting status.
+
+### Evidence Collection (Mandatory)
+
+❓ **"Were all state files loaded?"**
+Action Required:
+  - Verify file read operations completed
+  - Show ACTUAL file status
+  - Report: Which files loaded successfully
+
+Expected Evidence:
+  ✓ pm_context.md: [LOADED | NOT FOUND | ERROR]
+  ✓ state.json: [LOADED | NOT FOUND | ERROR]
+  ✓ last_session.md: [LOADED | NOT FOUND | ERROR]
+  ✓ next_actions.md: [LOADED | NOT FOUND | ERROR]
+
+❓ **"Does git branch match feature state?"**
+Action Required:
+  - Compare git branch vs state.json branch_name
+  - Show ACTUAL branch names
+  - Report: Match status
+
+Expected Evidence:
+  ✓ Current git branch: [BRANCH_NAME | no-git]
+  ✓ state.json branch_name: [BRANCH_NAME]
+  ✓ Match: [YES | NO | N/A (no git)]
+
+❓ **"Is feature phase consistent with files?"**
+Action Required:
+  - Verify phase matches file evidence
+  - Show ACTUAL phase and file presence
+  - Report: Consistency check
+
+Expected Evidence:
+  ✓ Phase from state.json: [SPECIFYING|CLARIFYING|PLANNING|...]
+  ✓ File evidence:
+    - spec.md exists: [YES/NO]
+    - plan.md exists: [YES/NO]
+    - tasks.md exists: [YES/NO]
+  ✓ Phase-file consistency: [CONSISTENT | INCONSISTENT]
+
+❓ **"Is confidence score above threshold?"**
+Action Required:
+  - Calculate confidence from 4 checks
+  - Show ACTUAL confidence percentage
+  - Report: Confidence score and threshold
+
+Expected Evidence:
+  ✓ CHECK 1 result: [PASS/FAIL]
+  ✓ CHECK 2 result: [PASS/FAIL]
+  ✓ CHECK 3 result: [PASS/FAIL]
+  ✓ CHECK 4 result: [PASS/FAIL]
+  ✓ Confidence: [N]% (threshold: ≥75%)
+
+IF any evidence is MISSING:
+  ❌ CANNOT report status
+  → Gather missing evidence first
+  → Re-run this step with complete evidence
+
+### Hallucination Prevention (7 Red Flags for Session Restoration)
+
+```yaml
+Detect and BLOCK these patterns:
+
+🚨 "Context restored" WITHOUT showing which files were loaded
+   → Self-correction: "Wait, I need to show file load status for each file"
+
+🚨 "High confidence" WITH <75% confidence score
+   → Self-correction: "Confidence below threshold, must report as low confidence"
+
+🚨 "Ready to proceed" WITH branch mismatch
+   → Self-correction: "Branch mismatch is critical, need user to fix"
+
+🚨 "Phase: PLANNING" WITHOUT plan.md existing
+   → Self-correction: "Phase-file inconsistency detected, need to report it"
+
+🚨 Claiming "all state valid" WITHOUT checking file consistency
+   → Self-correction: "Must verify phase matches actual file presence"
+
+🚨 Recommending next action WITH stale state
+   → Self-correction: "State may be stale, need to verify timestamps"
+
+🚨 Skipping critical check failures (branch, phase consistency)
+   → Self-correction: "Critical checks failed, must report and block"
+
+IF detected: STOP → Gather evidence → Report honestly
+```
+
+### Determine Status
+
+✅ **READY (High Confidence ≥75%)**:
+```yaml
+Criteria (ALL must be met):
+  - Confidence ≥75% (3-4 checks passed)
+  - All critical checks passed (no critical failures)
+  - Phase-file consistency verified
+  - Branch match confirmed (or no git repo)
+  - Next action can be determined
+
+IF ALL criteria met:
+  → Present symbol-based status to user
+```
+
+⚠️ **NEEDS REVIEW (Confidence 50-74%)**:
+```yaml
+Criteria:
+  - Confidence 50-74% (2 checks passed)
+  - Some state issues present (branch mismatch, minor inconsistency)
+  - Partial context available
+  - Manual review recommended
+
+IF criteria met:
+  → Present issues to user
+  → Request manual state verification
+  → Do NOT recommend next action automatically
+```
+
+❌ **NOT READY (Low Confidence <50%)**:
+```yaml
+Criteria (ANY triggers NOT READY):
+  - Confidence <50% (0-1 checks passed)
+  - No git repo AND no state.json
+  - Critical file read errors
+  - Phase completely inconsistent with files
+  - No features found
+
+IF NOT READY:
+  → Present failed checks with evidence
+  → Recommend: "Fix state issues before proceeding"
+  → DO NOT guess or assume next action
+  → STOP workflow progression
+```
+
+### Output Format (Present to User - ONLY if evidence provided)
+
+```markdown
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 Session Context Restoration Review
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Status: [✅ READY | ⚠️ NEEDS REVIEW | ❌ NOT READY]
+
+**Confidence**: [N]% (threshold: ≥75%)
+
+**State Files Loaded**:
+  [✅ | ❌] pm_context.md
+  [✅ | ❌] state.json
+  [✅ | ❌] last_session.md
+  [✅ | ❌] next_actions.md
+
+**Git Branch Match**:
+  - Current branch: [BRANCH_NAME | no-git]
+  - state.json branch: [BRANCH_NAME]
+  - Match: [✅ YES | ❌ NO | N/A]
+
+**Phase Consistency**:
+  - Phase: [PHASE]
+  - spec.md exists: [✅ YES | ❌ NO]
+  - plan.md exists: [✅ YES | ❌ NO]
+  - tasks.md exists: [✅ YES | ❌ NO]
+  - Consistency: [✅ CONSISTENT | ❌ INCONSISTENT]
+
+**Confidence Check Results**:
+  [✅ | ❌] CHECK 1: Context files loaded
+  [✅ | ❌] CHECK 2: Git branch match
+  [✅ | ❌] CHECK 3: Feature state consistent
+  [✅ | ❌] CHECK 4: Ready for actionable status
+
+[IF confidence ≥75%]
+Next Action: [Present symbol-based status]
+
+[IF confidence <75%]
+**Issues to Fix**:
+1. [Failed check 1 description]
+   Fix: [Resolution steps]
+2. [Failed check 2 description]
+   Fix: [Resolution steps]
+
+Next Action: Fix issues above before continuing
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### Wave 2 - Output - Minimal Status (When Confidence >= 75%)
 
 **Format** (Symbol-Based, Ultra-Compressed):
 

@@ -239,7 +239,7 @@ You **MUST** consider the user input before proceeding (if not empty).
      → Proceed to Step 6 (present completion report)
    ```
 
-   ⚠️ **CAN PROCEED** (with risks noted):
+   ⚠️ **NEEDS REVIEW** (with risks noted):
    ```yaml
    Criteria:
      - NEEDS CLARIFICATION ≤ 2 (low impact items)
@@ -278,7 +278,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    📐 Planning Review Complete
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-   Status: [✅ READY | ⚠️ CAN PROCEED | ❌ NOT READY]
+   Status: [✅ READY | ⚠️ NEEDS REVIEW | ❌ NOT READY]
 
    Branch: [branch-name]
    Plan: [path/to/plan.md]
@@ -348,7 +348,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    ✅ Requirements coverage ≥90%
    ✅ Ready to proceed to task generation
 
-   [IF ⚠️ CAN PROCEED:]
+   [IF ⚠️ NEEDS REVIEW:]
    ⚠️ Minor gaps detected:
       - [Gap 1]: [Why low impact]
       - [Gap 2]: [Why low impact]
@@ -402,7 +402,7 @@ You **MUST** consider the user input before proceeding (if not empty).
       - Data Model: [path/to/data-model.md]
       - Contracts: [path/to/contracts/]
 
-   [IF ⚠️ CAN PROCEED:]
+   [IF ⚠️ NEEDS REVIEW:]
    Choose one:
    1. Proceed with noted risks:
       /speckit.tasks
@@ -441,7 +441,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    IF user says "yes" or "proceed":
      IF status = READY:
        → Suggest: /speckit.tasks
-     IF status = CAN PROCEED:
+     IF status = NEEDS REVIEW:
        → Warn about risks, then suggest: /speckit.tasks
      IF status = NOT READY:
        → Block: "Cannot proceed - critical gaps remain"

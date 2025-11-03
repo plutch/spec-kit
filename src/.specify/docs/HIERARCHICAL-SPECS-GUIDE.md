@@ -308,7 +308,31 @@ grep -c "^### FR-" specs/000003-billing-console/spec.md
 
 ### Step 2: Create Supplementary Specs
 
-**Manual Only** (per user decision - no auto-suggestions):
+**Proactive Recommendations** (since v2.1.1):
+
+The `/speckit.specify` command automatically detects large specifications and recommends hierarchical specs when:
+- **Spec size > 100KB** (early warning before 150KB pain point), OR
+- **Total requirements > 60** (multi-domain complexity signal)
+
+**Example Auto-Recommendation**:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 RECOMMENDATION: Large Specification Detected
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Spec Size: 128KB (threshold: 100KB)
+Requirements: 72 (threshold: 60)
+
+Consider creating supplementary specs for domain-specific details:
+
+  /speckit.supplement ui-ux "UI/UX implementation details"
+  /speckit.supplement api-contracts "REST API contracts"
+  /speckit.supplement technical "Architecture and infrastructure"
+```
+
+**User Control**: The recommendation is **informational only** - users decide whether to create supplementary specs immediately, defer, or continue with a single spec.md.
+
+**Manual Creation** (anytime):
 
 ```bash
 /speckit.supplement ui-ux "Detailed UI/UX specifications"
