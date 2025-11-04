@@ -244,11 +244,11 @@ For each process and decision point:
    - Is there decision fatigue from too many options?
    - Can modes be consolidated without losing functionality?
 
-4. **Template-Command Coherence**: "Are distribution templates consistent?"
-   - Compare `src/.specify/templates/commands/` with `src/.claude/commands/`
-   - Are self-contained commands truly self-contained (no broken @include references)?
-   - Is template drift between sources and actual commands minimized?
-   - Are template update processes documented?
+4. **Command Coherence**: "Are distribution commands consistent?"
+   - Are self-contained commands in `src/.claude/commands/` truly self-contained (no broken @include references)?
+   - Do commands follow consistent patterns and structures?
+   - Are command update processes documented?
+   - Are all command files properly prefixed with `speckit.`?
 
 5. **Distribution Model Clarity**: "Can users install and use the framework easily?"
    - Is the copy-paste installation clear (no scripts, no CLI)?
@@ -260,7 +260,7 @@ For each process and decision point:
 - Documentation contradicts implementation
 - Complexity isn't justified by value
 - Mode selection requires expert knowledge
-- Template drift creates confusion
+- Commands have inconsistent patterns or structures
 - Distribution model is unclear or error-prone
 - Simplification opportunities exist without risk
 - Redundant commands or steps add friction
@@ -408,7 +408,7 @@ Assess the framework across five dimensions (0-10 scale):
 - Token usage significantly above targets (PM Agent >500 tokens)
 - Error messages without remediation steps
 - Documentation that contradicts implementation
-- Template drift between `src/.specify/templates/commands/` and `src/.claude/commands/`
+- Command inconsistencies across `src/.claude/commands/` files
 - Missing graceful degradation for common failures
 - Simplification opportunities that reduce complexity without losing value
 - Mode selection confusion without clear "When to Use" guidance

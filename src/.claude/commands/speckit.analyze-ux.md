@@ -134,7 +134,37 @@ You **MUST** consider the user input before proceeding (if not empty).
 
    **Overall UX Quality**: Average of the five scores
 
-5. **Identify Top UX Issues**: Scan spec for common problems, prioritized by severity
+5. **Detect UI Specifications** (Optional - when UI-SPEC.md present):
+
+   Check if `${FEATURE_DIR}/UI-SPEC.md` exists:
+   - IF exists → Enable UI Design Quality scoring + Component System Audit (Steps 6-7)
+   - IF not exists → Skip to Step 8 (UX-only mode)
+
+6. **Calculate UI Design Quality Scores** (0-10 scale, ONLY when UI-SPEC.md present):
+
+   **Visual Clarity**: Simplicity, purpose-driven design (8-10: minimal/clear, 0-1: chaotic)
+   **Component Consistency**: Design system adherence, reuse (8-10: excellent tokens, 0-1: no system)
+   **Visual Hierarchy**: Emphasis, scannability (8-10: clear primary/secondary, 0-1: flat)
+   **Responsive Design**: Mobile-first, touch targets ≥44px (8-10: mobile-first, 0-1: not responsive)
+   **Design System Adherence**: Framework usage ≥80% (8-10: high framework usage, 0-1: none)
+
+   **Overall Design Quality**: Average of UX (5) + UI (5) = 10 dimensions
+
+7. **Component System Audit** (ONLY when UI-SPEC.md present):
+
+   **Framework Detection**:
+   Prompt: "Framework and component library? (React/MUI, Angular/Kendo, Vue/Vuetify, Skip)"
+
+   **Audit Process**:
+   a. Load template from `.specify/templates/component-audit-templates/[framework].md`
+   b. Scan UI-SPEC.md for component usage, hardcoded values, custom components
+   c. Categorize: ✅ Used Correctly | ❌ Custom Reimplementation | ⚠️ Inconsistent
+   d. Check design tokens: Colors, Spacing, Typography (% adherence)
+   e. Calculate Component Reuse Score: (Library / Total) × 100%
+   f. Optional MCP: Query component docs if MCP available (e.g., kendo-angular-assistant)
+   g. Generate recommendations with before/after examples
+
+8. **Identify Top UX Issues**: Scan spec for common problems, prioritized by severity
 
    **Severity Classification**:
    - 🔴 CRITICAL: WCAG Level A/AA violations (legal risk), task-blocking issues affecting primary workflows, no mobile optimization for mobile-first app, data loss risks
@@ -196,6 +226,14 @@ You **MUST** consider the user input before proceeding (if not empty).
       - No forgiving input formats
 
    **Limit**: Flag top 5 issues maximum (by severity, then impact)
+
+   **For Each Issue Category**: Apply Socratic validation to verify significance:
+   - "What user goal is blocked or delayed?" (specific task/workflow)
+   - "How many users are affected?" (all, mobile, accessibility, cohort, % estimate)
+   - "What is the cost?" (time per task, abandonment, support, legal risk)
+   - "Why this severity?" (WCAG violation = legal, task-blocking = abandonment)
+
+   **Socratic Filter**: If you cannot answer these 4 questions with specifics, the issue may be a false positive. Only include issues where all 4 questions have clear, evidence-based answers focusing on actual user impact.
 
 6. **Identify Quick Wins**: High-impact, low-effort improvements
 
@@ -521,6 +559,52 @@ Analyzed: [DATE]
 
 ---
 
+## UI Design Quality (When UI-SPEC.md Present)
+
+[Include this section ONLY if UI-SPEC.md was detected]
+
+- **Visual Clarity**: [X]/10 [⚠️ if <7] - [Brief assessment]
+- **Component Consistency**: [X]/10 [⚠️ if <7] - [Brief assessment]
+- **Visual Hierarchy**: [X]/10 [⚠️ if <7] - [Brief assessment]
+- **Responsive Design**: [X]/10 [⚠️ if <7] - [Brief assessment]
+- **Design System Adherence**: [X]/10 [⚠️ if <7] - [Brief assessment]
+
+**Overall UI Quality**: [X.X]/10
+**Overall Design Quality**: [X.X]/10 (average of UX + UI)
+
+---
+
+## Component System Audit (When UI-SPEC.md Present)
+
+[Include this section ONLY if UI-SPEC.md was detected AND user didn't skip]
+
+**Framework Detected**: [React/Angular/Vue] + [Component Library]
+
+**Component Consistency**:
+- ✅ **Used Correctly**: [List library components with counts] = [N] total
+  - Example: Button (12), TextField (8), Card (5) = 25 components
+- ❌ **Custom Reimplementation**: [Components duplicating library functionality]
+  - Example: "BlueButton" duplicates MUI Button, "CustomTable" duplicates MUI Table
+- ⚠️ **Inconsistent Usage**: [Mix of library + custom for same purpose]
+  - Example: Mix of MUI DatePicker (3) and native `<input type="date">` (2)
+
+**Design Token Adherence**:
+- ✅ **Colors**: [X]% using design tokens ([framework theme references])
+- ❌ **Colors**: [Y]% hardcoded ([hex codes]) - should use theme
+- ✅ **Spacing**: [X]% using spacing scale ([framework spacing system])
+- ⚠️ **Typography**: [X]% using type variants ([Y]% custom font sizes)
+
+**Recommendations**:
+1. [Replace custom component X with library component Y]
+   [If MCP available: Include official docs link and validated props]
+2. [Standardize on library component Z]
+3. [Replace hardcoded values with design tokens]
+4. [Additional recommendations...]
+
+**Component Reuse Score**: [X]% ([Excellent ≥80% | Good 60-79% | Needs Improvement <60%])
+
+---
+
 ## UX Recommendations (Prioritized by Impact)
 
 ### 🔴 CRITICAL: [Dimension] Issues (Score: [X]/10)
@@ -532,6 +616,12 @@ Analyzed: [DATE]
 - [Specific issue from spec.md with section reference]
 - [Specific issue from spec.md with section reference]
 
+**Socratic Validation**:
+- "What user goal is blocked or delayed?" → [Specific task/workflow affected by these issues]
+- "How many users are affected?" → [All users, mobile users, accessibility users, specific cohort, % estimate]
+- "What is the cost of this issue?" → [Time waste per task, abandonment rate, support costs, legal risk (WCAG)]
+- "Why CRITICAL severity?" → [WCAG Level A/AA violation = legal risk, OR task-blocking = workflow failure]
+
 **Recommended Fix**:
 1. [Specific, actionable step]
 2. [Specific, actionable step]
@@ -541,6 +631,8 @@ Analyzed: [DATE]
 [Concrete example or pattern reference]
 
 **Impact**: +[N]% [dimension] score ([current]/10 → [target]/10)
+**Priority Rationale**: [Frequency × Impact × User Segment Size]
+**Effort Estimate**: [High (>5 days) | Medium (2-5 days) | Low (<2 days)]
 
 ---
 

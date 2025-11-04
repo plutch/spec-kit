@@ -57,6 +57,77 @@ Parse JSON and extract:
   - blockers: Current blockers
 ```
 
+### 3.5 Check Quality Scores (Optional Enhancement)
+
+```yaml
+Check: .specify/memory/features/[FEATURE_DIR]/quality.json
+
+IF file exists:
+  Parse quality scores:
+    - overall_quality: Overall score (0-10)
+    - last_analysis_date: When analyze was last run
+    - last_analysis_command: analyze or analyze-ux
+    - critical_issues: Count of 🔴 CRITICAL issues
+    - major_issues: Count of 🟠 MAJOR issues
+
+  IF overall_quality < 7:
+    → Flag: Quality review recommended before proceeding
+
+  IF critical_issues > 0:
+    → Flag: CRITICAL issues block workflow progression
+
+  Store for recommendation logic
+ELSE:
+  → quality.json not found (no analyze run yet)
+  → May recommend analyze as pre-flight check
+```
+
+### 3.6 Check Risk Level (Optional Enhancement)
+
+```yaml
+Check: specs/[FEATURE]/spec.md for Risk Assessment section
+
+IF Risk Assessment exists:
+  Parse risk score (0-12 scale):
+    - Calculate: Data Sensitivity + Access Control + External Integration +
+                 Performance + Complexity + Business Impact
+
+  Classification:
+    - 🔴 HIGH (8-12): Extra scrutiny required
+    - 🟠 MEDIUM (4-7): Standard workflow
+    - 🟢 LOW (0-3): Fast-track eligible
+
+  Store risk level for recommendation logic
+ELSE:
+  → Risk Assessment not found (may be older spec format)
+  → Proceed with standard workflow
+```
+
+### 3.7 Detect Feature Type (Context-Aware Detection)
+
+```yaml
+Detect feature characteristics:
+
+UI-Heavy Feature:
+  Check: specs/[FEATURE]/UI-SPEC.md exists
+  → IF exists AND quality.json missing OR last_analysis_command != "analyze-ux":
+      → Recommend analyze-ux before planning
+
+Hierarchical Specs:
+  Check: specs/[FEATURE]/ for supplementary specs (API-SPEC.md, UI-SPEC.md, etc.)
+  → IF supplementary specs exist:
+      → Check last modification time vs. last validation
+      → IF modified recently AND not validated:
+          → Recommend validate-hierarchy before proceeding
+
+Gap Reports:
+  Check: .specify/memory/features/[FEATURE_DIR]/gaps.json
+  → IF exists AND gaps_count > 0:
+      → Recommend reconcile to close gaps
+
+Store feature type flags for recommendation logic
+```
+
 ### 4. Analyze Prerequisites
 
 Based on phase, check required files and gates:
@@ -130,20 +201,82 @@ COMPLETED:
 
 ### 5. Generate Recommendation
 
-**Output Format** (Symbol-Based):
+**Output Format** (Symbol-Based with Quality/Risk Context):
 
 ```
 📍 [FEATURE_NAME]
 🔹 Phase: [PHASE] ([PROGRESS]%)
+[IF quality.json exists] 📊 Quality: [X.X]/10 [⚠️ if <7] [[LAST_ANALYSIS_DATE]]
+[IF Risk Assessment exists] 🎯 Risk: [🔴 HIGH | 🟠 MEDIUM | 🟢 LOW] ([SCORE]/12)
 
 Prerequisites:
   ✅ [COMPLETED_ITEM]
   ❌ [MISSING_ITEM]
 
-🎯 Next: /speckit.[COMMAND]
+[IF critical_issues > 0]
+🚨 **BLOCKED**: [N] CRITICAL issues must be resolved before proceeding
+   Fix: Run /speckit.clarify or address issues in spec.md
+
+[IF overall_quality < 7 AND phase approaching planning/implementing]
+⚠️ **Quality Warning**: Overall quality [X.X]/10 - recommend quality review
+   Suggestion: Run /speckit.analyze or /speckit.analyze-ux before proceeding
+
+🎯 Next: /speckit.[COMMAND] [IF risk HIGH: + quality gate recommendations]
 💡 Reason: [WHY_THIS_COMMAND]
 
+[IF UI-SPEC.md exists AND analyze-ux not run]
+💡 Suggestion: Run /speckit.analyze-ux for UI quality baseline (feature has UI-SPEC.md)
+
+[IF supplementary specs modified AND not validated]
+⚠️ Hierarchical specs modified - run /speckit.validate-hierarchy before proceeding
+
 [OPTIONAL_NOTES]
+```
+
+### 5.5 Pre-Flight Quality Gate (Before Phase Transitions)
+
+```yaml
+Quality-Gated Phase Transitions:
+
+CLARIFYING → PLANNING:
+  Check quality baseline:
+    IF analyze not run (no quality.json):
+      → Recommend: "Run /speckit.analyze first for quality baseline"
+      → Note: "Optional but recommended - identifies issues early"
+
+  IF risk level HIGH (8-12):
+    → Recommend: "Run /speckit.clarify --edge-cases (high-risk feature)"
+    → Note: "High-risk features require extra scrutiny for edge cases"
+
+  IF critical_issues > 0:
+    → BLOCK: "Cannot proceed - [N] CRITICAL issues must be resolved"
+    → Fix: "Address critical issues before planning"
+
+PLANNING → TASKING:
+  Check plan quality:
+    IF UI-SPEC.md exists AND analyze-ux not run:
+      → Recommend: "Run /speckit.analyze-ux for UI quality check"
+      → Note: "UI-heavy feature detected - validate design quality"
+
+  IF risk level HIGH (8-12):
+    → Note: "High-risk feature - ensure test strategy covers all risks"
+
+TASKING → IMPLEMENTING:
+  Check implementation readiness:
+    IF overall_quality < 7:
+      → Warn: "Quality score below 7/10 - implementation may be challenging"
+      → Suggest: "Consider running /speckit.clarify to resolve ambiguities"
+
+IMPLEMENTING → RECONCILING:
+  Check completeness:
+    IF gaps.json exists with gaps_count > 0:
+      → Automatic: Proceed to reconcile (expected workflow)
+
+RECONCILING → VALIDATING:
+  Check hierarchy integrity:
+    IF supplementary specs exist AND modified AND not validated:
+      → BLOCK: "Must run /speckit.validate-hierarchy before validation"
+      → Fix: "Validate hierarchical spec integrity (strict mode)"
 ```
 
 ### 6. Next Action Review Gate (Evidence-Based Self-Check)
@@ -314,62 +447,120 @@ Next Action: [Run recommended command OR Fix blockers]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-### 7. Recommendation Logic
+### 7. Recommendation Logic (Enhanced with Quality & Risk)
 
 ```yaml
 IF phase == "SPECIFYING":
   IF spec.md exists:
-    → Recommend: /speckit.clarify
-    → Reason: "Spec created, resolve ambiguities"
+    # Quality Pre-Flight Check
+    IF quality.json NOT exists:
+      → Suggest: "Optional: Run /speckit.analyze for early quality check"
+      → Primary: /speckit.clarify
+      → Reason: "Spec created, resolve ambiguities"
+    ELSE:
+      → Recommend: /speckit.clarify
+      → Reason: "Spec created, resolve ambiguities"
   ELSE:
     → Error: "Spec missing - state inconsistent"
 
 ELSE IF phase == "CLARIFYING":
   Count [NEEDS CLARIFICATION] markers in spec.md
-  IF markers > 0:
+
+  # Check for quality blockers
+  IF critical_issues > 0:
+    → BLOCK: "Cannot proceed - [N] CRITICAL issues detected"
+    → Fix: "Resolve critical issues before planning"
+    → Next: /speckit.clarify (to address issues)
+
+  ELSE IF markers > 0:
     → Recommend: /speckit.clarify --continue
     → Reason: "[N] clarifications still needed"
+
   ELSE IF clarifications_count == 0:
     → Recommend: /speckit.clarify
     → Reason: "No clarifications recorded yet"
+
   ELSE:
-    → Recommend: /speckit.plan
-    → Reason: "Clarifications complete, ready for planning"
+    # Quality-gated transition to PLANNING
+    IF quality.json NOT exists:
+      → Recommend: /speckit.analyze
+      → Reason: "Run quality analysis before planning (establishes baseline)"
+      → Note: "Optional but recommended - identifies issues early"
+
+    ELSE IF overall_quality < 7:
+      → Warn: "Quality score [X.X]/10 below threshold"
+      → Recommend: /speckit.clarify --expert OR /speckit.plan (user choice)
+      → Reason: "Low quality may cause planning difficulties"
+
+    ELSE IF risk_level == HIGH:
+      → Recommend: /speckit.clarify --edge-cases
+      → Reason: "High-risk feature ([SCORE]/12) - validate edge cases first"
+      → Note: "After edge case validation, proceed to /speckit.plan"
+
+    ELSE:
+      → Recommend: /speckit.plan
+      → Reason: "Clarifications complete, ready for planning"
 
 ELSE IF phase == "PLANNING":
   IF plan.md missing:
-    → Recommend: /speckit.plan
-    → Reason: "Create technical implementation plan"
+    # Check if UI quality analysis needed
+    IF UI-SPEC.md exists AND (quality.json missing OR last_analysis_command != "analyze-ux"):
+      → Recommend: /speckit.analyze-ux
+      → Reason: "UI-heavy feature detected - validate design quality before planning"
+      → Note: "After UI analysis, run /speckit.plan"
+    ELSE:
+      → Recommend: /speckit.plan
+      → Reason: "Create technical implementation plan"
+
   ELSE IF gates_failed not empty:
     → Report blockers
     → Recommend: Fix issues then re-run /speckit.plan
+
   ELSE IF plan.md exists AND gates passed:
-    → Recommend: /speckit.tasks
-    → Reason: "Plan validated, generate task breakdown"
+    # Quality-gated transition to TASKING
+    IF risk_level == HIGH AND overall_quality < 8:
+      → Warn: "High-risk feature with quality score [X.X]/10"
+      → Recommend: /speckit.clarify --expert (strengthen spec) OR /speckit.tasks (proceed)
+      → Reason: "High-risk features benefit from comprehensive review"
+    ELSE:
+      → Recommend: /speckit.tasks
+      → Reason: "Plan validated, generate task breakdown"
 
 ELSE IF phase == "TASKING":
   IF tasks.md missing:
     → Recommend: /speckit.tasks
     → Reason: "Generate executable task list"
   ELSE:
-    → Recommend: /speckit.implement
-    → Reason: "Tasks defined, begin implementation"
+    # Quality-gated transition to IMPLEMENTING
+    IF overall_quality < 7:
+      → Warn: "Quality score [X.X]/10 - implementation may be challenging"
+      → Suggest: "Consider /speckit.clarify to resolve ambiguities first"
+      → Primary: /speckit.implement
+      → Reason: "Tasks defined, begin implementation (with caution)"
+    ELSE:
+      → Recommend: /speckit.implement
+      → Reason: "Tasks defined, begin implementation"
 
 ELSE IF phase == "IMPLEMENTING":
   → Check task completion
   → IF tasks complete:
-      → Recommend: /speckit.reconcile
-      → Reason: "Implementation done - identify and close gaps"
+      # Check for hierarchical specs before reconcile
+      IF supplementary specs exist AND modified AND not validated:
+        → Recommend: /speckit.validate-hierarchy
+        → Reason: "Validate hierarchical specs before reconciliation"
+      ELSE:
+        → Recommend: /speckit.reconcile
+        → Reason: "Implementation done - identify and close gaps"
   → ELSE:
       → Recommend: Continue implementation
       → Note: "Check task progress in tasks.md"
 
 ELSE IF phase == "RECONCILING":
   → Check for supplementary specs
-  → IF supplementary specs exist AND modified:
+  → IF supplementary specs exist AND modified AND not validated:
       → Recommend: /speckit.validate-hierarchy
       → Reason: "Validate updated hierarchical specs (strict mode)"
-  → ELSE IF gaps remain:
+  → ELSE IF gaps remain (gaps.json exists with gaps_count > 0):
       → Recommend: Continue /speckit.reconcile
       → Note: "Address remaining gaps from gap report"
   → ELSE:
@@ -379,11 +570,13 @@ ELSE IF phase == "RECONCILING":
 ELSE IF phase == "VALIDATING":
   → Check for hierarchical specs
   → IF supplementary specs exist AND not validated:
-      → Recommend: /speckit.validate-hierarchy
+      → BLOCK: "Must run /speckit.validate-hierarchy first"
       → Reason: "Validate hierarchical spec integrity (blocks workflow)"
   → ELSE:
       → Recommend: Fix test failures or create PR
       → Note: "Run tests to verify functionality"
+      → IF risk_level == HIGH:
+          → Note: "High-risk feature - ensure comprehensive test coverage"
 
 ELSE IF phase == "COMPLETED":
   → Congratulate user
@@ -443,45 +636,102 @@ Prerequisites:
 Run: /speckit.clarify
 ```
 
-### Example 2: Ready for Planning
+### Example 2: Ready for Planning (with Quality Check Recommendation)
 
 ```
 User: /speckit.next
 
 📍 000042-payment-gateway
 🔹 Phase: CLARIFYING (30%)
+🎯 Risk: 🔴 HIGH (9/12)
 
 Prerequisites:
   ✅ Spec created
   ✅ All clarifications resolved (5 added)
   ✅ No ambiguities remain
+  ❌ Quality baseline not established
 
-🎯 Next: /speckit.plan
-💡 Reason: Spec is clear, ready for technical planning
+🎯 Next: /speckit.analyze
+💡 Reason: Run quality analysis before planning (establishes baseline)
 
-Run: /speckit.plan [tech stack details]
+Note: High-risk feature detected. Quality analysis recommended to identify issues early.
+
+After analysis, proceed to: /speckit.plan [tech stack details]
 ```
 
-### Example 3: Reconciling Phase
+### Example 3: UI-Heavy Feature Detection
+
+```
+User: /speckit.next
+
+📍 000015-dashboard-redesign
+🔹 Phase: PLANNING (15%)
+📊 Quality: No baseline (analyze not run)
+
+Prerequisites:
+  ✅ Spec created
+  ✅ Clarifications complete
+  ✅ UI-SPEC.md detected
+  ❌ UI quality analysis not performed
+
+🎯 Next: /speckit.analyze-ux
+💡 Reason: UI-heavy feature detected - validate design quality before planning
+
+Note: Feature contains UI-SPEC.md. Running analyze-ux will check:
+  - UI Design Quality (5 dimensions)
+  - Component System Audit (library usage, design tokens)
+  - UX scoring (usability, accessibility, efficiency)
+
+After UI analysis, proceed to: /speckit.plan
+```
+
+### Example 4: Reconciling Phase with Hierarchical Specs
 
 ```
 User: /speckit.next
 
 📍 000003-billing-console
 🔹 Phase: RECONCILING (92%)
+📊 Quality: 8.2/10 (2025-01-15)
 
 Prerequisites:
   ✅ Implementation complete
   ✅ Supplementary specs exist (UI-SPEC.md, API-SPEC.md)
   ⚠️ Gaps identified (missing navigation)
+  ⚠️ Hierarchical specs modified (not validated)
 
 🎯 Next: /speckit.validate-hierarchy
 💡 Reason: Supplementary specs modified - validate hierarchy (strict mode)
 
-After validation, continue to testing.
+After validation, continue gap closure with: /speckit.reconcile
 ```
 
-### Example 4: Blocker Detected
+### Example 5: Critical Issues Blocking Workflow
+
+```
+User: /speckit.next
+
+📍 000008-user-authentication
+🔹 Phase: CLARIFYING (35%)
+📊 Quality: 5.8/10 (2025-01-14)
+🎯 Risk: 🔴 HIGH (10/12)
+
+🚨 **BLOCKED**: 3 CRITICAL issues must be resolved before proceeding
+   Fix: Run /speckit.clarify or address issues in spec.md
+
+Critical Issues:
+1. 🔴 Missing password storage security spec (FR-003)
+2. 🔴 No session timeout defined (FR-008)
+3. 🔴 GDPR compliance gap - data retention not specified
+
+⚠️ High-risk feature with critical security/compliance gaps.
+
+Next: /speckit.clarify (address critical issues)
+
+Cannot proceed to planning until critical issues resolved.
+```
+
+### Example 6: Constitution Gate Blocker
 
 ```
 User: /speckit.next
@@ -502,7 +752,7 @@ User: /speckit.next
 Fix issues, then re-run: /speckit.plan
 ```
 
-### Example 5: No Active Feature
+### Example 7: No Active Feature
 
 ```
 User: /speckit.next
@@ -516,16 +766,16 @@ Or switch to existing feature branch:
 git checkout feature/000001-auth-system
 ```
 
-### Example 6: Multiple Features
+### Example 8: Multiple Features
 
 ```
 User: /speckit.next
 
 🔍 Multiple features found:
 
-1. 000001-auth-system (PLANNING - 45%)
-2. 000003-payment-flow (IMPLEMENTING - 75%)
-3. 000007-dashboard (CLARIFYING - 20%)
+1. 000001-auth-system (PLANNING - 45%) [Quality: 7.5/10 | Risk: 🟠 MEDIUM]
+2. 000003-payment-flow (IMPLEMENTING - 75%) [Quality: 8.1/10 | Risk: 🔴 HIGH]
+3. 000007-dashboard (CLARIFYING - 20%) [Quality: Not analyzed | Risk: 🟢 LOW]
 
 Which feature? (type number or feature name):
 ```
@@ -586,26 +836,41 @@ Did you switch branches? Update state:
 
 ## Token Economy
 
-**Target**: 200-400 tokens per invocation
+**Target**: 400-800 tokens per invocation (increased from v2.1 due to quality/risk checks)
+
+**v2.2 Enhancement Impact**:
+- Quality score checks: +100-150 tokens
+- Risk level detection: +50-100 tokens
+- Feature type detection: +100-150 tokens
+- Enhanced recommendation logic: +100-200 tokens
+- Total increase: ~400-600 tokens (justified by value)
 
 **Optimizations**:
 - Symbol-based output (10x compression)
 - Parallel state loading
 - Skip verbose explanations
 - Direct actionable recommendations
+- Conditional quality checks (only when quality.json exists)
+- Conditional risk checks (only when Risk Assessment present)
 
 ## Success Criteria
 
 - ✅ Correct next command 100% of time
 - ✅ Prerequisites accurately validated
 - ✅ Blockers clearly identified with fixes
-- ✅ <400 tokens per invocation
+- ✅ Quality-driven recommendations (when quality.json exists)
+- ✅ Risk-aware recommendations (when Risk Assessment present)
+- ✅ Context-aware feature type detection (UI, hierarchical specs, gaps)
+- ✅ <800 tokens per invocation (with quality/risk checks)
 - ✅ Graceful handling of edge cases
 - ✅ Clear, actionable output
 
 ---
 
+**Command Version**: 2.2.0
+**Last Updated**: 2025-01-16
+**Compatibility**: SpecKit v2.2+
 **Implementation**: Phase 2.3
-**Dependencies**: Phase 1.2 (State Management)
-**Token Budget**: 200-400 tokens
-**Pattern**: Fast recommendation with minimal cognitive load
+**Dependencies**: Phase 1.2 (State Management), Phase 2.2 (Quality Integration)
+**Token Budget**: 400-800 tokens (200-400 base + 400-600 for quality/risk)
+**Pattern**: Smart recommendation with quality and risk awareness

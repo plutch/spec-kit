@@ -146,9 +146,34 @@ You **MUST** consider the user input before proceeding (if not empty).
 
    **Limit**: Flag top 5 issues maximum (by severity, then impact)
 
-5. **Generate Analysis Report**: Create concise, actionable output
+   **For Each Issue**: Apply Socratic validation to verify significance:
+   - "What user goal is blocked or delayed?" (specific workflow/task)
+   - "How many users are affected?" (all, cohort, percentage estimate)
+   - "What is the cost?" (time, revenue, support, compliance, data loss)
+   - "Why this severity?" (justify by frequency × impact × criticality)
 
-6. **Analysis Review Gate (Evidence-Based Self-Check)**
+   **Socratic Filter**: If you cannot answer these 4 questions with specifics, the issue may be a false positive. Only include issues where all 4 questions have clear, evidence-based answers.
+
+5. **Identify Quick Wins**: After flagging issues, identify 3-5 high-impact, low-effort improvements
+
+   **Quick Win Criteria**:
+   - **High Impact**: Measurably improves quality (reduces errors, prevents data loss, improves clarity)
+   - **Low Effort**: Can be fixed in 1-2 days (simple additions, clarifications, or refinements)
+   - **Actionable**: Specific change with clear location in spec
+   - **Independent**: Can be implemented without blocking on other changes
+
+   **Examples of Quick Wins**:
+   - Adding missing error handling for common failure modes (FR-XXX)
+   - Clarifying vague acceptance criteria with specific values
+   - Adding Given/When/Then structure to abstract scenarios
+   - Defining timeout values for external API calls
+   - Adding edge case specifications (empty, null, max values)
+
+   **Quick Wins ≠ Low Severity Issues**: A quick win can address a CRITICAL issue if the fix is simple. Prioritize by impact/effort ratio, not just severity.
+
+6. **Generate Analysis Report**: Create concise, actionable output
+
+7. **Analysis Review Gate (Evidence-Based Self-Check)**
 
 **Purpose**: Validate analysis completeness before presenting results.
 
@@ -355,12 +380,21 @@ Analyzed: [DATE]
 
 [Description of the problem]
 
+**Socratic Validation**:
+- "What user goal is blocked or delayed?" → [Specific goal/workflow affected]
+- "How many users are affected?" → [All users, power users, specific cohort, % estimate]
+- "What is the cost of this issue?" → [Time waste, revenue loss, support cost, compliance risk, data loss]
+- "Why this severity level?" → [Justification: frequency × impact, criticality to business]
+
 **Impact**:
 - **User**: [How this affects end users]
 - **Technical**: [What could break]
 - **Business**: [Cost/compliance/reputation risk]
 
 **Recommendation**: [Specific, actionable fix]
+
+**Priority Rationale**: [Frequency × Impact - why this ranks in top 5]
+**Effort Estimate**: [High (>5 days) | Medium (2-5 days) | Low (<2 days)]
 
 ---
 
@@ -371,6 +405,37 @@ Analyzed: [DATE]
 ---
 
 [... Repeat for top 5 issues ...]
+
+---
+
+## Quick Wins (High Impact, Low Effort)
+
+**Purpose**: Identify 3-5 improvements that provide significant value with minimal implementation effort. These are psychological momentum-builders and practical starting points.
+
+### 1. **[Quick Win Title]**
+- **Current State**: [What's wrong/missing now?]
+- **Simple Fix**: [What's the specific change?]
+- **Impact**: [Quantified benefit - reduces X by Y%, prevents Z, improves W]
+- **Effort**: [1-2 days] [Why it's quick]
+- **Location**: [Section: FR-XXX or specific requirement]
+
+### 2. **[Quick Win Title]**
+- **Current State**: [...]
+- **Simple Fix**: [...]
+- **Impact**: [...]
+- **Effort**: [1-2 days] [Why it's quick]
+- **Location**: [...]
+
+### 3. **[Quick Win Title]**
+- **Current State**: [...]
+- **Simple Fix**: [...]
+- **Impact**: [...]
+- **Effort**: [1-2 days] [Why it's quick]
+- **Location**: [...]
+
+[Include 4-5 quick wins total if identified]
+
+**Quick Wins Rationale**: These improvements are prioritized by impact/effort ratio. Completing quick wins builds team momentum and demonstrates immediate value while working on larger issues.
 
 ---
 

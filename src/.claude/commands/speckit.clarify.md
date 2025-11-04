@@ -207,6 +207,12 @@ ELSE:
 
    [Specific description of the gap or problem]
 
+   **Socratic Validation** (Evidence-Based Verification):
+   - "What user goal is blocked or delayed?" → [Specific workflow/task affected by this gap]
+   - "How many users are affected?" → [All users, specific cohort, % estimate with rationale]
+   - "What is the cost of this issue?" → [Time waste, revenue impact, support cost, compliance risk, data loss]
+   - "Why this severity level?" → [Justification by frequency × impact × criticality to business]
+
    **Why This Matters**:
    - **User Impact**: [How does this affect end users?]
    - **Technical Risk**: [What could break or go wrong?]
@@ -226,11 +232,59 @@ ELSE:
    **Your choice**: _[Wait for user response]_
    ```
 
+   **Socratic Filter for Expert Questions**: Before including any finding, verify all 4 Socratic questions can be answered with specific, evidence-based responses. If any question cannot be answered concretely, the finding may be a false positive or low-impact issue.
+
 6. **Wait for User Responses**: Collect answers for all questions
 
-7. **Update Spec**: Apply answers and improvements to spec.md, documenting expert review findings
+7. **Identify Cross-Lens Conflicts**: After collecting answers, detect tensions where recommendations from different lenses conflict
 
-8. **Output Expert Review Summary**:
+   **Purpose**: Reveal tradeoffs where optimizing for one quality dimension may negatively impact another, requiring conscious decision-making.
+
+   **Conflict Detection Logic**:
+   - Compare recommendations across all 4 lenses
+   - Identify where Lens A suggests approach X, but Lens B suggests contradictory approach Y
+   - Common conflict patterns:
+     - Requirements clarity vs. Architecture simplicity (detailed specs vs. emergent design)
+     - UX efficiency vs. Architecture performance (fewer clicks vs. system load)
+     - Production resilience vs. UX simplicity (error handling complexity vs. user confusion)
+     - Architecture patterns vs. Requirements constraints (ideal design vs. business rules)
+
+   **Output Format for Each Conflict**:
+   ```markdown
+   ## Cross-Lens Conflict #[N]: [Descriptive Title]
+
+   **Lens A** ([Expert Name] - [Focus Area]): "[Recommendation from Lens A]"
+   **Lens B** ([Expert Name] - [Focus Area]): "[Conflicting recommendation from Lens B]"
+
+   **Tension**: [What's the fundamental conflict? What cannot be optimized simultaneously?]
+   **Affected**: [Which workflows/components/requirements are impacted?]
+
+   **Tradeoff Analysis**:
+   - **Lens A Perspective**: [Benefits + costs of this approach]
+   - **Lens B Perspective**: [Benefits + costs of alternative approach]
+
+   **Resolution Options**:
+   - **Option A**: [Compromise approach that balances both]
+     - Pros: [Advantages]
+     - Cons: [Disadvantages]
+   - **Option B**: [Alternative approach]
+     - Pros: [Advantages]
+     - Cons: [Disadvantages]
+   - **Option C**: [Another alternative if applicable]
+     - Pros: [Advantages]
+     - Cons: [Disadvantages]
+
+   **Recommended Resolution**: Option [X]
+   **Rationale**: [Why this balances both perspectives best, with evidence]
+
+   **Question for User**: Which resolution do you prefer? [A/B/C/Custom]
+   ```
+
+   **Note**: Not all expert reviews will have cross-lens conflicts. Only document when genuine tensions exist between expert recommendations. Typical range: 0-3 conflicts per feature.
+
+8. **Update Spec**: Apply answers and improvements to spec.md, documenting expert review findings AND cross-lens conflict resolutions
+
+9. **Output Expert Review Summary**:
    ```markdown
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    🔍 Expert Review Complete
@@ -244,6 +298,7 @@ ELSE:
 
    Findings: [N] issues ([X] critical, [Y] major, [Z] minor)
    Questions Asked: [N]
+   Cross-Lens Conflicts Identified: [M] (requiring tradeoff decisions)
    Spec Updates: [N] sections improved
 
    Quality Impact:
@@ -251,6 +306,8 @@ ELSE:
    - Design Simplification: +[Y]% improvement
    - UX Quality: +[Z]% improvement (WCAG compliance assessed)
    - Production Readiness: +[W]% improvement
+
+   Tradeoff Decisions Made: [M] cross-lens conflicts resolved
 
    Status: ✅ Ready for Planning
    ```
