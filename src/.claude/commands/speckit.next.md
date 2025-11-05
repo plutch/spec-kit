@@ -493,9 +493,11 @@ ELSE IF phase == "CLARIFYING":
       → Reason: "Low quality may cause planning difficulties"
 
     ELSE IF risk_level == HIGH:
-      → Recommend: /speckit.clarify --edge-cases
-      → Reason: "High-risk feature ([SCORE]/12) - validate edge cases first"
-      → Note: "After edge case validation, proceed to /speckit.plan"
+      → Recommend: /speckit.clarify --deep
+      → Reason: "High-risk feature ([SCORE]/12) - comprehensive expert review recommended"
+      → Note: "Expert mode includes cross-lens conflict detection (v2.2.0)"
+      → Alternative: "Or /speckit.clarify --edge-cases for focused edge case validation only"
+      → After expert review: "Proceed to /speckit.plan"
 
     ELSE:
       → Recommend: /speckit.plan
@@ -679,7 +681,7 @@ Prerequisites:
 
 Note: Feature contains UI-SPEC.md. Running analyze-ux will check:
   - UI Design Quality (5 dimensions)
-  - Component System Audit (library usage, design tokens)
+  - Component System Audit (Angular/Kendo library usage, design tokens, reuse score)
   - UX scoring (usability, accessibility, efficiency)
 
 After UI analysis, proceed to: /speckit.plan

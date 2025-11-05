@@ -153,7 +153,21 @@ You **MUST** consider the user input before proceeding (if not empty).
 7. **Component System Audit** (ONLY when UI-SPEC.md present):
 
    **Framework Detection**:
-   Prompt: "Framework and component library? (React/MUI, Angular/Kendo, Vue/Vuetify, Skip)"
+   Default: Angular + Kendo UI (project standard)
+
+   Prompt: "Component library framework? [Angular/Kendo] (or type to change)"
+
+   Available alternatives (for future framework changes):
+   - React + Material-UI (MUI)
+   - React + Chakra UI
+   - Angular + Angular Material
+   - Vue + Vuetify
+   - Generic (custom framework)
+   - Skip (no component audit)
+
+   If user accepts default (Enter): Use Angular/Kendo template
+   If user types alternative: Use specified framework template
+   If user types "skip": Skip component audit
 
    **Audit Process**:
    a. Load template from `.specify/templates/component-audit-templates/[framework].md`

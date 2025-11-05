@@ -299,6 +299,140 @@ Note: After edge case validation, run /speckit.analyze to establish quality base
 
 **Net Impact**: Cost increase 15-25%, but savings from prevented issues: 200-400% ROI.
 
+### Using v2.2.0 Features
+
+#### Socratic Validation (Automatic)
+Every quality analysis command now validates findings with evidence:
+
+```bash
+/speckit.analyze
+# Each finding includes:
+# - What user goal is blocked?
+# - How many users affected?
+# - What is the cost?
+# - Why this severity level?
+```
+
+**Benefit**: 40-60% reduction in false positives
+
+---
+
+#### Quick Wins (Automatic)
+High-impact, low-effort improvements identified automatically:
+
+```bash
+/speckit.analyze
+# Output includes "Quick Wins" section with:
+# - 3-5 improvements (1-2 days effort each)
+# - Impact estimates
+# - Location references
+# - Effort estimates
+```
+
+**Use when**: Prioritizing improvements by ROI
+
+---
+
+#### Component System Audit (When UI-SPEC.md Present)
+Framework-specific component library analysis:
+
+```bash
+/speckit.analyze-ux
+# Detects UI-SPEC.md
+# Default: Angular + Kendo UI
+# Analyzes:
+# - Component consistency (library vs custom)
+# - Design token adherence (theme vs hardcoded)
+# - Component reuse score
+# - Framework best practices
+```
+
+**Supported**: Angular/Kendo (default), React/MUI, React/Chakra, Angular/Material, Vue/Vuetify, Generic
+
+---
+
+#### Cross-Lens Conflicts (Expert Mode)
+Detects contradictions between expert recommendations:
+
+```bash
+/speckit.clarify --deep
+# After 4-lens review, identifies conflicts like:
+# - Requirements clarity vs Architecture simplicity
+# - UX efficiency vs Architecture performance
+# - Provides resolution options with recommendations
+```
+
+**Use when**: Complex features with competing concerns
+
+---
+
+#### Smart Recommendations (Quality & Risk Aware)
+Workflow navigator with intelligent next-step suggestions:
+
+```bash
+/speckit.next
+# Checks:
+# - Quality scores (quality.json)
+# - Risk levels (spec.md Risk Assessment)
+# - Feature type (UI-SPEC.md, hierarchical specs)
+# - Blocks/warns/suggests based on thresholds
+```
+
+**Benefit**: Prevents proceeding with low-quality specs
+
+---
+
+### Customizing Component Audit Templates
+
+Component audit templates are located in `.specify/templates/component-audit-templates/`.
+
+**Available Templates**:
+- `angular-kendo.md` (Default - Angular + Kendo UI with MCP integration)
+- `react-mui.md` (React + Material-UI)
+- `react-chakra.md` (React + Chakra UI)
+- `angular-material.md` (Angular + Angular Material)
+- `vue-vuetify.md` (Vue + Vuetify)
+- `generic.md` (Framework-agnostic fallback)
+
+**To Add a New Framework**:
+
+1. Copy `generic.md` to `[framework]-[library].md`
+   ```bash
+   cd .specify/templates/component-audit-templates/
+   cp generic.md my-framework-library.md
+   ```
+
+2. Customize the template:
+   - Update **Common Components Checklist** with library-specific components
+   - Update **Design Token Checks** with framework theme system references
+   - Update **Audit Questions** with framework-specific validation
+   - Update **Component Reuse Calculation** if needed
+
+3. Update `README.md` in the templates directory to list your new template
+
+4. Run `/speckit.analyze-ux` and specify your custom framework when prompted
+
+**Example Customization** (for a custom Angular library):
+```markdown
+## Common Components Checklist
+
+### Buttons & Actions
+- ✅ MyButton (primary, secondary, tertiary variants)
+- ✅ MyIconButton
+- ✅ MyActionBar
+
+### Design Token Checks
+
+**Theme References** (CORRECT):
+- `theme.colors.primary`
+- `theme.spacing.md`
+
+**Hardcoded Values** (INCORRECT):
+- `#3f51b5`, `padding: 16px`
+```
+
+See `.specify/templates/component-audit-templates/README.md` for detailed template structure.
+
 ---
 
 ## ✨ New in v2.1.1: Workflow Simplification & Consistency
