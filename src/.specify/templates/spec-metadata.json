@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "version": "2.3.0",
+  "feature_name": "",
+  "phase": "specification",
+  "approvals": {
+    "specification": {
+      "generated": false,
+      "approved": false,
+      "timestamp": null
+    },
+    "gap_analysis": {
+      "generated": false,
+      "approved": false,
+      "timestamp": null
+    },
+    "planning": {
+      "generated": false,
+      "approved": false,
+      "timestamp": null
+    },
+    "tasks": {
+      "generated": false,
+      "approved": false,
+      "timestamp": null
+    },
+    "implementation": {
+      "generated": false,
+      "approved": false,
+      "timestamp": null
+    },
+    "reconciliation": {
+      "generated": false,
+      "approved": false,
+      "timestamp": null
+    }
+  },
+  "metadata": {
+    "created_at": null,
+    "updated_at": null,
+    "created_by": "speckit",
+    "spec_version": "1.0",
+    "risk_level": null,
+    "overall_quality": null
+  },
+  "workflow_notes": [
+    "Phase progression: specification → gap_analysis → planning → tasks → implementation → reconciliation",
+    "Each phase requires approval before proceeding to next phase (unless using -y flag)",
+    "Use /speckit.status to view current phase and approval status",
+    "timestamps are ISO 8601 format (YYYY-MM-DDTHH:mm:ssZ)"
+  ]
+}

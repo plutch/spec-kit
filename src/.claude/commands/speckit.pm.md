@@ -27,8 +27,15 @@ PARALLEL Operations:
   3. Read: .specify/memory/pm_context.md (if exists)
   4. Read: .specify/memory/last_session.md (if exists)
   5. Read: .specify/memory/next_actions.md (if exists)
-  6. Bash: find .specify/memory/features -name "state.json" -type f 2>/dev/null | head -5
+  6. Bash: find specs/ -name "spec-metadata.json" -type f 2>/dev/null | head -5
+  7. Bash: find .specify/memory/features -name "state.json" -type f 2>/dev/null | head -5
 ```
+
+**Note (v2.3 State Management)**:
+- **Primary**: spec-metadata.json (v2.3.0 standard, located in specs/{FEATURE}/)
+- **Fallback**: state.json (v2.1 compatibility, located in .specify/memory/features/{FEATURE}/)
+- **Phase Mapping**: spec-metadata.json uses lowercase (specification, planning, implementation) vs state.json uses uppercase (SPECIFYING, PLANNING, IMPLEMENTING)
+
 
 **Important**: Do NOT wait for each operation sequentially. Use parallel tool calls.
 
@@ -104,12 +111,23 @@ Action Required:
   - Verify file read operations completed
   - Show ACTUAL file status
   - Report: Which files loaded successfully
+  - **v2.3**: Prioritize spec-metadata.json over state.json
 
 Expected Evidence:
   ✓ pm_context.md: [LOADED | NOT FOUND | ERROR]
-  ✓ state.json: [LOADED | NOT FOUND | ERROR]
+  ✓ spec-metadata.json: [LOADED | NOT FOUND | ERROR] (v2.3 primary)
+  ✓ state.json: [LOADED | NOT FOUND | ERROR] (v2.1 fallback)
   ✓ last_session.md: [LOADED | NOT FOUND | ERROR]
   ✓ next_actions.md: [LOADED | NOT FOUND | ERROR]
+
+**State Loading Priority (v2.3)**:
+  IF spec-metadata.json exists:
+    → Use as primary state source
+    → Convert phase: specification → SPECIFYING, planning → PLANNING, etc.
+  ELSE IF state.json exists:
+    → Use as fallback (v2.1 compatibility)
+  ELSE:
+    → No state found (first-time setup)
 
 ❓ **"Does git branch match feature state?"**
 Action Required:
@@ -305,25 +323,38 @@ Next Action: Fix issues above before continuing
 If stale data detected or inconsistencies found:
 
 ```yaml
-PARALLEL Write Operations:
+PARALLEL Write Operations (v2.3 Unified State Management):
   1. Write: .specify/memory/pm_context.md (updated timestamp)
-  2. Write: .specify/memory/features/[feature]/state.json (sync phase)
+  2. Write: specs/[FEATURE]/spec-metadata.json (primary state, v2.3)
+  3. Write: .specify/memory/features/[feature]/state.json (fallback, v2.1 compatibility)
 ```
+
+**Dual State Update Logic (v2.3)**:
+- IF spec-metadata.json exists:
+  → Update both spec-metadata.json AND state.json (keep in sync)
+- ELSE IF only state.json exists:
+  → Update only state.json (v2.1 compatibility mode)
+- ELSE (no state files):
+  → Create spec-metadata.json (v2.3 standard)
 
 ## State Machine Phases
 
 ```yaml
-Phase Progression:
-  1. SPECIFYING     → spec.md creation in progress
-  2. CLARIFYING     → clarify command active, Q&A phase
-  3. PLANNING       → plan.md generation
-  4. TASKING        → tasks.md breakdown
-  5. IMPLEMENTING   → implement command executing
-  6. RECONCILING    → gap closure, supplementary spec updates
-  7. VALIDATING     → tests running, validation phase
-  8. COMPLETED      → merged to main branch
+Phase Progression (v2.3 Unified Format):
 
-Progress Calculation:
+Display Format         spec-metadata.json      state.json          Progress
+(PM Output)            (v2.3 lowercase)        (v2.1 UPPERCASE)    (%)
+-------------------------------------------------------------------------------
+SPECIFYING             specification           SPECIFYING          0-15%
+CLARIFYING             clarifying              CLARIFYING          15-30%
+PLANNING               planning                PLANNING            30-50%
+TASKING                tasks                   TASKING             50-70%
+IMPLEMENTING           implementation          IMPLEMENTING        70-90%
+RECONCILING            reconciliation          RECONCILING         90-95%
+VALIDATING             validating              VALIDATING          95-98%
+COMPLETED              complete                COMPLETED           100%
+
+Progress Calculation (same for both formats):
   SPECIFYING:    0-15%    (spec exists but not clarified)
   CLARIFYING:    15-30%   (clarifications recorded)
   PLANNING:      30-50%   (plan.md exists)
@@ -332,11 +363,21 @@ Progress Calculation:
   RECONCILING:   90-95%   (gaps identified, surgical edits)
   VALIDATING:    95-98%   (tests running)
   COMPLETED:     100%     (merged)
+
+Phase Mapping Helper:
+  specification → SPECIFYING
+  clarifying → CLARIFYING
+  gap_analysis → GAP_ANALYSIS (v2.3 new phase)
+  planning → PLANNING
+  tasks → TASKING
+  implementation → IMPLEMENTING
+  reconciliation → RECONCILING
+  complete → COMPLETED
 ```
 
-## Command Execution Tracking
+## Command Execution Tracking (v2.3 Dual State)
 
-Every command should update `state.json`:
+Every command should update state files (both spec-metadata.json and state.json when both exist):
 
 ```json
 {
@@ -586,7 +627,11 @@ Support conversational queries:
 
 ---
 
+**Command Version**: 2.3.0
+**Last Updated**: 2025-11-05
+**Compatibility**: SpecKit v2.3+
 **Implementation**: Phase 1.2
 **Pattern**: Parallel-with-Reflection (Wave → Checkpoint → Wave)
 **Token Budget**: 200-500 tokens per invocation
 **Auto-Activation**: Recommended at every session start
+**New in v2.3**: Unified state management (spec-metadata.json primary, state.json fallback), phase mapping support, dual state sync

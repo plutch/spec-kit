@@ -54,6 +54,38 @@ The validate-hierarchy command performs comprehensive validation of hierarchical
 
 ---
 
+## Auto-Execution Mode (NEW v2.3)
+
+**Validation Execution**: Commands automatically execute bash validation checks using the Bash tool
+
+**Auto-Detection** (v2.3):
+- **Feature Directory**: Automatically detect from git branch or `$SPECIFY_FEATURE`
+  ```bash
+  # Auto-detect feature
+  BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+  if [[ "$BRANCH" =~ ^feature/(.+)$ ]]; then
+    FEATURE_DIR="specs/${BASH_REMATCH[1]}"
+  fi
+  ```
+
+- **Supplementary Specs**: Automatically discover `*-SPEC.md` files
+  ```bash
+  find "$FEATURE_DIR" -maxdepth 1 -name "*-SPEC.md" -type f
+  ```
+
+- **Validation Checks**: Execute all bash validation checks automatically
+  - Use Bash tool for live validation (not just examples)
+  - Real-time error detection and reporting
+  - Exit on first error (strict mode)
+
+**Benefits**:
+- ✅ No manual feature path specification needed
+- ✅ Live validation with actual bash execution
+- ✅ Immediate error feedback
+- ✅ Workflow integration (blocks on failure)
+
+---
+
 ## Validation Checks
 
 ### Check 1: Parent Spec Exists
@@ -929,7 +961,8 @@ Fix errors...
 
 ---
 
-**Command Version**: 2.1.0
-**Last Updated**: 2025-11-01
-**Compatibility**: SpecKit v2.1+
+**Command Version**: 2.3.0
+**Last Updated**: 2025-11-05
+**Compatibility**: SpecKit v2.3+
 **Validation Mode**: STRICT (errors block workflow)
+**New in v2.3**: Auto-detection of feature directory from git branch, automatic bash execution for validation checks, live error reporting

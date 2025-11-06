@@ -564,17 +564,22 @@ Every task MUST strictly follow this format:
 4. **[Story] label**: REQUIRED for user story phase tasks only
    - Format: [US1], [US2], [US3], etc. (maps to user stories from spec.md)
    - Setup phase: NO story label
-   - Foundational phase: NO story label  
+   - Foundational phase: NO story label
    - User Story phases: MUST have story label
    - Polish phase: NO story label
 5. **Description**: Clear action with exact file path
+6. **Requirement Reference** (NEW v2.3): Add `(_REQ-XX-Y.Z_)` for tasks implementing specific requirements
+   - Link to requirement IDs from spec.md (REQ-AUTH-1.1, REQ-DASH-2.1, etc.)
+   - Add at end of description when task directly implements a requirement
+   - Multiple requirements: `(_REQ-AUTH-1.1, REQ-AUTH-1.2_)`
 
 **Examples**:
 
 - ✅ CORRECT: `- [ ] T001 Create project structure per implementation plan`
-- ✅ CORRECT: `- [ ] T005 [P] Implement authentication middleware in src/middleware/auth.py`
+- ✅ CORRECT: `- [ ] T005 [P] Implement authentication middleware in src/middleware/auth.py (_REQ-AUTH-1.1_)`
 - ✅ CORRECT: `- [ ] T012 [P] [US1] Create User model in src/models/user.py`
-- ✅ CORRECT: `- [ ] T014 [US1] Implement UserService in src/services/user_service.py`
+- ✅ CORRECT: `- [ ] T014 [US1] Implement UserService with 2-second response time in src/services/user_service.py (_REQ-AUTH-1.1, REQ-AUTH-1.2_)`
+- ✅ CORRECT (v2.3): `- [ ] T018 [US1] Add login endpoint POST /api/auth/login in src/routes/auth.py (_REQ-AUTH-1.1_)`
 - ❌ WRONG: `- [ ] Create User model` (missing ID and Story label)
 - ❌ WRONG: `T001 [US1] Create model` (missing checkbox)
 - ❌ WRONG: `- [ ] [US1] Create User model` (missing Task ID)
@@ -591,16 +596,24 @@ Every task MUST strictly follow this format:
      - If tests requested: Tests specific to that story
    - Mark story dependencies (most stories should be independent)
 
-2. **From Contracts**:
+2. **From Requirements (spec.md + plan.md)** - NEW v2.3 TRACEABILITY:
+   - Extract requirement IDs from spec.md (REQ-XX-Y.Z format)
+   - Extract requirement references from plan.md phases (_Requirements: REQ-XX-Y.Z_)
+   - For each task that implements a requirement:
+     - Add requirement reference at end: `(_REQ-XX-Y.Z_)`
+     - Multiple requirements: `(_REQ-XX-1.1, REQ-XX-1.2_)`
+   - This enables full traceability: spec.md → plan.md → tasks.md → tests
+
+3. **From Contracts**:
    - Map each contract/endpoint → to the user story it serves
    - If tests requested: Each contract → contract test task [P] before implementation in that story's phase
 
-3. **From Data Model**:
+4. **From Data Model**:
    - Map each entity to the user story(ies) that need it
    - If entity serves multiple stories: Put in earliest story or Setup phase
    - Relationships → service layer tasks in appropriate story phase
 
-4. **From Setup/Infrastructure**:
+5. **From Setup/Infrastructure**:
    - Shared infrastructure → Setup phase (Phase 1)
    - Foundational/blocking tasks → Foundational phase (Phase 2)
    - Story-specific setup → within that story's phase
@@ -613,3 +626,30 @@ Every task MUST strictly follow this format:
   - Within each story: Tests (if requested) → Models → Services → Endpoints → Integration
   - Each phase should be a complete, independently testable increment
 - **Final Phase**: Polish & Cross-Cutting Concerns
+
+---
+
+## Final Step: Update Specification Metadata
+
+After generating tasks.md, update `spec-metadata.json` in the spec directory:
+
+```json
+{
+  "phase": "tasks",
+  "approvals": {
+    "tasks": {
+      "generated": true,
+      "approved": false,
+      "timestamp": "{ISO 8601 timestamp}"
+    }
+  },
+  "metadata": {
+    "updated_at": "{ISO 8601 timestamp}"
+  }
+}
+```
+
+**Recommend Next Steps**:
+- "✅ Tasks generated. Review tasks-N.md and run `/speckit.implement` to begin implementation"
+- "Or run `/speckit.status` to check current workflow state"
+- IF test-first workflow: "Run tests (they should fail), then implement to make them pass"

@@ -510,10 +510,12 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Validation rules from requirements
    - State transitions if applicable
 
-2. **Generate API contracts** from functional requirements:
+2. **Generate API contracts** from functional requirements with traceability:
    - For each user action → endpoint
    - Use standard REST/GraphQL patterns
    - Output OpenAPI/GraphQL schema to `/contracts/`
+   - **Link each endpoint to requirement IDs** (REQ-XX-Y.Z from spec.md)
+   - Example: `POST /api/auth/login` → `_Requirements: REQ-AUTH-1.1, REQ-AUTH-1.2_`
 
 3. **Agent context update**:
    - Run `{AGENT_SCRIPT}`
@@ -522,7 +524,21 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Add only new technology from current plan
    - Preserve manual additions between markers
 
-**Output**: data-model.md, /contracts/*, quickstart.md, agent-specific file
+4. **Add Requirements Traceability** to implementation phases in plan.md:
+   - For each implementation phase, add `_Requirements: REQ-XX-Y.Z_` line
+   - Reference specific requirement IDs from spec.md that the phase addresses
+   - Format: `### Phase N.M: {Description} (_Requirements: REQ-CAT-1.1, REQ-CAT-1.2_)`
+   - Example:
+     ```markdown
+     ### Phase 2.1: Authentication Implementation (_Requirements: REQ-AUTH-1.1, REQ-AUTH-1.2, REQ-AUTH-1.3_)
+
+     **Tasks**:
+     - Implement credential validation (REQ-AUTH-1.1)
+     - Create JWT token generation with 2-second response time (REQ-AUTH-1.1)
+     - Implement invalid credential rejection and logging (REQ-AUTH-1.2)
+     ```
+
+**Output**: data-model.md, /contracts/*, quickstart.md, agent-specific file, plan.md with requirement traceability
 
 ### Phase 1.5: Supplementary Spec Discovery & Integration (v2.1)
 
@@ -1254,6 +1270,33 @@ You **MUST** consider the user input before proceeding (if not empty).
 - 🔴 BLOCK: No authentication/authorization for sensitive endpoints
 - 🔴 BLOCK: SQL injection or XSS vulnerabilities possible
 - 🟠 WARN: Missing rate limiting, incomplete logging, unrotated secrets
+
+---
+
+## Final Step: Update Specification Metadata
+
+After completing all planning phases, update `spec-metadata.json` in the spec directory:
+
+```json
+{
+  "phase": "planning",
+  "approvals": {
+    "planning": {
+      "generated": true,
+      "approved": false,
+      "timestamp": "{ISO 8601 timestamp}"
+    }
+  },
+  "metadata": {
+    "updated_at": "{ISO 8601 timestamp}"
+  }
+}
+```
+
+**Recommend Next Steps**:
+- IF all review gates passed: "✅ Planning complete. Review plan-N.md and run `/speckit.tasks` to generate task breakdown"
+- IF security/architecture issues found: "⚠️ Address [N] issues in plan before proceeding"
+- Include `/speckit.status` recommendation to check current workflow state
 
 ---
 

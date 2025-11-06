@@ -228,8 +228,36 @@ Given that feature description, do this:
     4. Fill User Scenarios & Testing section
        If no clear user flow: ERROR "Cannot determine user scenarios"
     5. Generate Functional Requirements
-       Each requirement must be testable
+       **Use EARS Format** (Easy Approach to Requirements Syntax) for structured, testable requirements:
+
+       **Four Core Patterns**:
+       - **Event-Driven**: `WHEN [event] THEN [system] SHALL [response]`
+         Example: `WHEN a user submits valid credentials THEN the Authentication Service SHALL grant access within 2 seconds`
+
+       - **State-Driven**: `IF [condition] THEN [system] SHALL [response]`
+         Example: `IF credentials are invalid THEN the Authentication Service SHALL reject access and log the attempt`
+
+       - **Continuous**: `WHILE [duration] THE [system] SHALL [behavior]`
+         Example: `WHILE a report is generating THE UI SHALL display a progress indicator`
+
+       - **Contextual**: `WHERE [context] THE [system] SHALL [behavior]`
+         Example: `WHERE multi-tenant isolation is required THE Data Layer SHALL enforce row-level security`
+
+       **Requirement ID Format**: `REQ-{CATEGORY}-{NUMBER}.{SUB}`
+       - Examples: REQ-AUTH-1.1, REQ-AUTH-1.2, REQ-DASH-2.1
+       - Category: 2-4 letter acronym (AUTH, DASH, API, DATA, etc.)
+       - Number: Sequential per category
+       - Sub: Sequential within requirement
+
+       Each requirement must be:
+       - Testable (clear success criteria)
+       - Measurable (specific metrics where applicable)
+       - Unambiguous (structured EARS format)
+       - Traceable (unique ID for spec → plan → tasks → tests)
+
        Use reasonable defaults for unspecified details (document assumptions in Assumptions section)
+
+       See `.specify/templates/requirements-ears.md` for detailed guidance and examples.
     6. Define Success Criteria
        Create measurable, technology-agnostic outcomes
        Include both quantitative metrics (time, performance, volume) and qualitative measures (user satisfaction, task completion)
@@ -1082,5 +1110,67 @@ After specification is written and validated:
 
    Spec has [COUNT] [NEEDS CLARIFICATION] markers. Run `/speckit.clarify` to resolve them before planning.
    ```
+
+3. **Create Specification Metadata**: Create `spec-metadata.json` in the spec directory for phase tracking and approval gates:
+
+   ```json
+   {
+     "$schema": "http://json-schema.org/draft-07/schema#",
+     "version": "2.3.0",
+     "feature_name": "{short-name}",
+     "phase": "specification",
+     "approvals": {
+       "specification": {
+         "generated": true,
+         "approved": false,
+         "timestamp": "{ISO 8601 timestamp}"
+       },
+       "gap_analysis": {
+         "generated": false,
+         "approved": false,
+         "timestamp": null
+       },
+       "planning": {
+         "generated": false,
+         "approved": false,
+         "timestamp": null
+       },
+       "tasks": {
+         "generated": false,
+         "approved": false,
+         "timestamp": null
+       },
+       "implementation": {
+         "generated": false,
+         "approved": false,
+         "timestamp": null
+       },
+       "reconciliation": {
+         "generated": false,
+         "approved": false,
+         "timestamp": null
+       }
+     },
+     "metadata": {
+       "created_at": "{ISO 8601 timestamp}",
+       "updated_at": "{ISO 8601 timestamp}",
+       "created_by": "speckit",
+       "spec_version": "1.0",
+       "risk_level": "{HIGH/MEDIUM/LOW from Risk Assessment section}",
+       "overall_quality": {quality_score_average}
+     }
+   }
+   ```
+
+   **Determine Next Phase Based on Risk**:
+   - IF risk_level == "HIGH":
+     → Set phase to "gap_analysis" (requires feasibility assessment)
+     → Recommend: "⚠️ HIGH RISK feature - run `/speckit.validate-gap` before planning"
+   - ELSE IF risk_level == "MEDIUM":
+     → Set phase to "gap_analysis" (gap analysis optional but recommended)
+     → Recommend: "📋 MEDIUM RISK - consider running `/speckit.validate-gap`"
+   - ELSE (LOW risk):
+     → Set phase to "specification" (gap analysis optional)
+     → Recommend: "Run `/speckit.clarify` (optional) or proceed to `/speckit.plan`"
 
 **Note**: If `.specify/memory/` directory doesn't exist, create it with necessary structure (memory/, memory/features/).

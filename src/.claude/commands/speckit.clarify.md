@@ -1002,6 +1002,37 @@ Execution steps:
    Ready to proceed? (yes/review spec/run clarify again/address gaps)
    ```
 
+9. **Update spec-metadata.json** (NEW v2.3)
+
+   After clarification session completes, update `specs/[FEATURE]/spec-metadata.json`:
+
+   ```json
+   {
+     "version": "2.3.0",
+     "phase": "clarifying",
+     "approvals": {
+       "specification": {
+         "generated": true,
+         "approved": false,
+         "timestamp": "[ISO 8601 timestamp]"
+       }
+     },
+     "metadata": {
+       "clarifications_added": [count],
+       "markers_remaining": [count of [NEEDS CLARIFICATION] markers],
+       "last_clarify_mode": "[standard|expert]",
+       "last_updated": "[ISO 8601 timestamp]"
+     }
+   }
+   ```
+
+   **Dual State Tracking (v2.3 Transition)**:
+   - IF both spec-metadata.json AND state.json exist: Update both
+   - IF only spec-metadata.json exists: Update spec-metadata.json only
+   - IF only state.json exists: Update state.json only (v2.1 compatibility)
+
+10. Present Next Steps based on review gate status
+
    **User Interaction:**
    ```yaml
    IF user says "yes" or "proceed":
@@ -1055,3 +1086,10 @@ Behavior rules:
 - If quota reached with unresolved high-impact categories remaining, explicitly flag them under Deferred with rationale.
 
 Context for prioritization: {ARGS}
+
+---
+
+**Command Version**: 2.3.0
+**Last Updated**: 2025-11-05
+**Compatibility**: SpecKit v2.3+
+**New in v2.3**: spec-metadata.json integration, dual state tracking, clarification metadata tracking

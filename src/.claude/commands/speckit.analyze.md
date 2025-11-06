@@ -30,12 +30,27 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ## Execution Steps
 
-1. **Load Feature Context**:
+1. **Load Feature Context** (v2.3 Enhanced):
 
    Run `{SCRIPT}` from repo root to get:
    - `FEATURE_DIR`
    - `FEATURE_SPEC`
    - Optional: `IMPL_PLAN`, `TASKS`
+
+   **Load spec-metadata.json** (NEW v2.3):
+   ```bash
+   IF specs/[FEATURE]/spec-metadata.json exists:
+     → Load metadata for context:
+       - phase: Current workflow phase
+       - metadata.risk_level: HIGH/MEDIUM/LOW (affects analysis focus)
+       - metadata.overall_quality: Previous quality score (track improvement)
+       - approvals: Phase approval status
+   ```
+
+   **Context-Aware Analysis**:
+   - IF risk_level == HIGH: Apply extra scrutiny to security and edge cases
+   - IF overall_quality from previous analysis: Compare to detect improvement/regression
+   - IF phase == "clarifying": Expect [NEEDS CLARIFICATION] markers to exist
 
 2. **Read Specification**: Load the complete spec.md file
 
@@ -463,6 +478,35 @@ Analyzed: [DATE]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
+7. **Update spec-metadata.json** (NEW v2.3)
+
+   Save quality scores to `specs/[FEATURE]/spec-metadata.json`:
+
+   ```json
+   {
+     "metadata": {
+       "overall_quality": [calculated score 0-10],
+       "quality_dimensions": {
+         "clarity": [score],
+         "completeness": [score],
+         "testability": [score],
+         "consistency": [score]
+       },
+       "critical_issues": [count],
+       "major_issues": [count],
+       "last_analysis_date": "[ISO 8601 timestamp]",
+       "last_analysis_command": "analyze"
+     }
+   }
+   ```
+
+   **Quality Trend Tracking**:
+   - IF previous overall_quality exists:
+     → Calculate delta: new_score - previous_score
+     → Report: "Quality improved by +X.X points" OR "Quality regressed by -X.X points"
+   - ELSE:
+     → Report: "Baseline quality established: X.X/10"
+
 ---
 
 ## Notes
@@ -487,6 +531,7 @@ Analyzed: [DATE]
 
 ---
 
-**Command Version**: 2.1.0
-**Last Updated**: 2025-01-15
-**Compatibility**: SpecKit v2.1+
+**Command Version**: 2.3.0
+**Last Updated**: 2025-11-05
+**Compatibility**: SpecKit v2.3+
+**New in v2.3**: spec-metadata.json integration, context-aware analysis (risk level, previous quality), quality trend tracking

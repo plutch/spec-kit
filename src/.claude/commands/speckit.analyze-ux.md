@@ -31,12 +31,28 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ## Execution Steps
 
-1. **Load Feature Context**:
+1. **Load Feature Context** (v2.3 Enhanced):
 
    Run `{SCRIPT}` from repo root to get:
    - `FEATURE_DIR`
    - `FEATURE_SPEC`
    - Optional: `IMPL_PLAN`, `TASKS`
+
+   **Load spec-metadata.json** (NEW v2.3):
+   ```bash
+   IF specs/[FEATURE]/spec-metadata.json exists:
+     → Load metadata for context:
+       - phase: Current workflow phase
+       - metadata.risk_level: HIGH/MEDIUM/LOW (affects analysis depth)
+       - metadata.overall_quality: Previous quality score (track improvement)
+       - metadata.ux_quality: Previous UX score (track UX improvement)
+       - approvals: Phase approval status
+   ```
+
+   **Context-Aware UX Analysis**:
+   - IF risk_level == HIGH: Apply extra scrutiny to accessibility and error prevention
+   - IF ux_quality from previous analysis: Compare to detect improvement/regression
+   - IF UI-SPEC.md exists: Load for component system audit (Angular/Kendo integration)
 
 2. **Read Specification**: Load the complete spec.md file
 
@@ -719,6 +735,51 @@ Analyzed: [DATE]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
+9. **Update spec-metadata.json** (NEW v2.3)
+
+   Save UX quality scores to `specs/[FEATURE]/spec-metadata.json`:
+
+   ```json
+   {
+     "metadata": {
+       "ux_quality": [calculated overall UX score 0-10],
+       "ux_dimensions": {
+         "usability": [score],
+         "efficiency": [score],
+         "accessibility": [score],
+         "error_prevention": [score],
+         "delight": [score]
+       },
+       "ui_design_quality": [calculated UI design score 0-10],
+       "ui_design_dimensions": {
+         "visual_clarity": [score],
+         "component_consistency": [score],
+         "visual_hierarchy": [score],
+         "responsive_design": [score],
+         "design_system_adherence": [score]
+       },
+       "component_audit": {
+         "framework": "[detected framework]",
+         "component_consistency_score": [score],
+         "reuse_score": [score],
+         "design_token_adherence": [score]
+       },
+       "critical_ux_issues": [count],
+       "major_ux_issues": [count],
+       "wcag_compliance": "[AA|A|None]",
+       "last_ux_analysis_date": "[ISO 8601 timestamp]",
+       "last_analysis_command": "analyze-ux"
+     }
+   }
+   ```
+
+   **UX Quality Trend Tracking**:
+   - IF previous ux_quality exists:
+     → Calculate delta: new_score - previous_score
+     → Report: "UX quality improved by +X.X points" OR "UX quality regressed by -X.X points"
+   - ELSE:
+     → Report: "Baseline UX quality established: X.X/10"
+
 ---
 
 ## Notes
@@ -756,6 +817,7 @@ Analyzed: [DATE]
 
 ---
 
-**Command Version**: 2.1.0
-**Last Updated**: 2025-01-15
-**Compatibility**: SpecKit v2.1+
+**Command Version**: 2.3.0
+**Last Updated**: 2025-11-05
+**Compatibility**: SpecKit v2.3+
+**New in v2.3**: spec-metadata.json integration, context-aware UX analysis (risk level, previous UX quality), UX trend tracking, component audit metadata

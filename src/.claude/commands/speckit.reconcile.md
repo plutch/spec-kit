@@ -72,6 +72,52 @@ Provide a structured gap report describing what was discovered:
 
 ## Execution Protocol
 
+### Step 0: Gather Live Implementation Context (NEW v2.3)
+
+**Purpose**: Gather real-world evidence of what was actually implemented vs. what was specified
+
+**Use Bash Tool for Live Context**:
+
+```bash
+# 1. Show what was implemented (committed changes)
+git diff --name-status origin/main...HEAD
+
+# 2. Get actual file changes for the feature
+git diff origin/main...HEAD -- src/
+
+# 3. Check for uncommitted work
+git status --short
+```
+
+**Why This Matters**:
+- Gap reports may be incomplete or inaccurate
+- Git diff shows ACTUAL implementation vs baseline
+- Helps identify silent gaps not in user's gap report
+- Provides evidence for surgical edits
+
+**Extract from Git Diff**:
+1. **New files added**: May need documentation, navigation, or integration
+2. **Modified files**: Check if related specs were updated
+3. **File patterns**: Frontend changes may need UI-SPEC.md updates
+4. **Integration points**: New API calls suggest integration gaps
+
+**Example Context Extraction**:
+```bash
+# Git shows these changes:
+src/app/features/billing/billing.component.ts (new file)
+src/app/app-routing.module.ts (modified)
+src/app/services/payment.service.ts (modified)
+
+# Inferred gaps to validate against user's gap report:
+- New billing component → Need UI-SPEC.md update?
+- Modified routing → Need route documentation?
+- Modified payment service → Need API-SPEC.md update?
+```
+
+**Proceed to Step 1** with both user's gap report AND git diff context
+
+---
+
 ### Step 1: Parse Gap Report
 
 **Task**: Analyze gaps and categorize by type and severity
@@ -733,6 +779,64 @@ Update PM context in `.specify/memory/pm_context.md`:
 
 ---
 
+## Spec Metadata Integration (NEW v2.3)
+
+After reconciliation, update `spec-metadata.json` in the spec directory:
+
+```json
+{
+  "version": "2.3.0",
+  "feature_name": "billing-console",
+  "phase": "reconciliation",
+  "approvals": {
+    "reconciliation": {
+      "generated": true,
+      "approved": false,
+      "timestamp": "2025-11-01T14:30:00Z"
+    }
+  },
+  "metadata": {
+    "reconciliation_cycles": 1,
+    "gaps_addressed": 4,
+    "files_modified": ["spec.md", "UI-SPEC.md", "plan.md", "tasks.md"],
+    "sync_report_path": "SYNC-IMPACT-REPORT-001.md"
+  }
+}
+```
+
+**Dual State Tracking Note (v2.3 Transition)**:
+- IF `state.json` exists: Update both `state.json` AND `spec-metadata.json`
+- IF only `spec-metadata.json` exists: Update only `spec-metadata.json`
+- This ensures compatibility during v2.3 migration period
+
+**After Reconciliation Complete**:
+
+1. **Present Sync Impact Report** to user
+2. **Ask for approval**: "Review reconciliation. Approve to proceed? (yes/no)"
+3. **IF approved**:
+   ```json
+   {
+     "approvals": {
+       "reconciliation": {
+         "generated": true,
+         "approved": true,
+         "timestamp": "2025-11-01T14:35:00Z"
+       }
+     }
+   }
+   ```
+4. **Recommend next command**:
+   ```
+   ✅ Reconciliation approved. Recommended next steps:
+
+   1. Run `/speckit.status` to view updated workflow state
+   2. Implement new tasks added during reconciliation
+   3. Run integration tests identified in sync report
+   4. Run `/speckit.validate-hierarchy` if using supplementary specs
+   ```
+
+---
+
 ## Usage Examples
 
 ### Example 1: Simple Gap (Missing Navigation)
@@ -873,9 +977,10 @@ Multiple reconciliations indicate:
 2. `/speckit.validate-hierarchy` → Strict validation (auto-run after edits)
 
 ### After Reconcile
-1. `/speckit.tasks` → Re-run to update task list (optional)
-2. `/speckit.implement` → Implement new tasks
-3. `/speckit.pm` → Update session context
+1. `/speckit.status` → View updated workflow state (NEW v2.3)
+2. `/speckit.tasks` → Re-run to update task list (optional)
+3. `/speckit.implement` → Implement new tasks added during reconciliation
+4. `/speckit.pm` → Update session context (if not using spec-metadata.json)
 
 ---
 
@@ -948,6 +1053,7 @@ Reconciliation is complete when:
 
 ---
 
-**Command Version**: 2.1.0
-**Last Updated**: 2025-11-01
-**Compatibility**: SpecKit v2.1+
+**Command Version**: 2.3.0
+**Last Updated**: 2025-11-05
+**Compatibility**: SpecKit v2.3+
+**New in v2.3**: Live context gathering (git diff), spec-metadata.json integration, dual state tracking

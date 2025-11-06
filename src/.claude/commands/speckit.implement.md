@@ -17,7 +17,38 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 1. Run `{SCRIPT}` from repo root and parse FEATURE_DIR and AVAILABLE_DOCS list. All paths must be absolute. For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
-2. **Check checklists status** (if FEATURE_DIR/checklists/ exists):
+2. **Pre-Implementation Approval Gate Check** (NEW v2.3):
+
+   **Check if previous phases are approved before proceeding:**
+
+   - Read `spec-metadata.json` from FEATURE_DIR (if exists)
+   - Check approval status and current phase
+
+   **Approval Gate Logic**:
+   ```
+   IF spec-metadata.json exists:
+     IF approvals.planning.approved == false:
+       → 🔴 ERROR: "Planning not approved. Review plan.md and approve before implementation."
+       → STOP execution
+
+     IF approvals.tasks.approved == false AND tasks.md exists:
+       → 🟠 WARN: "Tasks not approved. Recommend reviewing tasks.md before proceeding."
+       → Ask: "Tasks not approved. Proceed anyway? (yes/no/-y for auto-approve)"
+       → IF no: STOP
+       → IF yes or -y flag: Continue (update tasks.approved = true)
+
+     IF approvals.gap_analysis.approved == false AND metadata.risk_level == "HIGH":
+       → 🟠 WARN: "HIGH RISK feature without gap analysis approval."
+       → Recommend: "Run /speckit.status to review workflow state"
+
+   ELSE:
+     → ℹ️ INFO: "No spec-metadata.json found - proceeding without approval gates"
+     → Recommend: "Consider running /speckit.memory to set up project memory for better workflow tracking"
+   ```
+
+   **Auto-Approval Flag**: If user provides `-y` flag, automatically approve current phase and proceed.
+
+3. **Check checklists status** (if FEATURE_DIR/checklists/ exists):
    - Scan all checklist files in the checklists/ directory
    - For each checklist, count:
      - Total items: All lines matching `- [ ]` or `- [X]` or `- [x]`
@@ -977,6 +1008,35 @@ You **MUST** consider the user input before proceeding (if not empty).
    - ✅ No false "done" claims
    - ✅ Transparent validation process
    - ✅ User confidence in quality
+
+---
+
+## Final Step: Update Specification Metadata
+
+After completing implementation and passing quality gate, update `spec-metadata.json`:
+
+```json
+{
+  "phase": "implementation",
+  "approvals": {
+    "implementation": {
+      "generated": true,
+      "approved": false,
+      "timestamp": "{ISO 8601 timestamp}"
+    }
+  },
+  "metadata": {
+    "updated_at": "{ISO 8601 timestamp}"
+  }
+}
+```
+
+**Recommend Next Steps**:
+- IF quality gate passed: "✅ Implementation complete. Run `/speckit.reconcile` to verify all requirements met"
+- IF quality gate had issues: "⚠️ Address [N] issues before marking complete"
+- "Or run `/speckit.status` to check current workflow state"
+
+---
 
 Note: This command assumes a complete task breakdown exists in tasks.md. If tasks are incomplete or missing, suggest running `/speckit.tasks` first to regenerate the task list.
 

@@ -40,67 +40,100 @@ Priority Order:
      → EXIT
 ```
 
-### 3. Load Feature State
+### 3. Load Feature State (v2.3 Unified State Management)
 
 ```yaml
-Read: .specify/memory/features/[FEATURE_DIR]/state.json
+Read state with priority order:
+  1. FIRST: specs/[FEATURE]/spec-metadata.json (v2.3 primary)
+  2. FALLBACK: .specify/memory/features/[FEATURE_DIR]/state.json (v2.1 compatibility)
 
-IF file not found:
-  → Report: "State file missing. Run /speckit.pm to initialize or recreate state."
+IF spec-metadata.json found:
+  → Use as primary state source
+  → Parse JSON and extract:
+    - phase: Current workflow phase (lowercase: specification, planning, etc.)
+    - progress: Calculate from phase
+    - approvals: Approval status for each phase
+    - metadata: risk_level, overall_quality, etc.
+  → Convert phase to uppercase for display (specification → SPECIFYING)
+
+ELSE IF state.json found:
+  → Use as fallback (v2.1 compatibility)
+  → Parse JSON and extract:
+    - phase: Current workflow phase (uppercase: SPECIFYING, PLANNING, etc.)
+    - progress: Percentage complete
+    - gates_passed: Completed gates
+    - gates_failed: Failed validation gates
+    - blockers: Current blockers
+
+ELSE (neither found):
+  → Report: "State files missing. Run /speckit.pm to initialize or /speckit.specify to create new feature."
   → EXIT
 
-Parse JSON and extract:
-  - phase: Current workflow phase
-  - progress: Percentage complete
-  - gates_passed: Completed gates
-  - gates_failed: Failed validation gates
-  - blockers: Current blockers
+Phase Mapping (spec-metadata.json → Display):
+  specification → SPECIFYING
+  gap_analysis → GAP_ANALYSIS
+  planning → PLANNING
+  tasks → TASKING
+  implementation → IMPLEMENTING
+  reconciliation → RECONCILING
+  complete → COMPLETED
 ```
 
-### 3.5 Check Quality Scores (Optional Enhancement)
+### 3.5 Check Quality Scores (v2.3 Enhanced)
 
 ```yaml
-Check: .specify/memory/features/[FEATURE_DIR]/quality.json
+Check quality from multiple sources (priority order):
 
-IF file exists:
-  Parse quality scores:
-    - overall_quality: Overall score (0-10)
-    - last_analysis_date: When analyze was last run
-    - last_analysis_command: analyze or analyze-ux
-    - critical_issues: Count of 🔴 CRITICAL issues
-    - major_issues: Count of 🟠 MAJOR issues
+1. FIRST: spec-metadata.json (v2.3)
+   IF spec-metadata.json exists AND contains metadata.overall_quality:
+     → Use overall_quality from metadata
+     → Check metadata.critical_issues count
 
+2. FALLBACK: .specify/memory/features/[FEATURE_DIR]/quality.json (v2.1/v2.2)
+   IF quality.json exists:
+     Parse quality scores:
+       - overall_quality: Overall score (0-10)
+       - last_analysis_date: When analyze was last run
+       - last_analysis_command: analyze or analyze-ux
+       - critical_issues: Count of 🔴 CRITICAL issues
+       - major_issues: Count of 🟠 MAJOR issues
+
+Quality-Based Flags:
   IF overall_quality < 7:
     → Flag: Quality review recommended before proceeding
 
   IF critical_issues > 0:
     → Flag: CRITICAL issues block workflow progression
 
-  Store for recommendation logic
-ELSE:
-  → quality.json not found (no analyze run yet)
-  → May recommend analyze as pre-flight check
+Store for recommendation logic
 ```
 
-### 3.6 Check Risk Level (Optional Enhancement)
+### 3.6 Check Risk Level (v2.3 Enhanced)
 
 ```yaml
-Check: specs/[FEATURE]/spec.md for Risk Assessment section
+Check risk level from multiple sources (priority order):
 
-IF Risk Assessment exists:
-  Parse risk score (0-12 scale):
-    - Calculate: Data Sensitivity + Access Control + External Integration +
-                 Performance + Complexity + Business Impact
+1. FIRST: spec-metadata.json (v2.3)
+   IF spec-metadata.json exists AND contains metadata.risk_level:
+     → Use risk_level directly (HIGH/MEDIUM/LOW)
+     → No parsing needed (pre-calculated)
 
-  Classification:
-    - 🔴 HIGH (8-12): Extra scrutiny required
-    - 🟠 MEDIUM (4-7): Standard workflow
-    - 🟢 LOW (0-3): Fast-track eligible
+2. FALLBACK: specs/[FEATURE]/spec.md Risk Assessment section
+   IF Risk Assessment section exists:
+     Parse risk score (0-12 scale):
+       - Calculate: Data Sensitivity + Access Control + External Integration +
+                    Performance + Complexity + Business Impact
 
-  Store risk level for recommendation logic
-ELSE:
-  → Risk Assessment not found (may be older spec format)
-  → Proceed with standard workflow
+     Classification:
+       - 🔴 HIGH (8-12): Extra scrutiny required
+       - 🟠 MEDIUM (4-7): Standard workflow
+       - 🟢 LOW (0-3): Fast-track eligible
+
+3. ELSE (no risk information found):
+   → Risk Assessment not found (may be older spec format)
+   → Proceed with standard workflow (assume MEDIUM)
+
+Store risk level for recommendation logic
 ```
 
 ### 3.7 Detect Feature Type (Context-Aware Detection)
@@ -869,10 +902,11 @@ Did you switch branches? Update state:
 
 ---
 
-**Command Version**: 2.2.0
-**Last Updated**: 2025-01-16
-**Compatibility**: SpecKit v2.2+
+**Command Version**: 2.3.0
+**Last Updated**: 2025-11-05
+**Compatibility**: SpecKit v2.3+
 **Implementation**: Phase 2.3
-**Dependencies**: Phase 1.2 (State Management), Phase 2.2 (Quality Integration)
+**Dependencies**: Phase 1.2 (State Management), Phase 2.2 (Quality Integration), Phase 2.3 (Unified State)
 **Token Budget**: 400-800 tokens (200-400 base + 400-600 for quality/risk)
 **Pattern**: Smart recommendation with quality and risk awareness
+**New in v2.3**: Unified state management (spec-metadata.json primary, state.json fallback), phase mapping support, quality/risk from metadata
