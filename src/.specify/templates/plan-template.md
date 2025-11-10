@@ -66,6 +66,14 @@ Read `memory/constitution.md` and validate this feature against each article:
   - If NO: Explain why (e.g., prototype feature)
 - [ ] **Real Dependencies**: Will tests use real databases/services (not mocks)?
   - If NO: Justify why mocks necessary
+- [ ] **Phase 2.5 Test Strategy Compliance** (validate AFTER Phase 2.5 Mock & Stub Strategy):
+  - Auth/Database/Business Logic: Real dependencies in integration tests? (NOT mocked)
+  - Mock & Stub Strategy section: Does it violate Article V prohibitions?
+    - ❌ Prohibited: Mocking auth/JWT validation in integration tests
+    - ❌ Prohibited: Mocking database queries in integration tests
+    - ❌ Prohibited: Mocking multi-tenancy logic in integration tests
+    - ✅ Allowed: Time mocking, test data generation (Faker.js), email/SMS mocks (with justification)
+  - If violations found: Document justification in Complexity Tracking OR revise test strategy
 
 #### Article XI: Technical Pivot Protocol (if complex feature)
 - [ ] **Complexity Assessment**: Is this feature complex? (Multi-tenant, performance-critical, integration-heavy)
@@ -100,6 +108,60 @@ Read `memory/constitution.md` and validate this feature against each article:
   1. Amend feature to comply with constitution, OR
   2. Amend constitution to reflect new reality (requires approval), OR
   3. Document exception with architect approval
+
+### Post-Implementation Checkpoint (NEW v2.4)
+
+**Purpose**: This constitutional validation will be **RE-CHECKED during implementation** (`/speckit.implement` Step 2.5 and Step 10.4) to prevent constitutional drift.
+
+**Automated Enforcement Points**:
+
+1. **Step 2.5: Constitutional Pre-Flight Check**
+   - Reads this Phase -1 validation result
+   - Blocks implementation if ❌ FAIL status
+   - Warns if ⚠️ CONDITIONAL status
+
+2. **Step 10.4: Constitutional Reviewer** (Quality Gate)
+   - Validates TDD compliance via git history analysis
+   - Scans for framework/project count violations
+   - Detects prohibited patterns from constitution.md
+   - Checks for unjustified abstractions
+
+**Enforcement Criteria** (will be validated during implementation):
+
+- [ ] **TDD Evidence**: Test commits MUST precede feature commits in git history
+- [ ] **Framework Count**: New frameworks MUST NOT exceed constitution limits (scanned from package.json/requirements.txt)
+- [ ] **Project Count**: New projects MUST NOT exceed constitution limits (directory structure validation)
+- [ ] **Abstractions**: Custom wrappers MUST be justified in Complexity Tracking section (below)
+- [ ] **Prohibited Patterns**: Code MUST NOT contain patterns from constitution.md "Prohibited Patterns" section
+- [ ] **Integration Tests**: Contract/integration tests MUST exist for cross-boundary features
+
+**Justifications Required for Implementation**:
+
+IF you checked YES for any of these during validation above:
+- **Framework Addition**: Document in Complexity Tracking section → Will be verified against package.json during Step 10.4
+- **Project Addition**: Document in Complexity Tracking section → Will be verified against directory structure during Step 10.4
+- **Custom Wrappers**: Document in Complexity Tracking section → Will be verified via grep patterns during Step 10.4
+- **Mocks in Integration Tests**: Document in Complexity Tracking section → Will be verified via test file analysis during Step 10.4
+
+**Constitutional Compliance Promise**:
+
+By proceeding to implementation, the development team commits to:
+✅ Following TDD (tests before implementation)
+✅ Staying within framework/project limits
+✅ Justifying all abstractions
+✅ Avoiding prohibited patterns
+✅ Using real dependencies in integration tests
+
+**IF Implementation Violates Constitution**:
+- Step 2.5: BLOCKS execution if planning validation = ❌ FAIL
+- Step 10.4: Reports violations with file:line locations
+- Quality Gate: Overall status = ❌ NOT READY if constitutional violations found
+- Remediation: Fix violations before commit allowed
+
+**Documentation Reference**:
+- Constitution: `.specify/memory/constitution.md`
+- Prohibited Patterns: `.specify/memory/constitution.md` → "Prohibited Patterns" section
+- Implementation Enforcement: `/speckit.implement` Step 2.5 and Step 10.4
 
 ## Project Structure
 

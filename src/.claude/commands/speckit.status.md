@@ -36,7 +36,7 @@ This command provides visibility into the current state of your Spec-Driven Deve
 **Step 1.2: Handle User-Provided Path**
 If user provides a path argument:
 ```
-/speckit.status .specify/specs/feature-name/
+/speckit.status .specify/specs/000001-feature-name/
 /speckit.status oauth-integration
 ```
 → Search in specified path first, then fallback to defaults

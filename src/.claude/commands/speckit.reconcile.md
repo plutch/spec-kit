@@ -494,6 +494,133 @@ IF all_critical_gaps_have_tests:
 
 ---
 
+##### ❓ Question 5: Do surgical edits maintain constitutional compliance? (NEW v2.4)
+
+**Purpose**: Prevent constitutional drift during reconciliation cycles. Verify surgical edits don't introduce violations.
+
+**⚠️ SCOPE CLARIFICATION** (NEW - addresses Finding #2):
+- **IF surgical edits modify SPECIFICATIONS** (spec.md, UI-SPEC.md, plan.md, tasks.md) → Apply **specification-level validation** (checks 1, 4 below)
+- **IF surgical edits modify CODE** (src/\*, tests/\*) → Apply **code-level validation** (all checks 1-4 below)
+
+Most reconciliations are **specs-only** (append-only edits to requirements). Code-level pattern scanning (check 3) only applies when implementation files are modified.
+
+---
+
+**Required Evidence (ALL must be provided)**:
+
+1. **Complexity Analysis (MANDATORY - applies to BOTH specs and code)**:
+   ```yaml
+   Question: Do edits introduce new frameworks, projects, or abstractions?
+
+   Evidence Format:
+   - New Frameworks Added: [None / Framework name + justification]
+   - New Projects/Services: [None / Project name + justification]
+   - New Abstractions: [None / Abstraction type + problem solved]
+
+   Example (specs-only):
+   - New Frameworks Added: None (spec edits don't add frameworks)
+   - New Projects/Services: None
+   - New Abstractions: None (no architectural changes in specs)
+
+   Example (code edits):
+   - New Frameworks Added: None
+   - New Projects/Services: None
+   - New Abstractions: Repository pattern for data access (justified: improves testability)
+   ```
+
+2. **TDD Compliance Check (MANDATORY if new CODE functionality)**:
+   ```yaml
+   Question: If surgical edits add new functionality, were tests added BEFORE implementation?
+
+   Evidence Format:
+   IF specs-only edits (spec.md, plan.md, tasks.md):
+     - Tests Added: N/A (specification updates only - no implementation changes)
+     - TDD Compliance: N/A (applies to code, not specs)
+
+   IF code edits (src/*, tests/*) with new functionality:
+     - Tests Added: [Yes/No]
+     - Test Location: [path/to/test.spec.ts]
+     - Test Coverage: [N]% for new functionality
+     - TDD Evidence: [Git commit showing test before impl]
+
+   IF code edits (refactoring only, no new functionality):
+     - Tests Added: N/A (refactoring - existing tests still pass)
+     - TDD Compliance: ✅ PASS (no new functionality requiring tests)
+   ```
+
+3. **Prohibited Patterns Scan (MANDATORY if CODE edits OR tasks.md references patterns)**:
+   ```yaml
+   Question: Do surgical edits introduce prohibited patterns from constitution?
+
+   Evidence Format:
+   IF specs-only edits (spec.md, UI-SPEC.md, plan.md):
+     - Pattern Scan: N/A (specs don't contain code patterns)
+     - Task Description Check: [Scan tasks.md for pattern references]
+       Example: "Task references fs.readFileSync" → ⚠️ WARNING
+
+   IF code edits (src/*, tests/*):
+     - Read `.specify/memory/constitution.md` (if exists)
+     - Patterns Scanned: [N] patterns from constitution
+     - Violations Found: [None / List violations with file:line]
+
+     Example:
+     - Patterns Scanned: 3 patterns (fs.readFileSync, db.query, global state)
+     - Violations Found: None
+
+     OR (if violation found):
+     - Violations Found:
+       - src/utils/file.ts:42 - Pattern "fs.readFileSync" detected
+       - Remediation: Use fs.promises.readFile() instead
+
+   IF constitution.md missing:
+     - Pattern Scan: N/A (no constitution defined)
+   ```
+
+4. **Simplicity Preservation (MANDATORY - applies to BOTH specs and code)**:
+   ```yaml
+   Question: Do surgical edits maintain simplicity constraints?
+
+   Evidence Format:
+   - Append-Only Edits: [Yes/No]
+   - Version History Used: [Yes/No/N/A]
+   - Simplicity Maintained: [Yes - no new complexity / No - see justification]
+
+   IF simplicity concerns:
+     - Justification: [Why additional complexity necessary]
+     - Mitigation: [How complexity is controlled]
+
+   Example (specs-only):
+   - Append-Only Edits: Yes (added acceptance criteria to spec.md)
+   - Simplicity Maintained: Yes (no new complexity in specifications)
+
+   Example (code edits):
+   - Append-Only Edits: No (refactored existing function)
+   - Simplicity Maintained: Yes (reduced cyclomatic complexity from 8 to 5)
+   ```
+
+**Constitutional Compliance Status** (determined after evidence gathered):
+- ✅ **COMPLIANT**: No new complexity, TDD followed (if applicable), no prohibited patterns, simplicity maintained
+- ⚠️ **CONDITIONAL**: New complexity justified, TDD evidence partial, simplicity near limits
+- ❌ **NON-COMPLIANT**: Unjustified complexity, TDD skipped, prohibited patterns found, simplicity violated
+
+**IF any evidence is MISSING**:
+```
+❌ CANNOT report constitutional compliance
+→ Gather missing evidence first
+→ Re-run this step with complete evidence
+```
+
+**IF ❌ NON-COMPLIANT**:
+```
+🔴 CONSTITUTIONAL VIOLATION in surgical edits
+→ List violations found
+→ STOP reconciliation
+→ Remediate violations before proceeding
+→ Re-run Step 5 with corrected edits
+```
+
+---
+
 #### Hallucination Prevention (7 Red Flags for Reconciliation)
 
 ```yaml

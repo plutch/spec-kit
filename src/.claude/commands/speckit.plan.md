@@ -820,18 +820,42 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 4. **Mock & Stub Strategy**:
 
+   ⚠️ **CONSTITUTIONAL ARTICLE V COMPLIANCE REQUIRED**
+
+   Before defining mock strategy, validate against `.specify/memory/constitution.md` Article V (if exists):
+
+   **Specific Prohibitions** (Integration-First Testing):
+   - ❌ NEVER mock authentication logic (Auth0, JWT validation) in integration tests
+   - ❌ NEVER mock database queries in integration tests
+   - ❌ NEVER mock multi-tenancy isolation logic in integration tests
+
+   **Acceptable Test Helpers**:
+   - ✅ Time mocking (Date.now(), jest.useFakeTimers for rotation tests)
+   - ✅ Test data generation (Faker.js for synthetic names/emails)
+   - ✅ Email/SMS mocks (external services with justification)
+   - ✅ Transient failure simulation (timeout mocks for error handling tests)
+
+   **If unsure**: Ask "Does this dependency contain auth/database/multi-tenancy logic?" If YES → Use real dependency in integration tests.
+
+   ---
+
    For each external dependency, define mocking approach:
 
    **External APIs** (Stripe, Auth0, tax services):
-   - [ ] Use official SDK test mode (if available)
-   - [ ] Use HTTP mocking library (nock, MSW, WireMock)
-   - [ ] Create shared mock factories for common scenarios
-   - [ ] Plan error scenario mocks (timeout, 500 error, rate limit)
+   - [ ] Use official SDK test mode (Auth0 test tenant, Stripe test keys)
+   - [ ] ⚠️ CONSTITUTIONAL CONSTRAINT: Auth/business logic APIs MUST use real services in integration tests
+   - [ ] HTTP mocking ONLY allowed for:
+     - Email/SMS services (justification: external, no test mode available)
+     - Transient failures (timeout simulation for error handling tests)
+     - Unit tests isolating business logic (NOT integration tests)
+   - [ ] Integration tests: Real Auth0 test tenant, real API calls
+   - [ ] Unit tests: Mocks acceptable for isolated business logic testing
 
    **Database**:
-   - [ ] Use in-memory test DB for unit tests (SQLite, H2)
-   - [ ] Use Docker containers for integration tests (PostgreSQL, MySQL)
-   - [ ] Plan schema migration testing strategy
+   - [ ] Use in-memory test DB for unit tests ONLY (SQLite, H2) - isolated business logic
+   - [ ] Use Docker containers for integration tests (PostgreSQL, MySQL, Testcontainers)
+   - [ ] ⚠️ CONSTITUTIONAL CONSTRAINT: Integration tests MUST use real database (NOT in-memory substitutes)
+   - [ ] Plan schema migration testing strategy (use Docker for migrations)
    - [ ] Define test data seeding and cleanup procedures
 
    **Time/Clock**:
@@ -909,11 +933,12 @@ You **MUST** consider the user input before proceeding (if not empty).
 
    **Mock & Stub Strategy**:
 
-   - **Stripe API**: Use Stripe test mode + mock webhook deliveries
-   - **Auth0**: Mock JWT token validation with jose library
-   - **Database**: PostgreSQL Docker container for integration tests, in-memory for unit
-   - **Clock**: Use jest.useFakeTimers for time-dependent logic
-   - **File Storage**: Mock S3 with LocalStack for integration tests
+   - **Stripe API**: Use Stripe test mode keys + real API calls in integration tests, mock webhook deliveries for timeout scenarios
+   - **Auth0**: ✅ Real Auth0 test tenant + real JWT validation in integration tests, ❌ NO jose mocks
+   - **Database**: ✅ PostgreSQL Docker container for integration tests, in-memory SQLite acceptable for unit tests (isolated logic only)
+   - **Clock**: ✅ Use jest.useFakeTimers for time-dependent logic (allowed)
+   - **File Storage**: Use real S3 test bucket or LocalStack (real S3-compatible service) for integration tests
+   - **Email/SMS**: ✅ Mocks acceptable (external service, no test mode available) - justify in Complexity Tracking
 
    **Test Data Strategy**:
 
@@ -943,6 +968,104 @@ You **MUST** consider the user input before proceeding (if not empty).
 - Test strategy completeness feeds into Planning Review Gate (Step 5)
 - Missing test coverage for high-risk requirements (🔴) blocks progression
 - Test strategy quality contributes to "design artifacts complete" check
+
+---
+
+### Phase 2.6: Constitutional Test Strategy Validation (v2.6)
+
+**Prerequisites**: Phase 2.5 complete, test strategy documented in plan.md
+
+**Purpose**: Validate that the planned test strategy complies with Article V: Integration-First Testing principles BEFORE implementation begins. This prevents constitutional violations from being planned (Phase 2.5) and only discovered during implementation (Step 10.4).
+
+**Validation Steps**:
+
+1. **Read Constitution Article V** (if `.specify/memory/constitution.md` exists):
+   - Extract prohibited mock patterns (auth, database, multi-tenancy)
+   - Extract allowed mock exceptions (time, email/SMS, test data generation)
+   - Extract integration test requirements (real dependencies)
+
+2. **Validate Phase 2.5 Mock & Stub Strategy Section**:
+
+   Scan for prohibited patterns in the Mock & Stub Strategy section you just created:
+
+   **Prohibited Patterns** (violations of Article V):
+   - ❌ HTTP mocking for auth/database/business logic (nock, MSW for Auth0/critical APIs)
+   - ❌ In-memory databases for integration tests (SQLite, H2 replacing PostgreSQL/MySQL)
+   - ❌ Mocked tenant context for multi-tenant features (fake tenant IDs)
+   - ❌ Mocked JWT validation in integration tests (jose library mocks)
+
+   **Required Real Dependencies** (must be present):
+   - ✅ Auth: Real Auth0 test tenant, real JWT validation in integration tests
+   - ✅ Database: Docker/Testcontainers for integration tests (PostgreSQL, MySQL)
+   - ✅ Multi-tenancy: Real tenant filtering in database queries
+   - ✅ Business Logic APIs: Real API calls in integration tests
+
+   **Allowed Mocks** (constitutional exceptions):
+   - ✅ Time mocking (Date.now(), jest.useFakeTimers)
+   - ✅ Test data generation (Faker.js)
+   - ✅ Email/SMS services (with justification in Complexity Tracking)
+   - ✅ Transient failure simulation (timeout mocks for error handling)
+
+3. **Generate Validation Report**:
+
+   Create validation report and append to plan.md after Phase 2.5:
+
+   ```markdown
+   ## Constitutional Test Strategy Validation (Article V)
+
+   **Article V Compliance**: [✅ PASS | ⚠️ CONDITIONAL | ❌ FAIL]
+
+   **Mock & Stub Strategy Review**:
+
+   | Dependency | Planned Approach | Article V Requirement | Status |
+   |------------|------------------|----------------------|--------|
+   | [Auth0/Auth] | [from Phase 2.5] | Real test tenant in integration tests | [✅/⚠️/❌] |
+   | [Database] | [from Phase 2.5] | Docker containers for integration tests | [✅/⚠️/❌] |
+   | [Multi-tenancy] | [from Phase 2.5] | Real tenant filtering (NOT mocked) | [✅/⚠️/❌] |
+   | [Business APIs] | [from Phase 2.5] | Real API calls in integration tests | [✅/⚠️/❌] |
+   | [Email/SMS] | [from Phase 2.5] | Mocks allowed (justify below) | [✅] |
+   | [Time/Clock] | [from Phase 2.5] | Mocks allowed | [✅] |
+
+   **Violations Found**: [N]
+
+   [IF violations found]:
+   - **Violation 1**: [Description] → [Recommendation: Use real Auth0 test tenant instead]
+   - **Violation 2**: [Description] → [Recommendation: Use Docker PostgreSQL instead of in-memory]
+
+   **Conditional Approvals** (require justification):
+   - **Email/SMS Mocks**: [Justification: No test mode available, external service]
+   - **[Other conditional]**: [Justification]
+
+   **Required Actions**:
+   - IF ❌ FAIL: Revise Phase 2.5 Mock & Stub Strategy section, update Article IX gate in Phase -1
+   - IF ⚠️ CONDITIONAL: Document all justifications in Complexity Tracking section below
+   - IF ✅ PASS: Proceed to Phase 3 (Security Review)
+   ```
+
+4. **Update Phase -1 Validation Result** (if violations found):
+
+   IF Phase 2.6 finds violations:
+   - Update Phase -1 Article IX status to ⚠️ CONDITIONAL or ❌ FAIL
+   - Document violations in Phase -1 "If CONDITIONAL/FAIL" section
+   - Link to Phase 2.6 report for details
+
+5. **Integration with Implementation Workflow**:
+
+   This Phase 2.6 validation result will be checked during implementation:
+
+   - **Step 2.5 Pre-Flight Check**: Reads Phase 2.6 result, blocks if ❌ FAIL
+   - **Step 10.4 Constitutional Reviewer**: Validates actual implementation matches Phase 2.6 approved strategy
+
+**Output**: Append "Constitutional Test Strategy Validation (Article V)" section to plan.md after Phase 2.5 Test Strategy
+
+**Token Cost**: +200-300 tokens per planning session
+
+**ROI**: Prevents 10K-20K token rework cycles when violations discovered at Step 10.4 (late-stage)
+
+**Graceful Degradation** (backward compatibility):
+- IF constitution.md missing: Validate against generic Article V principles (auth, database, multi-tenancy real dependencies)
+- IF Phase 2.5 incomplete: Warn, recommend completing Phase 2.5 before validation
+- IF no prohibited patterns defined: Use built-in patterns (mock auth, mock database, mock tenant context)
 
 ---
 

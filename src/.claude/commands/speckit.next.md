@@ -325,9 +325,9 @@ Action Required:
   - Report: Feature number, name, branch
 
 Expected Evidence:
-  ✓ Feature ID: 000XXX-feature-name
-  ✓ Git branch: feature/000XXX-feature-name (or env var/directory)
-  ✓ Feature directory exists: .specify/memory/features/000XXX-feature-name/
+  ✓ Feature ID: 000001-feature-name
+  ✓ Git branch: feature/000001-feature-name (or env var/directory)
+  ✓ Feature directory exists: .specify/memory/features/000001-feature-name/
 
 ❓ **"Was current phase validated?"**
 Action Required:
@@ -453,8 +453,8 @@ IF NOT READY:
 
 Status: [✅ READY | ⚠️ NEEDS REVIEW | ❌ NOT READY]
 
-**Feature**: [000XXX-feature-name]
-**Branch**: [feature/000XXX-feature-name]
+**Feature**: [000001-feature-name]
+**Branch**: [feature/000001-feature-name]
 **Phase**: [PHASE] ([PROGRESS]%)
 
 **Prerequisites**:
