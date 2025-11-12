@@ -72,7 +72,86 @@ Provide a structured gap report describing what was discovered:
 
 ## Execution Protocol
 
-### Step 0: Gather Live Implementation Context (NEW v2.3)
+### Step 0: Context Loading (v2.7 - Context Optimization)
+
+**Purpose**: Load tactical context for gap closure and surgical edits during reconciliation.
+
+**Current Phase**: `reconciliation`
+
+**Context Loading Strategy**:
+
+a. **Read Configuration** (if exists):
+   - Check for `.specify/config.yml` or `.specify/config.example.yml`
+   - Extract `context_budget.reconciliation` (default: 30KB)
+   - Extract `memory.strict_phase_loading` (default: true)
+   - Extract `budget_enforcement.mode` (default: strict)
+
+b. **Load Memory Files** (phase-aware - TACTICAL focus):
+
+   For each memory file in `.specify/memory/`:
+
+   i. **Read YAML Frontmatter**:
+      - Extract `inclusion_mode`, `context_level`, `load_phases`, `exclude_phases`
+      - If metadata missing: Default to `inclusion_mode: always, context_level: strategic, load_phases: all`
+
+   ii. **Determine if file should be loaded**:
+      ```yaml
+      IF current_phase IN exclude_phases:
+        → SKIP this file entirely
+
+      ELSE IF inclusion_mode = "always" (e.g., constitution.md):
+        → Load TACTICAL sections only (Implementation Patterns for gap closure)
+        → Skip strategic sections (not needed for surgical edits)
+
+      ELSE IF inclusion_mode = "conditional":
+        IF current_phase IN load_phases:
+          → Load TACTICAL sections (code examples for fixes)
+          → Examples:
+            - testing-approach.md: Integration test patterns (for missing integration tasks)
+            - api-standards.md: Documentation examples (for missing API docs)
+        ELSE:
+          → SKIP this file
+
+      ELSE IF inclusion_mode = "manual":
+        → SKIP (manual loading via @filename only)
+      ```
+
+   iii. **Filter Sections** (if loading file):
+      - Scan for `<!-- SECTION_META: context_level=X, load_phases=Y -->` comments
+      - For reconciliation phase: Load sections where `context_level=tactical`
+      - Focus on code examples, testing patterns, documentation templates
+
+c. **Context Loading Report** (verbose mode):
+
+   IF `verbose_context_loading: true` in config:
+   ```markdown
+   📊 Context Loading Report
+
+   Phase: reconciliation
+   Budget: 30KB
+
+   Loaded:
+   - constitution.md (tactical: Implementation Patterns): 4.8KB
+   - testing-approach.md (tactical: Integration test patterns): 5.2KB
+   - Skipped: api-standards.md (excluded phase: reconciliation)
+   - Skipped: deployment-runbook.md (manual only)
+
+   Total Loaded: 10KB / 30KB (33% budget used)
+   Remaining: 20KB available
+
+   Status: ✅ Within budget
+   ```
+
+d. **Backward Compatibility**:
+   - If `.specify/memory/` doesn't exist → Skip context loading (no error)
+   - If memory files lack metadata → Load all content (v2.6 behavior)
+   - Never fail command due to missing memory files
+
+**Expected Token Savings**: ~20% (20-30KB → 15-25KB for reconciliation phase)
+
+---
+
+### Step 1: Gather Live Implementation Context (NEW v2.3)
 
 **Purpose**: Gather real-world evidence of what was actually implemented vs. what was specified
 

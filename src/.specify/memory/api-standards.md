@@ -1,12 +1,44 @@
+---
+# Context Optimization Metadata (v2.7+)
+# These settings control when and how this memory file is loaded
+
+inclusion_mode: conditional              # always | conditional | manual
+context_level: tactical                  # strategic | tactical | reference
+load_phases:                             # Phases where this content is loaded
+  - implementation                       # Load during implementation (API coding)
+  - reconciliation                       # Load during reconciliation (gap closure)
+exclude_phases:                          # Phases where this content is skipped
+  - specification                        # Skip during spec writing (too detailed)
+  - gap_analysis                         # Skip during gap analysis
+  - planning                             # Skip during planning (load strategic only)
+
+# Pattern-based conditional loading
+include_when:
+  - path_pattern: "src/api/**/*"
+  - path_pattern: "**/controllers/**/*"
+  - path_pattern: "**/routes/**/*"
+  - path_pattern: "**/*-api.js"
+  - path_pattern: "**/*-api.ts"
+  - path_pattern: "**/handlers/**/*"
+  - path_pattern: "**/endpoints/**/*"
+
+# Version and update tracking
+memory_version: "1.0.0"
+last_updated: "[YYYY-MM-DD]"
+created_by: "speckit.memory"
+---
+
 # API Standards & Guidelines
 
-**Inclusion Mode**: Conditional
-**Trigger Patterns**: `src/api/**/*`, `**/controllers/**/*`, `**/routes/**/*`, `**/*-api.js`, `**/*-api.ts`
 **Purpose**: API design patterns, RESTful conventions, and endpoint standards
+**Context**: This file is conditionally loaded when working in API-related directories
+**Loaded During**: Implementation and reconciliation phases only
 
 ---
 
+<!-- SECTION_META: context_level=strategic, load_phases=planning,implementation,reconciliation -->
 ## REST API Design Principles
+<!-- Strategic section: High-level API design principles -->
 
 ### Resource Naming
 <!-- URL path conventions -->
@@ -37,7 +69,9 @@
 - `500 Internal Server Error` - Server-side failure
 - `503 Service Unavailable` - Temporary downtime
 
+<!-- SECTION_META: context_level=tactical, load_phases=implementation,reconciliation -->
 ## Request/Response Format
+<!-- Tactical section: Code examples and templates for API implementation -->
 
 ### Request Structure
 ```json
@@ -242,7 +276,9 @@ X-RateLimit-Reset: 1609459200
 - Rate limits
 - Deprecation status
 
+<!-- SECTION_META: context_level=tactical, load_phases=implementation,reconciliation -->
 ## Testing
+<!-- Tactical section: Testing patterns and examples for API implementation -->
 
 ### API Test Coverage
 - **Contract Tests**: Verify request/response schemas

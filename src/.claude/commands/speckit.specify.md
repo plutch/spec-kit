@@ -19,6 +19,90 @@ The text the user typed after `/speckit.specify` in the triggering message **is*
 
 Given that feature description, do this:
 
+### Phase 0: Context Loading (v2.7 - Context Optimization)
+
+**Purpose**: Load only relevant memory content for the specification phase to optimize token usage.
+
+**Current Phase**: `specification`
+
+**Context Loading Strategy**:
+
+1. **Read Configuration** (if exists):
+   - Check for `.specify/config.yml` or `.specify/config.example.yml`
+   - Extract `context_budget.specification` (default: 15KB if not found)
+   - Extract `memory.strict_phase_loading` (default: true)
+   - Extract `budget_enforcement.mode` (default: strict)
+
+2. **Load Memory Files** (phase-aware):
+
+   **Load ALL memory files, but filter by phase**:
+
+   For each memory file in `.specify/memory/`:
+
+   a. **Read YAML Frontmatter**:
+      - Extract `inclusion_mode`, `context_level`, `load_phases`, `exclude_phases`
+      - If metadata missing: Default to `inclusion_mode: always, context_level: strategic, load_phases: all`
+
+   b. **Determine if file should be loaded**:
+      ```yaml
+      IF current_phase IN exclude_phases:
+        → SKIP this file entirely
+
+      ELSE IF inclusion_mode = "always":
+        → Load strategic sections only (filter by SECTION_META comments)
+
+      ELSE IF inclusion_mode = "conditional":
+        IF current_phase IN load_phases:
+          → Load strategic sections (planning) OR tactical sections (implementation)
+        ELSE:
+          → SKIP this file
+
+      ELSE IF inclusion_mode = "manual":
+        → SKIP (manual loading via @filename only)
+      ```
+
+   c. **Filter Sections** (if loading file):
+      - Scan for `<!-- SECTION_META: context_level=X, load_phases=Y -->` comments
+      - For specification phase: Load ONLY sections where `context_level=strategic`
+      - Skip sections marked `context_level=tactical` or `context_level=reference`
+
+   d. **Track Budget**:
+      - Sum loaded content size
+      - If exceeds `context_budget.specification` (15KB):
+        - **strict mode**: Warn user, truncate reference sections first
+        - **warn mode**: Continue loading, warn about budget exceeded
+        - **adaptive mode**: Intelligently summarize content to fit budget
+
+3. **Context Loading Report** (verbose mode):
+
+   IF `verbose_context_loading: true` in config:
+   ```markdown
+   📊 Context Loading Report
+
+   Phase: specification
+   Budget: 15KB
+
+   Loaded:
+   - constitution.md (strategic sections): 3.2KB
+   - Skipped: api-standards.md (excluded phase: specification)
+   - Skipped: testing-approach.md (excluded phase: specification)
+   - Skipped: deployment-runbook.md (manual only)
+
+   Total Loaded: 3.2KB / 15KB (21% budget used)
+   Remaining: 11.8KB available
+
+   Status: ✅ Within budget
+   ```
+
+4. **Backward Compatibility**:
+   - If `.specify/memory/` doesn't exist → Skip context loading (no error)
+   - If memory files lack metadata → Load all content (v2.6 behavior)
+   - Never fail command due to missing memory files
+
+**Expected Token Savings**: ~70% (25-35KB → 5-8KB for specification phase)
+
+---
+
 1. **Vagueness Detection & Pre-Spec Discovery** (Adaptive Dialogue):
 
    **Purpose**: If the feature description is too high-level or vague, engage in brief discovery dialogue BEFORE generating the spec to build better understanding and prevent assumption-heavy specifications.

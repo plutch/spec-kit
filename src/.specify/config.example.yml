@@ -246,3 +246,141 @@ agent:
     auto_update_agent_files: true
     include_research_md: true
     include_quickstart_md: true
+
+# ==============================================================================
+# Context Optimization (v2.7+)
+# ==============================================================================
+# Controls how much context is loaded per workflow phase to optimize token usage
+
+context_budget:
+  # Maximum context size per phase (in KB)
+  # Adjust based on your project size and complexity
+
+  specification: 15       # Lightweight - mainly strategic context
+  gap_analysis: 25        # Medium - strategic + existing code analysis
+  planning: 35            # Heavy - strategic + architectural patterns
+  implementation: 50      # Heaviest - tactical + code examples
+  reconciliation: 30      # Medium - tactical + diff analysis
+
+budget_enforcement:
+  # How to handle context budget overruns
+  mode: strict            # strict | warn | adaptive
+
+  # Strategy when context exceeds budget (applied in order)
+  overflow_strategy:
+    - truncate_reference_sections_first    # Remove reference-level content first
+    - summarize_strategic_content          # Condense strategic principles
+    - defer_tactical_examples              # Skip code examples if needed
+    - warn_user_if_critical_context_dropped  # Always warn if critical content excluded
+
+# Memory System (Context Optimization)
+memory:
+  # Default context level for new memory files
+  default_context_level: strategic  # strategic | tactical | reference
+
+  # Auto-detect context level from content type
+  # (principles/patterns = strategic, code examples = tactical, runbooks = reference)
+  auto_detect_context_level: true
+
+  # Only load memory sections relevant to current phase
+  strict_phase_loading: true
+
+  # Warn if memory files are missing context metadata
+  warn_on_missing_metadata: true
+
+# ==============================================================================
+# Epic Management (v2.8+)
+# ==============================================================================
+# Controls multi-feature epic coordination
+
+epics:
+  # Enable epic-level workflow commands
+  enabled: true
+
+  # Directory for epic files
+  directory: ".specify/epics"
+
+  # Automatically detect dependencies between features
+  auto_dependency_detection: true
+
+  # Allow planning features while foundation features are still in progress
+  parallel_planning_allowed: true
+
+  # Maximum features per epic (prevents unwieldy epics)
+  max_features_per_epic: 8
+
+  # Minimum features per epic (below this, use single-feature workflow)
+  min_features_per_epic: 3
+
+# ==============================================================================
+# Quality Framework (Enhanced v2.7+)
+# ==============================================================================
+# Quality standards and enforcement
+
+quality:
+  # Minimum overall quality score (0-100)
+  minimum_overall_score: 80
+
+  # Minimum test coverage percentage
+  minimum_test_coverage: 80
+
+  # Block implementation if critical quality issues found
+  block_on_critical_issues: true
+
+  # Aggregate quality metrics across all features in an epic
+  epic_quality_rollup: true
+
+  # Severity thresholds
+  severity:
+    critical_count_threshold: 0   # Block if any critical issues
+    major_count_threshold: 3      # Block if >3 major issues
+    medium_count_threshold: 10    # Warn if >10 medium issues
+
+# ==============================================================================
+# Constitutional Enforcement (v2.4-v2.6)
+# ==============================================================================
+# Project constitution validation
+
+constitutional:
+  # Enable constitutional validation
+  enabled: true
+
+  # Validate constitution across all features in an epic
+  epic_level_validation: true
+
+  # Scan codebase for prohibited patterns
+  pattern_scanning: true
+
+  # Block on constitutional violations (vs warn)
+  strict_mode: true
+
+  # Constitution file location
+  constitution_path: ".specify/memory/constitution.md"
+
+# ==============================================================================
+# Risk Management
+# ==============================================================================
+# Risk assessment and mitigation
+
+risk:
+  # Automatically trigger gap analysis for HIGH-risk features
+  auto_gap_analysis_for_high_risk: true
+
+  # Risk score thresholds (0-12 scale)
+  thresholds:
+    high: 8     # Score ≥8 = HIGH risk
+    medium: 4   # Score 4-7 = MEDIUM risk
+    low: 0      # Score 0-3 = LOW risk
+
+# ==============================================================================
+# Advanced Settings (v2.7+)
+# ==============================================================================
+
+# Verbose mode - show context loading details
+verbose_context_loading: false
+
+# Enable experimental features (not recommended for production)
+experimental_features: false
+
+# Token usage tracking (for optimization insights)
+track_token_usage: true

@@ -20,7 +20,87 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 1. **Setup**: Run `{SCRIPT}` from repo root and parse JSON for FEATURE_SPEC, IMPL_PLAN, SPECS_DIR, BRANCH. For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
-2. **Load context**: Read FEATURE_SPEC and `.specify/memory/constitution.md`. Load IMPL_PLAN template (already copied).
+1.5. **Context Loading** (v2.7 - Context Optimization):
+
+   **Purpose**: Load relevant memory content for the planning phase, optimized for token efficiency.
+
+   **Current Phase**: `planning`
+
+   **Context Loading Strategy**:
+
+   a. **Read Configuration** (if exists):
+      - Check for `.specify/config.yml` or `.specify/config.example.yml`
+      - Extract `context_budget.planning` (default: 35KB)
+      - Extract `memory.strict_phase_loading` (default: true)
+      - Extract `budget_enforcement.mode` (default: strict)
+
+   b. **Load Memory Files** (phase-aware):
+
+      For each memory file in `.specify/memory/`:
+
+      i. **Read YAML Frontmatter**:
+         - Extract `inclusion_mode`, `context_level`, `load_phases`, `exclude_phases`
+         - If metadata missing: Default to `inclusion_mode: always, context_level: strategic, load_phases: all`
+
+      ii. **Determine if file should be loaded**:
+         ```yaml
+         IF current_phase IN exclude_phases:
+           → SKIP this file entirely
+
+         ELSE IF inclusion_mode = "always":
+           → Load strategic sections only (constitution core principles)
+
+         ELSE IF inclusion_mode = "conditional":
+           IF current_phase IN load_phases:
+             → Load strategic sections (e.g., testing philosophy from testing-approach.md)
+           ELSE:
+             → SKIP (e.g., api-standards.md excluded in planning phase)
+
+         ELSE IF inclusion_mode = "manual":
+           → SKIP (manual loading via @filename only)
+         ```
+
+      iii. **Filter Sections** (if loading file):
+         - Scan for `<!-- SECTION_META: context_level=X, load_phases=Y -->` comments
+         - For planning phase: Load sections where `planning` IN load_phases
+         - Load strategic sections, skip tactical/reference sections
+
+      iv. **Track Budget**:
+         - Sum loaded content size
+         - If exceeds `context_budget.planning` (35KB):
+           - **strict mode**: Warn user, prioritize strategic over tactical
+           - **warn mode**: Continue loading, warn about budget exceeded
+           - **adaptive mode**: Intelligently filter content to fit budget
+
+   c. **Context Loading Report** (verbose mode):
+
+      IF `verbose_context_loading: true` in config:
+      ```markdown
+      📊 Context Loading Report
+
+      Phase: planning
+      Budget: 35KB
+
+      Loaded:
+      - constitution.md (strategic sections): 4.5KB
+      - testing-approach.md (strategic: testing philosophy): 2.8KB
+      - Skipped: api-standards.md (excluded phase: planning)
+      - Skipped: deployment-runbook.md (manual only)
+
+      Total Loaded: 7.3KB / 35KB (21% budget used)
+      Remaining: 27.7KB available
+
+      Status: ✅ Within budget
+      ```
+
+   d. **Backward Compatibility**:
+      - If `.specify/memory/` doesn't exist → Skip context loading (no error)
+      - If memory files lack metadata → Load all content (v2.6 behavior)
+      - Never fail command due to missing memory files
+
+   **Expected Token Savings**: ~50% (35-50KB → 15-25KB for planning phase)
+
+2. **Load context**: Read FEATURE_SPEC and loaded memory content from Phase 1.5. Load IMPL_PLAN template (already copied).
 
 3. **Execute plan workflow**: Follow the structure in IMPL_PLAN template to:
    - Fill Technical Context (mark unknowns as "NEEDS CLARIFICATION")

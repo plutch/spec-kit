@@ -17,6 +17,106 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 1. Run `{SCRIPT}` from repo root and parse FEATURE_DIR and AVAILABLE_DOCS list. All paths must be absolute. For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
+1.5. **Context Loading** (v2.7 - Context Optimization):
+
+   **Purpose**: Load tactical implementation context (code examples, TDD patterns, API templates) for the implementation phase.
+
+   **Current Phase**: `implementation`
+
+   **Context Loading Strategy**:
+
+   a. **Read Configuration** (if exists):
+      - Check for `.specify/config.yml` or `.specify/config.example.yml`
+      - Extract `context_budget.implementation` (default: 50KB - highest budget)
+      - Extract `memory.strict_phase_loading` (default: true)
+      - Extract `budget_enforcement.mode` (default: strict)
+
+   b. **Load Memory Files** (phase-aware - TACTICAL focus):
+
+      For each memory file in `.specify/memory/`:
+
+      i. **Read YAML Frontmatter**:
+         - Extract `inclusion_mode`, `context_level`, `load_phases`, `exclude_phases`
+         - If metadata missing: Default to `inclusion_mode: always, context_level: strategic, load_phases: all`
+
+      ii. **Determine if file should be loaded**:
+         ```yaml
+         IF current_phase IN exclude_phases:
+           → SKIP this file entirely
+
+         ELSE IF inclusion_mode = "always" (e.g., constitution.md):
+           → Load TACTICAL sections only (Implementation Patterns, not Core Principles)
+           → Skip strategic sections (already seen during planning)
+
+         ELSE IF inclusion_mode = "conditional":
+           IF current_phase IN load_phases:
+             → Load TACTICAL sections (code examples, step-by-step procedures)
+             → Examples:
+               - api-standards.md: Load Request/Response Format examples, Testing patterns
+               - testing-approach.md: Load Unit Testing structure (AAA pattern), Integration Testing patterns
+           ELSE:
+             → SKIP this file
+
+         ELSE IF inclusion_mode = "manual":
+           → SKIP (manual loading via @filename only)
+         ```
+
+      iii. **Filter Sections** (if loading file):
+         - Scan for `<!-- SECTION_META: context_level=X, load_phases=Y -->` comments
+         - For implementation phase: Load sections where `context_level=tactical`
+         - **SKIP strategic sections** (user already saw them during planning)
+         - Load code examples, templates, procedures
+
+      iv. **Path-Based Conditional Loading**:
+         - If working in `src/api/**/*`: Load api-standards.md
+         - If working in `**/*.test.*`: Load testing-approach.md
+         - If working in deployment files: Consider loading deployment-runbook.md (manual)
+
+      v. **Track Budget**:
+         - Sum loaded content size
+         - If exceeds `context_budget.implementation` (50KB):
+           - **strict mode**: Warn user, truncate reference sections first
+           - **warn mode**: Continue loading, warn about budget exceeded
+           - **adaptive mode**: Prioritize tactical over strategic content
+
+   c. **Context Loading Report** (verbose mode):
+
+      IF `verbose_context_loading: true` in config:
+      ```markdown
+      📊 Context Loading Report
+
+      Phase: implementation
+      Budget: 50KB
+
+      Loaded:
+      - constitution.md (tactical: Implementation Patterns): 6.2KB
+      - testing-approach.md (tactical: Unit/Integration patterns): 8.5KB
+      - api-standards.md (tactical: Request/Response examples): 7.3KB
+      - Skipped: deployment-runbook.md (manual only)
+
+      Total Loaded: 22KB / 50KB (44% budget used)
+      Remaining: 28KB available
+
+      Status: ✅ Within budget
+
+      Path-Based Loading:
+      - Detected API files → api-standards.md loaded
+      - Detected test files → testing-approach.md loaded
+      ```
+
+   d. **Backward Compatibility**:
+      - If `.specify/memory/` doesn't exist → Skip context loading (no error)
+      - If memory files lack metadata → Load all content (v2.6 behavior)
+      - Never fail command due to missing memory files
+
+   **Expected Token Savings**: ~15% (30-45KB → 25-40KB for implementation phase)
+
+   **Key Difference from Planning Phase**:
+   - Planning loads STRATEGIC content (principles, philosophy)
+   - Implementation loads TACTICAL content (code examples, procedures)
+   - This prevents showing code examples during planning (wasted tokens)
+   - This ensures code examples available during coding (when needed)
+
 2. **Pre-Implementation Approval Gate Check** (NEW v2.3):
 
    **Check if previous phases are approved before proceeding:**

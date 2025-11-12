@@ -1,7 +1,34 @@
+---
+# Context Optimization Metadata (v2.7+)
+# These settings control when and how this memory file is loaded
+
+inclusion_mode: always                    # always | conditional | manual
+context_level: strategic                  # strategic | tactical | reference
+load_phases:                              # Phases where this content is loaded
+  - specification
+  - gap_analysis
+  - planning
+  - tasks
+exclude_phases:                           # Phases where this content is skipped
+  - implementation                        # Implementation loads tactical sections only
+  - reconciliation                        # Reconciliation loads tactical sections only
+
+# Pattern-based conditional loading (optional - for future use)
+include_when:
+  - always_load: true                     # Constitution is core context
+
+# Version and update tracking
+memory_version: "1.0.0"
+last_updated: "[YYYY-MM-DD]"
+created_by: "speckit.memory"
+---
+
 # [PROJECT_NAME] Constitution
 <!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
 
+<!-- SECTION_META: context_level=strategic, load_phases=specification,gap_analysis,planning,tasks -->
 ## Core Principles
+<!-- Strategic section: High-level principles loaded during planning/specification phases -->
 
 ### [PRINCIPLE_1_NAME]
 <!-- Example: I. Library-First -->
@@ -40,7 +67,9 @@
 [SECTION_3_CONTENT]
 <!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
 
+<!-- SECTION_META: context_level=strategic, load_phases=specification,gap_analysis,planning,tasks,implementation,reconciliation -->
 ## Prohibited Patterns (Machine-Readable - v2.4)
+<!-- Strategic section: Pattern definitions loaded in all phases for awareness -->
 
 **Purpose**: Enable automated constitutional validation during `/speckit.implement` (Step 10.4 Constitutional Reviewer) and `/speckit.reconcile` (Step 5 Question 5).
 
@@ -199,7 +228,132 @@
 - Use `--exclude-dir` to avoid false positives in test/vendor code
 - Document exceptions in plan.md Complexity Tracking if pattern is unavoidable
 
+<!-- SECTION_META: context_level=tactical, load_phases=implementation,reconciliation -->
+## Implementation Patterns (Tactical Guidance - v2.7)
+<!-- Tactical section: Code examples and step-by-step procedures loaded during implementation/reconciliation only -->
+
+**Purpose**: Provide concrete implementation patterns that align with constitutional principles. This section contains code examples and procedural guidance for developers during implementation.
+
+### TDD Implementation (Article [TDD_ARTICLE_NUMBER])
+
+**RED Phase Checklist**:
+1. Write minimal failing test that demonstrates the requirement
+2. Run test suite, verify new test fails with expected error message
+3. Commit failing test: `git commit -m "RED: add failing test for [feature]"`
+
+**Example RED Phase**:
+```[LANGUAGE]
+// Example: TypeScript/Jest
+describe('[FeatureName]', () => {
+  it('should [expected behavior]', () => {
+    const result = [functionCall]([testInput]);
+    expect(result).toBe([expectedValue]);
+  });
+});
+
+// Run: npm test -- --watch
+// Expected: Test fails with "ReferenceError: [functionName] is not defined"
+```
+
+**GREEN Phase Checklist**:
+1. Write minimal code to make test pass (don't worry about perfection)
+2. Run test suite, verify all tests pass
+3. Commit passing code: `git commit -m "GREEN: implement [feature]"`
+
+**Example GREEN Phase**:
+```[LANGUAGE]
+// Example: TypeScript
+export function [functionName]([param]: [Type]): [ReturnType] {
+  // Minimal implementation to pass test
+  return [simpleImplementation];
+}
+
+// Run: npm test
+// Expected: All tests pass
+```
+
+**REFACTOR Phase Checklist**:
+1. Improve code structure without changing behavior
+2. Run test suite after each refactoring step
+3. Commit refactoring: `git commit -m "REFACTOR: improve [aspect] in [feature]"`
+
+**Example REFACTOR Phase**:
+```[LANGUAGE]
+// Example: Extract helper, improve naming, add comments
+export function [betterFunctionName]([param]: [Type]): [ReturnType] {
+  // Clear documentation of purpose
+  const [intermediate] = [helperFunction]([param]);
+  return [cleanImplementation]([intermediate]);
+}
+```
+
+---
+
+### Integration Testing Patterns (Article [INTEGRATION_ARTICLE_NUMBER])
+
+**Database Integration (Real Database Required)**:
+```[LANGUAGE]
+// ❌ PROHIBITED in integration tests
+const db = new InMemoryDatabase();
+const mockRepo = createMockRepository();
+
+// ✅ REQUIRED in integration tests
+import { GenericContainer } from 'testcontainers';
+
+beforeAll(async () => {
+  const container = await new GenericContainer('[database-image]')
+    .withExposedPorts([port])
+    .withEnvironment({ [ENV_KEY]: [ENV_VALUE] })
+    .start();
+
+  const db = new Database({
+    host: container.getHost(),
+    port: container.getMappedPort([port])
+  });
+
+  await db.migrate();
+});
+
+afterAll(async () => {
+  await container.stop();
+});
+```
+
+**Auth Integration (Real Auth Provider Required)**:
+```[LANGUAGE]
+// ❌ PROHIBITED in integration tests
+jest.mock('auth0');
+const mockToken = 'fake-jwt-token';
+
+// ✅ REQUIRED in integration tests
+import { Auth0Client } from '@auth0/auth0-spa-js';
+
+const auth0 = new Auth0Client({
+  domain: process.env.AUTH0_TEST_DOMAIN,
+  clientId: process.env.AUTH0_TEST_CLIENT_ID,
+  // Use real test tenant, not mocks
+});
+
+const token = await auth0.getTokenSilently({
+  // Real authentication flow
+});
+```
+
+---
+
+### [PROJECT_SPECIFIC_IMPLEMENTATION_PATTERNS]
+<!-- Add project-specific implementation patterns below -->
+<!-- Examples: API endpoint structure, database query patterns, error handling templates, etc. -->
+
+---
+
+**Note**: This tactical section is only loaded during `/speckit.implement` and `/speckit.reconcile` to provide concrete guidance during coding. Strategic principles (above) are loaded during planning phases.
+
+---
+
+<!-- SECTION_META: context_level=strategic, load_phases=all -->
 ## Governance
+<!-- Strategic section: Governance rules loaded in all phases -->
 <!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
 [GOVERNANCE_RULES]

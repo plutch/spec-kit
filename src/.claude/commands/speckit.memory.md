@@ -78,6 +78,25 @@ This command creates and maintains **Project Memory** files that provide persist
 
 **Template Location**: `.specify/memory/constitution.md`
 
+**Context Metadata (v2.7+)** - Add to YAML frontmatter:
+```yaml
+---
+inclusion_mode: always                    # Constitution is core context
+context_level: strategic                  # High-level principles
+load_phases:
+  - specification
+  - gap_analysis
+  - planning
+  - tasks
+exclude_phases:
+  - implementation                        # Implementation loads tactical sections only
+  - reconciliation
+memory_version: "1.0.0"
+last_updated: "[TODAY'S DATE in YYYY-MM-DD format]"
+created_by: "speckit.memory"
+---
+```
+
 **Information to Extract/Update:**
 
 **3.1: Project Overview**
@@ -122,6 +141,30 @@ This command creates and maintains **Project Memory** files that provide persist
 
 **When to Create**: If project has API endpoints
 
+**Context Metadata (v2.7+)** - Add to YAML frontmatter:
+```yaml
+---
+inclusion_mode: conditional
+context_level: tactical
+load_phases:
+  - implementation
+  - reconciliation
+exclude_phases:
+  - specification
+  - gap_analysis
+  - planning
+include_when:
+  - path_pattern: "src/api/**/*"
+  - path_pattern: "**/controllers/**/*"
+  - path_pattern: "**/routes/**/*"
+  - path_pattern: "**/*-api.js"
+  - path_pattern: "**/*-api.ts"
+memory_version: "1.0.0"
+last_updated: "[TODAY'S DATE in YYYY-MM-DD format]"
+created_by: "speckit.memory"
+---
+```
+
 **Information to Extract/Update:**
 - Detect REST API patterns
 - Extract conventions (resource naming, HTTP methods, response formats)
@@ -133,6 +176,31 @@ This command creates and maintains **Project Memory** files that provide persist
 **Template Location**: `.specify/memory/testing-approach.md`
 
 **When to Create**: If project has tests
+
+**Context Metadata (v2.7+)** - Add to YAML frontmatter:
+```yaml
+---
+inclusion_mode: conditional
+context_level: tactical
+load_phases:
+  - planning
+  - implementation
+  - reconciliation
+exclude_phases:
+  - specification
+  - gap_analysis
+include_when:
+  - path_pattern: "**/*.test.*"
+  - path_pattern: "**/*.spec.*"
+  - path_pattern: "**/tests/**/*"
+  - path_pattern: "**/test/**/*"
+  - command: "speckit.implement"
+  - command: "speckit.plan"
+memory_version: "1.0.0"
+last_updated: "[TODAY'S DATE in YYYY-MM-DD format]"
+created_by: "speckit.memory"
+---
+```
 
 **Information to Extract/Update:**
 - Detect testing framework
@@ -189,6 +257,7 @@ This command creates and maintains **Project Memory** files that provide persist
 - All major sections have content
 - Version number updated
 - Last Updated date is today
+- **Context metadata present** (v2.7+): YAML frontmatter with inclusion_mode, context_level, load_phases
 
 ✅ **Accuracy Check**
 - Technology stack matches actual dependencies

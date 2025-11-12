@@ -1,12 +1,44 @@
+---
+# Context Optimization Metadata (v2.7+)
+# These settings control when and how this memory file is loaded
+
+inclusion_mode: conditional              # always | conditional | manual
+context_level: tactical                  # strategic | tactical | reference
+load_phases:                             # Phases where this content is loaded
+  - planning                             # Load during planning (test strategy)
+  - implementation                       # Load during implementation (TDD)
+  - reconciliation                       # Load during reconciliation (gap closure)
+exclude_phases:                          # Phases where this content is skipped
+  - specification                        # Skip during spec writing
+  - gap_analysis                         # Skip during gap analysis
+
+# Pattern-based conditional loading
+include_when:
+  - path_pattern: "**/*.test.*"
+  - path_pattern: "**/*.spec.*"
+  - path_pattern: "**/tests/**/*"
+  - path_pattern: "**/test/**/*"
+  - path_pattern: "**/__tests__/**/*"
+  - command: "speckit.implement"         # Load during implementation
+  - command: "speckit.plan"              # Load during planning (Phase 2.5)
+
+# Version and update tracking
+memory_version: "1.0.0"
+last_updated: "[YYYY-MM-DD]"
+created_by: "speckit.memory"
+---
+
 # Testing Approach & Standards
 
-**Inclusion Mode**: Conditional
-**Trigger Patterns**: `**/*.test.*`, `**/*.spec.*`, `**/tests/**/*`, `**/test/**/*`, `**/__tests__/**/*`
 **Purpose**: Testing strategy, conventions, and quality standards
+**Context**: This file is conditionally loaded when working in test files or during implementation
+**Loaded During**: Planning (test strategy), implementation (TDD), and reconciliation phases
 
 ---
 
+<!-- SECTION_META: context_level=strategic, load_phases=planning,implementation,reconciliation -->
 ## Testing Philosophy
+<!-- Strategic section: High-level testing principles -->
 
 ### Test-First Mindset
 <!-- When TDD is required vs optional -->
@@ -43,7 +75,9 @@
 
 **Priority**: Branch coverage > Line coverage
 
+<!-- SECTION_META: context_level=tactical, load_phases=implementation,reconciliation -->
 ## Unit Testing
+<!-- Tactical section: Unit testing patterns and code examples -->
 
 ### Scope
 - Test single function, method, or component in isolation
