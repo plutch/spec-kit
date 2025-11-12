@@ -22,6 +22,95 @@ This command performs **Gap Analysis** between your specification and existing c
 
 Gap analysis is **critical for HIGH-risk features** and **recommended for all features** before planning begins.
 
+## Context Loading (v2.7 - Context Optimization)
+
+**Purpose**: Load relevant memory content for gap analysis, optimized for token efficiency.
+
+**Current Phase**: `gap_analysis`
+
+**Context Loading Strategy**:
+
+a. **Read Configuration** (if exists):
+   - Check for `.specify/config.yml` or `.specify/config.example.yml`
+   - Extract `context_budget.gap_analysis` (default: 25KB)
+   - Extract `memory.strict_phase_loading` (default: true)
+   - Extract `budget_enforcement.mode` (default: strict)
+
+b. **Load Memory Files** (phase-aware):
+
+   For each memory file in `.specify/memory/`:
+
+   i. **Read YAML Frontmatter**:
+      - Extract `inclusion_mode`, `context_level`, `load_phases`, `exclude_phases`
+      - If metadata missing: Default to `inclusion_mode: always, context_level: strategic, load_phases: all`
+
+   ii. **Determine if file should be loaded**:
+      ```yaml
+      IF current_phase IN exclude_phases:
+        → SKIP this file entirely
+
+      ELSE IF inclusion_mode = "always":
+        → Load strategic sections only (constitution core principles, architecture decisions)
+
+      ELSE IF inclusion_mode = "conditional":
+        IF current_phase IN load_phases OR "gap_analysis" IN load_phases:
+          → Load strategic + analysis sections (architecture patterns, existing code analysis)
+        ELSE:
+          → SKIP (e.g., deployment runbooks excluded)
+
+      ELSE IF inclusion_mode = "manual":
+        → SKIP (manual loading via @filename only)
+      ```
+
+   iii. **Filter Sections** (if loading file):
+      - Scan for `<!-- SECTION_META: context_level=X, load_phases=Y -->` comments
+      - For gap_analysis phase: Load sections where `gap_analysis` IN load_phases
+      - Load strategic sections (architecture principles, existing patterns)
+      - Load analysis-relevant sections (codebase structure, component inventory)
+      - Skip tactical sections (code examples, deployment procedures)
+
+   iv. **Track Budget**:
+      - Sum loaded content size
+      - If exceeds `context_budget.gap_analysis` (25KB):
+        - **strict mode**: Warn user, prioritize architecture + existing code analysis
+        - **warn mode**: Continue loading, warn about budget exceeded
+        - **adaptive mode**: Intelligently filter content to fit budget
+
+c. **Context Loading Report** (verbose mode):
+
+   IF `verbose_context_loading: true` in config:
+   ```markdown
+   📊 Context Loading Report
+
+   Phase: gap_analysis
+   Budget: 25KB
+
+   Loaded:
+   - constitution.md (strategic: architecture principles): 4.1KB
+   - codebase-structure.md (analysis: existing components): 6.3KB
+   - architecture-patterns.md (strategic: design patterns): 5.2KB
+   - Skipped: api-standards.md (tactical: API examples not needed for gap analysis)
+   - Skipped: deployment-runbook.md (manual only)
+
+   Total Loaded: 15.6KB / 25KB (62% budget used)
+   Remaining: 9.4KB available
+
+   Status: ✅ Within budget
+   ```
+
+d. **Backward Compatibility**:
+   - If `.specify/memory/` doesn't exist → Skip context loading (no error)
+   - If memory files lack metadata → Load all content (v2.6 behavior)
+   - Never fail command due to missing memory files
+
+**Expected Token Savings**: ~60% (35-50KB → 15-25KB for gap analysis phase)
+
+**Key Difference from Other Phases**:
+- Gap Analysis loads STRATEGIC + EXISTING CODE ANALYSIS (architecture, component inventory)
+- Specification loads only STRATEGIC (principles, patterns)
+- Implementation loads only TACTICAL (code examples, procedures)
+- This ensures gap analysis has context on existing codebase for reuse identification
+
 ## Execution Flow
 
 ### Phase 1: Load Specification & Requirements

@@ -29,6 +29,83 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ---
 
+## Context Loading (v2.7 - Context Optimization)
+
+**Purpose**: Load relevant memory content for UX quality analysis, optimized for token efficiency.
+
+**Current Phase**: `ux_analysis`
+
+**Context Loading Strategy**:
+
+a. **Read Configuration** (if exists):
+   - Check for `.specify/config.yml` or `.specify/config.example.yml`
+   - Extract `context_budget` for UX analysis (default: 20KB)
+   - Extract `memory.strict_phase_loading` (default: true)
+   - Extract `budget_enforcement.mode` (default: strict)
+
+b. **Load Memory Files** (phase-aware):
+
+   For each memory file in `.specify/memory/`:
+
+   i. **Read YAML Frontmatter**:
+      - Extract `inclusion_mode`, `context_level`, `load_phases`, `exclude_phases`
+      - If metadata missing: Default to `inclusion_mode: always, context_level: strategic`
+
+   ii. **Determine if file should be loaded**:
+      ```yaml
+      IF inclusion_mode = "always":
+        → Load strategic sections only (UX principles, accessibility guidelines)
+
+      ELSE IF inclusion_mode = "conditional":
+        IF "ux_analysis" IN load_phases OR "specification" IN load_phases:
+          → Load strategic sections (UX criteria, WCAG guidelines, design principles)
+        ELSE:
+          → SKIP
+
+      ELSE IF inclusion_mode = "manual":
+        → SKIP
+      ```
+
+   iii. **Filter Sections**:
+      - Load strategic sections (UX principles, accessibility standards, component guidelines)
+      - Skip tactical sections (implementation code, deployment procedures)
+
+   iv. **Track Budget**:
+      - If exceeds 20KB budget:
+        - **strict mode**: Warn user, prioritize UX standards + accessibility
+        - **warn mode**: Continue, warn about budget
+        - **adaptive mode**: Filter to fit budget
+
+c. **Context Loading Report** (verbose mode):
+
+   IF `verbose_context_loading: true`:
+   ```markdown
+   📊 Context Loading Report
+
+   Phase: ux_analysis
+   Budget: 20KB
+
+   Loaded:
+   - ux-principles.md (strategic: usability, accessibility): 5.2KB
+   - design-system.md (strategic: component patterns): 4.1KB
+   - Skipped: api-standards.md (not relevant to UX)
+   - Skipped: deployment-runbook.md (manual only)
+
+   Total: 9.3KB / 20KB (47% used)
+   Status: ✅ Within budget
+   ```
+
+d. **Backward Compatibility**:
+   - If `.specify/memory/` doesn't exist → Skip (no error)
+   - If files lack metadata → Load all content (v2.6 behavior)
+   - Never fail due to missing memory files
+
+**Expected Token Savings**: ~40% (15-20KB → 9-12KB for UX analysis)
+
+**Key Focus**: UX analysis loads STRATEGIC content (UX principles, accessibility guidelines, design system patterns) to evaluate user experience, not implementation code.
+
+---
+
 ## Execution Steps
 
 1. **Load Feature Context** (v2.3 Enhanced):
@@ -191,7 +268,19 @@ You **MUST** consider the user input before proceeding (if not empty).
    c. Categorize: ✅ Used Correctly | ❌ Custom Reimplementation | ⚠️ Inconsistent
    d. Check design tokens: Colors, Spacing, Typography (% adherence)
    e. Calculate Component Reuse Score: (Library / Total) × 100%
-   f. Optional MCP: Query component docs if MCP available (e.g., kendo-angular-assistant)
+   f. Optional MCP Enhancement (Graceful Fallback):
+      - **IF MCP server available** (e.g., kendo-angular-assistant for Kendo UI):
+        * Query official component documentation via MCP
+        * Validate component props against official API
+        * Include official docs links in recommendations
+        * Verify best practices from framework vendor
+      - **IF MCP NOT available** (graceful fallback):
+        * Use component audit template (`.specify/templates/component-audit-templates/`)
+        * Rely on common patterns and best practices from template
+        * Provide general recommendations (without vendor-validated props)
+        * Note: "⚠️ MCP server not available - using template-based audit (less precise)"
+      - **Benefit of MCP**: Higher precision, vendor-validated recommendations
+      - **Impact without MCP**: Still functional, but recommendations less specific
    g. Generate recommendations with before/after examples
 
 8. **Identify Top UX Issues**: Scan spec for common problems, prioritized by severity
@@ -626,7 +715,17 @@ Analyzed: [DATE]
 
 **Recommendations**:
 1. [Replace custom component X with library component Y]
-   [If MCP available: Include official docs link and validated props]
+
+   **IF MCP Available** (Enhanced Recommendations):
+   - Official docs: [MCP-queried documentation link]
+   - Validated props: [component API from vendor docs]
+   - Best practices: [framework-specific guidance]
+
+   **IF MCP NOT Available** (Template-Based Recommendations):
+   - General guidance: Use [library component Y] instead of custom [component X]
+   - Common props: [standard props from template knowledge]
+   - Note: ⚠️ Verify props against [framework] documentation
+
 2. [Standardize on library component Z]
 3. [Replace hardcoded values with design tokens]
 4. [Additional recommendations...]

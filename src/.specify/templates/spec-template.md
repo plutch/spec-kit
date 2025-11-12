@@ -68,6 +68,123 @@
 
 ---
 
+## Epic Reference *(auto-generated if part of epic)*
+
+**Epic**: [EPIC-XXX: Epic Name](../../../epics/[epic-name]/epic-spec.md)
+
+**Feature Position in Epic**:
+- **Feature ID**: [XXX]
+- **Dependencies**: [Feature IDs this feature depends on]
+- **Blocks**: [Feature IDs that depend on this feature]
+- **Wave**: [N] ([Week X-Y])
+- **Epic Timeline**: See [dependency-map.md](../../../epics/[epic-name]/dependency-map.md)
+
+**Business Context** (from Epic):
+[1-2 sentences explaining how this feature supports epic-level business goals]
+
+---
+
+## Architectural Decisions (From Epic) *(auto-generated if part of epic)*
+
+This feature must adhere to the following epic-level architectural decisions:
+
+### AD-EPIC-001: [Decision Title]
+
+**Status**: [Accepted / Superseded]
+**Date**: [YYYY-MM-DD]
+**Impact**: [All features / Specific features]
+**Decision**: [Summary of architectural decision from epic-architecture.md]
+**Full Details**: See [epic-architecture.md](../../../epics/[epic-name]/epic-architecture.md#AD-EPIC-001)
+
+**Feature-Specific Implications**:
+- [How this decision affects THIS feature specifically]
+- [What this feature must implement to comply with this decision]
+- [Any constraints or requirements this decision imposes]
+
+**Implementation Guidance** (from epic):
+```[language]
+// Code examples from epic-architecture.md showing how to apply this decision
+```
+
+---
+
+### AD-EPIC-002: [Another Decision Title]
+
+[Same structure as above]
+
+---
+
+## Integration Requirements *(auto-generated if part of epic)*
+
+### Depends On (Upstream Features)
+
+This feature requires the following from upstream features:
+
+| Feature | Contract | Delivery Date | What This Feature Needs | Status |
+|---------|----------|---------------|-------------------------|--------|
+| [001 - Feature Name] | [Interface/API/Schema] | [YYYY-MM-DD] | [Specific requirements from upstream feature] | [🟢/🟡/🔴] |
+| [002 - Feature Name] | [Interface/API/Schema] | [YYYY-MM-DD] | [Specific requirements from upstream feature] | [🟢/🟡/🔴] |
+
+**Acceptance Criteria (Integration)**:
+- REQ-INT-1: WHEN Feature [001] completes THEN `[Interface/API]` SHALL be available
+- REQ-INT-2: WHEN calling `[method/endpoint]` THEN [expected behavior] SHALL occur within [N]ms
+
+---
+
+### Provides To (Downstream Features)
+
+This feature must deliver the following to downstream features:
+
+| Feature | Contract | Delivery Date | What This Feature Must Deliver | Status |
+|---------|----------|---------------|-------------------------------|--------|
+| [003 - Feature Name] | [Interface/API/Schema] | [YYYY-MM-DD] | [Specific deliverables this feature provides] | [🟢/🟡/🔴] |
+| [004 - Feature Name] | [Interface/API/Schema] | [YYYY-MM-DD] | [Specific deliverables this feature provides] | [🟢/🟡/🔴] |
+
+**Delivery Requirements**:
+- [Interface/API] must be stable and documented by [Date]
+- Breaking changes require 2-week notice to downstream features
+- Integration tests with downstream features required before delivery
+
+---
+
+## Constitutional Requirements *(auto-generated if constitution.md exists)*
+
+This feature must comply with the following constitutional principles:
+
+### Article I: Test-Driven Development (TDD)
+- **Requirement**: ALL code in this feature must follow RED-GREEN-REFACTOR workflow
+- **Validation**: Git history analysis at `/speckit.implement` Step 10.4.1
+- **Evidence Required**: Tests written before implementation, one test per requirement
+
+### Article III: Integration-First Testing
+- **Requirement**: Integration tests must use real dependencies (Docker/Testcontainers), not mocks
+- **Validation**: Test file analysis at `/speckit.implement` Step 10.4.4
+- **Prohibited**: Mocked databases, mocked authentication, mocked external APIs (unless explicitly allowed)
+
+### Article V: Prohibited Patterns
+- ❌ **PROHIBITED**: [List of prohibited patterns from constitution.md + epic-architecture.md]
+  - Example: `fs.readFileSync()` for async operations (use `fs.promises.readFile()`)
+  - Example: `db.query()` without parameterization (SQL injection risk)
+- ✅ **REQUIRED**: [Approved alternatives]
+  - Example: Use `fs.promises.readFile()` for async file operations
+  - Example: Use parameterized queries for all database access
+
+### Article VIII: Simplicity Over Abstraction
+- **Epic-Specific Requirement**: [From epic-architecture.md Constitutional Compliance section]
+  - Example: "Use PostgreSQL RLS directly, no custom multi-tenant framework"
+- **Validation**: Framework count, custom wrapper detection at `/speckit.implement` Step 10.4.3
+
+**Constitutional Validation Checkpoints**:
+1. **Pre-Flight Check** (`/speckit.implement` Step 2.5): Verify planning phase constitutional approval
+2. **Constitutional Reviewer** (`/speckit.implement` Step 10.4): 6-task validation (TDD, simplicity, prohibited patterns, etc.)
+3. **Re-Validation** (`/speckit.reconcile` Step 5 Q5): Maintain constitutional integrity during gap closure
+
+**References**:
+- [constitution.md](../../memory/constitution.md)
+- [epic-architecture.md Constitutional Compliance](../../../epics/[epic-name]/epic-architecture.md#constitutional-compliance-epic-wide) (if part of epic)
+
+---
+
 ## User Scenarios & Testing *(mandatory)*
 
 <!--

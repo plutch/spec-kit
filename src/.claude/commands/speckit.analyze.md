@@ -28,6 +28,81 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ---
 
+## Context Loading (v2.7 - Context Optimization)
+
+**Purpose**: Load relevant memory content for quality analysis, optimized for token efficiency.
+
+**Current Phase**: `quality_analysis`
+
+**Context Loading Strategy**:
+
+a. **Read Configuration** (if exists):
+   - Check for `.specify/config.yml` or `.specify/config.example.yml`
+   - Extract `context_budget` for quality analysis (default: 20KB)
+   - Extract `memory.strict_phase_loading` (default: true)
+   - Extract `budget_enforcement.mode` (default: strict)
+
+b. **Load Memory Files** (phase-aware):
+
+   For each memory file in `.specify/memory/`:
+
+   i. **Read YAML Frontmatter**:
+      - Extract `inclusion_mode`, `context_level`, `load_phases`, `exclude_phases`
+      - If metadata missing: Default to `inclusion_mode: always, context_level: strategic`
+
+   ii. **Determine if file should be loaded**:
+      ```yaml
+      IF inclusion_mode = "always":
+        → Load strategic sections only (quality standards, severity guidelines)
+
+      ELSE IF inclusion_mode = "conditional":
+        IF "quality_analysis" IN load_phases OR "specification" IN load_phases:
+          → Load strategic sections (quality criteria, best practices)
+        ELSE:
+          → SKIP
+
+      ELSE IF inclusion_mode = "manual":
+        → SKIP
+      ```
+
+   iii. **Filter Sections**:
+      - Load strategic sections (quality standards, severity definitions)
+      - Skip tactical sections (code examples, procedures)
+
+   iv. **Track Budget**:
+      - If exceeds 20KB budget:
+        - **strict mode**: Warn user, prioritize quality standards
+        - **warn mode**: Continue, warn about budget
+        - **adaptive mode**: Filter to fit budget
+
+c. **Context Loading Report** (verbose mode):
+
+   IF `verbose_context_loading: true`:
+   ```markdown
+   📊 Context Loading Report
+
+   Phase: quality_analysis
+   Budget: 20KB
+
+   Loaded:
+   - quality-standards.md (strategic: criteria, severity levels): 4.8KB
+   - Skipped: implementation-patterns.md (tactical: not needed for analysis)
+
+   Total: 4.8KB / 20KB (24% used)
+   Status: ✅ Within budget
+   ```
+
+d. **Backward Compatibility**:
+   - If `.specify/memory/` doesn't exist → Skip (no error)
+   - If files lack metadata → Load all content (v2.6 behavior)
+   - Never fail due to missing memory files
+
+**Expected Token Savings**: ~40% (15-20KB → 9-12KB for quality analysis)
+
+**Key Focus**: Quality analysis loads STRATEGIC content (quality standards, severity guidelines, best practices) to evaluate specifications, not tactical implementation details.
+
+---
+
 ## Execution Steps
 
 1. **Load Feature Context** (v2.3 Enhanced):

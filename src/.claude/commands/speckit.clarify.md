@@ -77,6 +77,95 @@ ELSE:
 
 ---
 
+## Context Loading (v2.7 - Context Optimization)
+
+**Purpose**: Load relevant memory content for the clarification phase, optimized for token efficiency.
+
+**Current Phase**: `specification` (clarification is part of specification refinement)
+
+**Context Loading Strategy**:
+
+a. **Read Configuration** (if exists):
+   - Check for `.specify/config.yml` or `.specify/config.example.yml`
+   - Extract `context_budget.specification` (default: 15KB)
+   - Extract `memory.strict_phase_loading` (default: true)
+   - Extract `budget_enforcement.mode` (default: strict)
+
+b. **Load Memory Files** (phase-aware):
+
+   For each memory file in `.specify/memory/`:
+
+   i. **Read YAML Frontmatter**:
+      - Extract `inclusion_mode`, `context_level`, `load_phases`, `exclude_phases`
+      - If metadata missing: Default to `inclusion_mode: always, context_level: strategic, load_phases: all`
+
+   ii. **Determine if file should be loaded**:
+      ```yaml
+      IF current_phase IN exclude_phases:
+        → SKIP this file entirely
+
+      ELSE IF inclusion_mode = "always":
+        → Load strategic sections only (constitution core principles)
+
+      ELSE IF inclusion_mode = "conditional":
+        IF current_phase IN load_phases OR "specification" IN load_phases:
+          → Load strategic sections (e.g., requirements patterns, domain knowledge)
+        ELSE:
+          → SKIP (e.g., tactical implementation details excluded)
+
+      ELSE IF inclusion_mode = "manual":
+        → SKIP (manual loading via @filename only)
+      ```
+
+   iii. **Filter Sections** (if loading file):
+      - Scan for `<!-- SECTION_META: context_level=X, load_phases=Y -->` comments
+      - For specification/clarification phase: Load sections where `specification` IN load_phases
+      - Load strategic sections (principles, patterns, domain knowledge)
+      - Skip tactical sections (code examples, procedures)
+
+   iv. **Track Budget**:
+      - Sum loaded content size
+      - If exceeds `context_budget.specification` (15KB):
+        - **strict mode**: Warn user, prioritize core strategic content
+        - **warn mode**: Continue loading, warn about budget exceeded
+        - **adaptive mode**: Intelligently filter content to fit budget
+
+c. **Context Loading Report** (verbose mode):
+
+   IF `verbose_context_loading: true` in config:
+   ```markdown
+   📊 Context Loading Report
+
+   Phase: specification (clarification)
+   Budget: 15KB
+
+   Loaded:
+   - constitution.md (strategic: core principles): 3.2KB
+   - domain-patterns.md (strategic: requirements patterns): 2.5KB
+   - Skipped: api-standards.md (excluded phase: specification)
+   - Skipped: testing-approach.md (tactical: code examples not needed)
+   - Skipped: deployment-runbook.md (manual only)
+
+   Total Loaded: 5.7KB / 15KB (38% budget used)
+   Remaining: 9.3KB available
+
+   Status: ✅ Within budget
+   ```
+
+d. **Backward Compatibility**:
+   - If `.specify/memory/` doesn't exist → Skip context loading (no error)
+   - If memory files lack metadata → Load all content (v2.6 behavior)
+   - Never fail command due to missing memory files
+
+**Expected Token Savings**: ~60% (20-30KB → 8-12KB for clarification phase)
+
+**Key Difference from Implementation Phase**:
+- Clarification loads STRATEGIC content (principles, patterns, domain knowledge)
+- Implementation loads TACTICAL content (code examples, procedures)
+- This prevents showing code examples during requirements clarification (wasted tokens)
+
+---
+
 ### Expert Lens Mode Execution (Multi-Perspective Review)
 
 **Purpose**: Apply systematic multi-expert review methodology to identify gaps across requirements quality, architecture, UX/usability, and production resilience dimensions.

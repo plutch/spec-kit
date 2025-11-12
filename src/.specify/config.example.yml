@@ -377,7 +377,7 @@ risk:
 # ==============================================================================
 
 # Verbose mode - show context loading details
-verbose_context_loading: false
+verbose_context_loading: true
 
 # Enable experimental features (not recommended for production)
 experimental_features: false

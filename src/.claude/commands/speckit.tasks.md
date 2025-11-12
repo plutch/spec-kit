@@ -15,6 +15,95 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ## Outline
 
+## Context Loading (v2.7 - Context Optimization)
+
+**Purpose**: Load relevant memory content for task generation, optimized for token efficiency.
+
+**Current Phase**: `tasks` (task breakdown phase)
+
+**Context Loading Strategy**:
+
+a. **Read Configuration** (if exists):
+   - Check for `.specify/config.yml` or `.specify/config.example.yml`
+   - Extract `context_budget.implementation` (default: 50KB - tasks shares budget with implementation)
+   - Extract `memory.strict_phase_loading` (default: true)
+   - Extract `budget_enforcement.mode` (default: strict)
+
+b. **Load Memory Files** (phase-aware):
+
+   For each memory file in `.specify/memory/`:
+
+   i. **Read YAML Frontmatter**:
+      - Extract `inclusion_mode`, `context_level`, `load_phases`, `exclude_phases`
+      - If metadata missing: Default to `inclusion_mode: always, context_level: strategic, load_phases: all`
+
+   ii. **Determine if file should be loaded**:
+      ```yaml
+      IF current_phase IN exclude_phases:
+        → SKIP this file entirely
+
+      ELSE IF inclusion_mode = "always":
+        → Load tactical sections (task templates, implementation procedures)
+
+      ELSE IF inclusion_mode = "conditional":
+        IF current_phase IN load_phases OR "tasks" IN load_phases OR "implementation" IN load_phases:
+          → Load tactical sections (task breakdown patterns, implementation procedures)
+        ELSE:
+          → SKIP (e.g., specification-only content excluded)
+
+      ELSE IF inclusion_mode = "manual":
+        → SKIP (manual loading via @filename only)
+      ```
+
+   iii. **Filter Sections** (if loading file):
+      - Scan for `<!-- SECTION_META: context_level=X, load_phases=Y -->` comments
+      - For tasks phase: Load sections where `tasks` OR `implementation` IN load_phases
+      - Load tactical sections (task templates, implementation procedures, file structure patterns)
+      - Skip strategic sections (high-level principles without actionable details)
+
+   iv. **Track Budget**:
+      - Sum loaded content size
+      - If exceeds `context_budget.implementation` (50KB):
+        - **strict mode**: Warn user, prioritize task templates + implementation procedures
+        - **warn mode**: Continue loading, warn about budget exceeded
+        - **adaptive mode**: Intelligently filter content to fit budget
+
+c. **Context Loading Report** (verbose mode):
+
+   IF `verbose_context_loading: true` in config:
+   ```markdown
+   📊 Context Loading Report
+
+   Phase: tasks
+   Budget: 50KB
+
+   Loaded:
+   - task-templates.md (tactical: task breakdown patterns): 7.2KB
+   - testing-approach.md (tactical: test task patterns): 8.5KB
+   - file-structure-patterns.md (tactical: project organization): 5.3KB
+   - Skipped: constitution.md (strategic: principles only, not task details)
+   - Skipped: deployment-runbook.md (manual only)
+
+   Total Loaded: 21KB / 50KB (42% budget used)
+   Remaining: 29KB available
+
+   Status: ✅ Within budget
+   ```
+
+d. **Backward Compatibility**:
+   - If `.specify/memory/` doesn't exist → Skip context loading (no error)
+   - If memory files lack metadata → Load all content (v2.6 behavior)
+   - Never fail command due to missing memory files
+
+**Expected Token Savings**: ~15% (30-40KB → 25-35KB for tasks phase)
+
+**Key Difference from Other Phases**:
+- Tasks loads TACTICAL content (task templates, implementation procedures, file structure)
+- Specification/Planning load STRATEGIC (principles, patterns, architecture)
+- This ensures tasks have actionable implementation details, not just high-level principles
+
+## Execution Steps
+
 1. **Setup**: Run `{SCRIPT}` from repo root and parse FEATURE_DIR and AVAILABLE_DOCS list. All paths must be absolute. For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
 2. **Load design documents**: Read from FEATURE_DIR:

@@ -76,27 +76,27 @@ Confidence = (Passed Checks / 4) × 100
 
 Examples:
 - 4/4 checks pass: 100% → PROCEED (high confidence)
-- 3/4 checks pass: 75% → PROCEED (adequate confidence)
-- 2/4 checks pass: 50% → BLOCK (below threshold)
+- 3/4 checks pass: 75% → PROCEED (good confidence)
+- 2/4 checks pass: 50% → PROCEED (adequate confidence)
 - 1/4 checks pass: 25% → BLOCK (insufficient context)
 - 0/4 checks pass: 0% → BLOCK (no context)
 
-Threshold: ≥75% (requires 3 or 4 checks passing)
-NOTE: This is Fix C2 - confidence threshold raised from 70% to 75%
+Threshold: ≥50% (requires 2, 3, or 4 checks passing)
+NOTE: Threshold lowered from 75% to 50% for better developer experience (workflow-reviewer recommendation)
 ```
 
 **Decision Logic**:
 
 ```yaml
-IF confidence < 75% (0-2 checks passed):
+IF confidence < 50% (0-1 checks passed):
   → STOP execution immediately
   → Report which checks failed with specific details
   → Request user to fix issues
   → DO NOT guess or make assumptions
   → Output format: "❌ Low Confidence ([X]%) - [Failed Check Details]"
 
-ELSE IF confidence >= 75% (3-4 checks passed):
-  → High confidence - proceed to review gate
+ELSE IF confidence >= 50% (2-4 checks passed):
+  → Adequate confidence - proceed to review gate
   → Gather evidence for review gate
 ```
 
@@ -165,7 +165,7 @@ Expected Evidence:
   ✓ CHECK 2 result: [PASS/FAIL]
   ✓ CHECK 3 result: [PASS/FAIL]
   ✓ CHECK 4 result: [PASS/FAIL]
-  ✓ Confidence: [N]% (threshold: ≥75%)
+  ✓ Confidence: [N]% (threshold: ≥50%)
 
 IF any evidence is MISSING:
   ❌ CANNOT report status
@@ -180,7 +180,7 @@ Detect and BLOCK these patterns:
 🚨 "Context restored" WITHOUT showing which files were loaded
    → Self-correction: "Wait, I need to show file load status for each file"
 
-🚨 "High confidence" WITH <75% confidence score
+🚨 "High confidence" WITH <50% confidence score
    → Self-correction: "Confidence below threshold, must report as low confidence"
 
 🚨 "Ready to proceed" WITH branch mismatch
@@ -203,10 +203,10 @@ IF detected: STOP → Gather evidence → Report honestly
 
 ### Determine Status
 
-✅ **READY (High Confidence ≥75%)**:
+✅ **READY (Adequate Confidence ≥50%)**:
 ```yaml
 Criteria (ALL must be met):
-  - Confidence ≥75% (3-4 checks passed)
+  - Confidence ≥50% (2-4 checks passed)
   - All critical checks passed (no critical failures)
   - Phase-file consistency verified
   - Branch match confirmed (or no git repo)
@@ -216,24 +216,26 @@ IF ALL criteria met:
   → Present symbol-based status to user
 ```
 
-⚠️ **NEEDS REVIEW (Confidence 50-74%)**:
+⚠️ **NEEDS REVIEW (Confidence 25-49%)** [RARE - threshold lowered]:
 ```yaml
 Criteria:
-  - Confidence 50-74% (2 checks passed)
+  - Confidence 25-49% (1 check passed)
   - Some state issues present (branch mismatch, minor inconsistency)
-  - Partial context available
+  - Minimal context available
   - Manual review recommended
 
 IF criteria met:
   → Present issues to user
   → Request manual state verification
   → Do NOT recommend next action automatically
+
+NOTE: This status is rare after threshold lowering from 75% to 50%
 ```
 
-❌ **NOT READY (Low Confidence <50%)**:
+❌ **NOT READY (Low Confidence <25%)**:
 ```yaml
 Criteria (ANY triggers NOT READY):
-  - Confidence <50% (0-1 checks passed)
+  - Confidence <25% (0 checks passed)
   - No git repo AND no state.json
   - Critical file read errors
   - Phase completely inconsistent with files
@@ -255,7 +257,7 @@ IF NOT READY:
 
 Status: [✅ READY | ⚠️ NEEDS REVIEW | ❌ NOT READY]
 
-**Confidence**: [N]% (threshold: ≥75%)
+**Confidence**: [N]% (threshold: ≥50%)
 
 **State Files Loaded**:
   [✅ | ❌] pm_context.md

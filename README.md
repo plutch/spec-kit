@@ -59,7 +59,7 @@ Claude will:
 
 ## Available Commands
 
-Once installed, you get access to 17 powerful commands:
+Once installed, you get access to 20 powerful commands (17 core + 3 epic management):
 
 ### Core Workflow
 
@@ -81,6 +81,16 @@ Once installed, you get access to 17 powerful commands:
 | `/speckit.reconcile` | Close post-implementation gaps | After testing reveals gaps |
 | `/speckit.validate-hierarchy` | Validate spec relationships | After supplement/reconcile |
 | `/speckit.amend-technical` | Amend architecture decisions | After ADR-driven changes |
+
+### Epic Management (v2.8)
+
+| Command | Purpose | When to Use |
+|---------|---------|-------------|
+| `/speckit.epic.create` | Create multi-feature epic with shared architecture, dependencies, ADRs | 2+ related features sharing data model/APIs |
+| `/speckit.epic.decompose` | Generate feature specs from epic blueprint | After epic created, before feature implementation |
+| `/speckit.epic.status` | Monitor epic progress, wave completion, integration points | Daily standup, milestone tracking |
+
+**Example Use Case**: Building multi-tenant SaaS platform with 5 features (tenant isolation, dashboard, billing, admin, onboarding) that share database schema and authentication.
 
 ### Quality & Session Management
 
@@ -149,6 +159,55 @@ Once installed, you get access to 17 powerful commands:
 
 # Shows: Feature complete, all phases approved
 ```
+
+### Epic Workflow Example (v2.8 - Multi-Feature Coordination)
+
+For initiatives involving 2+ related features with shared architecture or dependencies:
+
+```bash
+# 1. Create epic specification with shared architecture and dependency tracking
+/speckit.epic.create multi-tenant-saas
+
+# Output: .specify/epics/multi-tenant-saas/
+#   - epic-spec.md (vision, business goals, 5 features, timeline)
+#   - epic-architecture.md (ADRs: PostgreSQL RLS, JWT with tenant claim, shared patterns)
+#   - dependency-map.md (critical path, parallelization waves, integration points)
+#   - epic-status.json (structured progress tracking)
+
+# 2. Generate feature specifications from epic blueprint
+/speckit.epic.decompose multi-tenant-saas
+
+# Output: 5 feature specs with:
+#   - ADR inheritance from epic-architecture.md
+#   - Integration contracts auto-linked
+#   - Constitutional requirements propagated
+#   - Wave assignments for parallel development
+
+# 3. Implement features in waves (parallel development)
+# Wave 1 (Week 1-3): Foundation feature
+/speckit.implement  # Feature 001: Tenant Isolation (no dependencies)
+
+# Wave 2 (Week 4-5): Parallel development by 2 teams
+/speckit.implement  # Feature 002: Tenant Dashboard (depends on 001)
+/speckit.implement  # Feature 003: Tenant Billing (depends on 001)
+/speckit.implement  # Feature 004: Tenant Admin (depends on 001)
+
+# Wave 3 (Week 6): Integration feature
+/speckit.implement  # Feature 005: Tenant Onboarding (depends on 002, 003, 004)
+
+# 4. Monitor epic progress (daily standup, milestone tracking)
+/speckit.epic.status multi-tenant-saas
+
+# Shows:
+#   - Wave completion: Wave 1 ✅ 100%, Wave 2 🟡 60%, Wave 3 ⬜ 0%
+#   - Integration points: 🟢 ON TRACK / 🟡 AT RISK / 🔴 BLOCKED
+#   - Quality metrics: 85% test coverage, 2 critical issues
+#   - Smart recommendations: "Wave 2 delayed, adjust Wave 3 timeline"
+```
+
+**Timeline Optimization**: 10 weeks sequential → 6 weeks parallelized (40% reduction)
+
+**Detailed Guide**: See [Epic Management Guide](src/.specify/docs/EPIC-MANAGEMENT-GUIDE.md) for comprehensive usage.
 
 ---
 
