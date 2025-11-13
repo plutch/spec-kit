@@ -164,6 +164,58 @@ Next: Constitutional pre-flight check...
 
 ---
 
+**Create metadata file** at `.specify/quick-tasks/quick-task-[timestamp]-metadata.json`:
+
+**Purpose**: Enable integration with `/speckit.status`, `/speckit.pm`, and workflow tracking (v2.3+ compatibility).
+
+```json
+{
+  "version": "2.9.0",
+  "workflow_type": "quick",
+  "feature_name": "[task-title-slug]",
+  "phase": "requirements_capture",
+  "created_at": "[ISO 8601 timestamp]",
+  "updated_at": "[ISO 8601 timestamp]",
+  "task_file": ".specify/quick-tasks/quick-task-[timestamp].md",
+  "metadata": {
+    "risk_level": "LOW",
+    "estimated_effort_days": 2
+  },
+  "approvals": {
+    "requirements_capture": {
+      "generated": "[ISO 8601 timestamp]",
+      "approved": null
+    },
+    "constitutional_preflight": {
+      "generated": null,
+      "approved": null
+    },
+    "implementation": {
+      "generated": null,
+      "approved": null
+    },
+    "quality_gate": {
+      "generated": null,
+      "approved": null
+    }
+  }
+}
+```
+
+**Field Descriptions**:
+- `workflow_type`: Always "quick" (vs "full" for traditional workflow)
+- `feature_name`: Slugified task title (e.g., "user-profile-edit-form")
+- `phase`: Current phase (requirements_capture → constitutional_preflight → implementation → quality_gate → complete)
+- `task_file`: Relative path to task document
+- `approvals`: Track phase completion (for `/speckit.status` integration)
+
+**Update metadata as workflow progresses**:
+- After Phase 2 (Pre-Flight): Set `approvals.constitutional_preflight.generated` and `approved` timestamps, update `phase` to "implementation"
+- After Phase 3 (Implementation): Set `approvals.implementation.generated` and `approved` timestamps
+- After Phase 4 (Quality Gate): Set `approvals.quality_gate.generated` and `approved` timestamps, update `phase` to "complete"
+
+---
+
 ### Phase 2: Constitutional Pre-Flight Check
 
 **Purpose**: Validate task aligns with constitutional principles BEFORE implementation begins.
@@ -266,6 +318,21 @@ All constitutional gates satisfied:
 Proceeding to implementation...
 ```
 
+**Update metadata file** (if ✅ PASS):
+
+```json
+{
+  "phase": "implementation",
+  "updated_at": "[ISO 8601 timestamp]",
+  "approvals": {
+    "constitutional_preflight": {
+      "generated": "[ISO 8601 timestamp]",
+      "approved": "[ISO 8601 timestamp]"
+    }
+  }
+}
+```
+
 **If FAIL or user declines CONDITIONAL**:
 ```
 ❌ Constitutional Pre-Flight: FAIL
@@ -281,6 +348,23 @@ Recommendations:
 Please revise task approach and run /speckit.quick again.
 ```
 
+**Update metadata file** (if ❌ FAIL):
+
+```json
+{
+  "phase": "constitutional_preflight",
+  "updated_at": "[ISO 8601 timestamp]",
+  "approvals": {
+    "constitutional_preflight": {
+      "generated": "[ISO 8601 timestamp]",
+      "approved": null
+    }
+  }
+}
+```
+
+**STOP workflow** (user must revise and restart).
+
 ---
 
 ### Phase 3: TDD Implementation
@@ -288,7 +372,9 @@ Please revise task approach and run /speckit.quick again.
 **Load tactical context** (if not already loaded):
 - Read constitution.md tactical sections (Implementation Patterns, TDD examples)
 - Read testing-approach.md (if exists and applicable)
-- Budget: Additional 20-30KB for implementation guidance
+- Budget: 20-30KB for tactical context (included in Phase 3 total of 30-50K)
+
+**Token Budget for Phase 3**: 30-50K total (includes tactical context loading + implementation execution)
 
 **Implementation Instructions**:
 
@@ -440,6 +526,21 @@ Ensure ALL acceptance criteria are met.
 - [x] [Criterion 1] - Implemented in [file]
 - [x] [Criterion 2] - Implemented in [file]
 - [x] [Criterion 3] - Implemented in [file]
+```
+
+**Update metadata file**:
+
+```json
+{
+  "phase": "quality_gate",
+  "updated_at": "[ISO 8601 timestamp]",
+  "approvals": {
+    "implementation": {
+      "generated": "[ISO 8601 timestamp]",
+      "approved": "[ISO 8601 timestamp]"
+    }
+  }
+}
 ```
 
 ---
@@ -1074,6 +1175,23 @@ Quality Gate: ✅ PASS
 6. ✅ Commit & Complete
 
 **Next Steps**: Feature ready for deployment/PR
+```
+
+**Update metadata file** (final):
+
+```json
+{
+  "phase": "complete",
+  "updated_at": "[ISO 8601 timestamp]",
+  "completed_at": "[ISO 8601 timestamp]",
+  "commit_sha": "[Git commit SHA]",
+  "approvals": {
+    "quality_gate": {
+      "generated": "[ISO 8601 timestamp]",
+      "approved": "[ISO 8601 timestamp]"
+    }
+  }
+}
 ```
 
 **Output to User**:

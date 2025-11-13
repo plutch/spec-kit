@@ -107,7 +107,42 @@ Given that feature description, do this:
 
 **Purpose**: Analyze feature complexity and recommend appropriate workflow (quick vs full).
 
-**Complexity Analysis**:
+**Quick Risk Assessment** (Heuristic):
+
+Before complexity analysis, perform a quick risk assessment based on feature description keywords:
+
+**HIGH-RISK Indicators** (score ≥4, requires full workflow):
+- Contains keywords: "payment", "billing", "stripe", "auth", "authentication", "authorization", "security", "encryption", "password", "multi-tenant", "tenant", "database migration", "data migration", "production data"
+- External integrations: "API integration", "third-party", "OAuth", "SSO"
+- Compliance: "GDPR", "HIPAA", "PCI", "SOC2", "compliance"
+- Scale: "million users", "high traffic", "performance critical"
+
+**MEDIUM-RISK Indicators** (score 4-7, full workflow recommended):
+- Contains keywords: "database", "schema change", "API endpoint", "real-time", "WebSocket", "cron job", "background job"
+- Data operations: "delete", "bulk update", "import", "export"
+
+**Decision**:
+```
+IF feature_description contains ANY HIGH-RISK indicator:
+  → Risk Level: 🔴 HIGH (score ≥8)
+  → Output: "⚠️ HIGH-RISK feature detected. Full workflow required for proper risk assessment and security review."
+  → Skip workflow recommendation entirely
+  → Proceed directly to Step 1 (full workflow)
+
+ELSE IF feature_description contains ≥2 MEDIUM-RISK indicators:
+  → Risk Level: 🟠 MEDIUM (score 4-7)
+  → Output: "⚠️ MEDIUM-RISK feature detected. Full workflow recommended for comprehensive planning."
+  → Skip workflow recommendation entirely
+  → Proceed directly to Step 1 (full workflow)
+
+ELSE:
+  → Risk Level: 🟢 LOW (score 0-3) - Assumed safe for complexity analysis
+  → Continue to Complexity Analysis below
+```
+
+---
+
+**Complexity Analysis** (if risk ≤3):
 
 Evaluate the feature description against these criteria:
 
