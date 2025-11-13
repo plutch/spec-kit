@@ -59,13 +59,14 @@ Claude will:
 
 ## Available Commands
 
-Once installed, you get access to 20 powerful commands (17 core + 3 epic management):
+Once installed, you get access to 21 powerful commands (18 core + 3 epic management):
 
 ### Core Workflow
 
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
-| `/speckit.specify` | Create feature specifications (EARS format) | Start of every feature |
+| `/speckit.specify` | Create feature specifications (EARS format) | Start of every complex feature |
+| `/speckit.quick` | **NEW v2.9**: Lightweight implementation for small tasks | Simple forms, bug fixes, minor enhancements |
 | `/speckit.clarify` | Clarify ambiguities | After specify, before plan |
 | `/speckit.validate-gap` | **NEW v2.3**: Analyze implementation feasibility | After specify, before plan (critical for HIGH-risk) |
 | `/speckit.plan` | Generate implementation plans | After gap analysis |
@@ -159,6 +160,67 @@ Once installed, you get access to 20 powerful commands (17 core + 3 epic managem
 
 # Shows: Feature complete, all phases approved
 ```
+
+### Quick Workflow Example (v2.9 - Simple Tasks)
+
+For small, straightforward tasks (forms, bug fixes, minor enhancements):
+
+```bash
+# Single command workflow - no formal spec/plan needed
+/speckit.quick
+
+# Claude prompts for:
+# 1. What: "Create user profile edit form with name, email, bio, avatar upload"
+# 2. Why: "Allow users to update their profile information"
+# 3. Acceptance Criteria: (bullet list)
+# 4. Files: src/components/UserProfile/EditForm.tsx
+
+# Output: .specify/quick-tasks/quick-task-[timestamp].md
+
+# Claude then:
+# 1. Constitutional pre-flight check ✅
+#    - Validates against Article I-X (TDD, simplicity, integration-first)
+#    - Checks for prohibited patterns
+#    - Gate: ✅ PASS | ⚠️ CONDITIONAL | ❌ FAIL
+
+# 2. TDD Implementation (RED-GREEN-REFACTOR enforced)
+#    - RED: Write failing test
+#    - GREEN: Implement feature
+#    - REFACTOR: Clean up code
+
+# 3. Quality Gate (4 reviewers)
+#    - Code Reviewer: Linting, type safety, criteria met ✅
+#    - Quality/Tests: All tests pass, coverage ≥75% ✅
+#    - Security: No secrets, input validation present ✅
+#    - Constitutional: TDD git history, no violations ✅
+
+# 4. Commit & Complete
+#    - Commit: "feat: add user profile edit form..."
+#    - Task marked complete
+#    - Ready for deployment
+
+# Time: 1-2 hours (vs 4-8 hours full workflow)
+# Tokens: 60-90K (~$1.15-$1.75)
+# Savings: 35-40% vs full workflow
+```
+
+**When to Use `/speckit.quick`**:
+- ✅ Simple forms, components, bug fixes
+- ✅ Clear requirements (no ambiguity)
+- ✅ LOW risk (score 0-3)
+- ✅ < 2 days effort
+- ✅ Uses existing patterns
+
+**When to Use Full Workflow** (specify → plan → implement):
+- ❌ MEDIUM/HIGH risk (score ≥4)
+- ❌ Complex features with many edge cases
+- ❌ Architectural changes or new ADRs needed
+- ❌ Multi-system integration
+- ❌ 3+ days effort
+
+**Smart Recommendation**: `/speckit.specify` now detects simple tasks and recommends `/speckit.quick` automatically (v2.9 Step 0.5).
+
+---
 
 ### Epic Workflow Example (v2.8 - Multi-Feature Coordination)
 

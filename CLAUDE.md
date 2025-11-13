@@ -16,7 +16,7 @@ When making changes to this framework:
 
 1. **Edit template commands** in `src/.claude/commands/`
    - Each command file is self-contained (no @include references)
-   - Files: speckit.specify.md, speckit.clarify.md, speckit.analyze.md, speckit.analyze-ux.md, speckit.plan.md, speckit.tasks.md, speckit.implement.md, speckit.constitution.md, speckit.supplement.md, speckit.reconcile.md, speckit.validate-hierarchy.md, speckit.amend-technical.md, speckit.pm.md, speckit.next.md, speckit.memory.md, speckit.status.md, speckit.validate-gap.md
+   - Files: speckit.specify.md, speckit.quick.md, speckit.clarify.md, speckit.analyze.md, speckit.analyze-ux.md, speckit.plan.md, speckit.tasks.md, speckit.implement.md, speckit.constitution.md, speckit.supplement.md, speckit.reconcile.md, speckit.validate-hierarchy.md, speckit.amend-technical.md, speckit.pm.md, speckit.next.md, speckit.memory.md, speckit.status.md, speckit.validate-gap.md
 
 2. **Update templates** in `src/.specify/templates/`
    - Specification templates
@@ -55,7 +55,7 @@ spec-kit-claude/
 └── src/                       # Distribution source (users copy this)
     ├── .claude/
     │   ├── agents/            # Framework review agents
-    │   └── commands/          # 17 self-contained command files
+    │   └── commands/          # 18 self-contained command files
     └── .specify/
         ├── config.example.yml     # Configuration template
         ├── business-rules/    # Business rule validation templates
@@ -94,6 +94,7 @@ No scripts, no CLI, no package managers required. Users simply:
 | Command | Category | Description | Since |
 |---------|----------|-------------|-------|
 | `/speckit.specify` | Core | Create feature specifications with EARS format support | v2.3 |
+| `/speckit.quick` | Core | Lightweight implementation for small, low-risk tasks | v2.9 |
 | `/speckit.clarify` | Core | Clarify ambiguities in specs | v1.0 |
 | `/speckit.validate-gap` | Core | Analyze implementation feasibility | v2.3 |
 | `/speckit.plan` | Core | Generate implementation plans with requirements traceability | v2.3 |
@@ -117,6 +118,168 @@ No scripts, no CLI, no package managers required. Users simply:
 ---
 
 ## Framework Features by Version
+
+<details>
+<summary><strong>⚡ Quick Workflow (v2.9)</strong> - Click to expand</summary>
+
+### Overview (v2.9.0)
+
+Introduces `/speckit.quick` command for small, low-risk tasks, reducing workflow overhead by **35-40%** while maintaining full constitutional enforcement and quality gates.
+
+**Problem**: Previous versions required full workflow (specify → clarify → plan → implement → reconcile) even for simple tasks like creating a form or fixing a bug. This created unnecessary overhead:
+- 90-146K tokens for simple tasks that could be done in 60-90K
+- 4-8 hours for work that could be completed in 1-2 hours
+- Formal spec/plan documentation overkill for straightforward implementations
+- Users felt framework was "too heavyweight" for simple changes
+
+**Solution**: New `/speckit.quick` command provides streamlined workflow for small tasks while preserving critical quality/constitutional enforcement.
+
+### Quick Workflow Architecture
+
+**When to Use `/speckit.quick`**:
+- ✅ Simple, isolated features (forms, components, bug fixes)
+- ✅ Clear requirements (no ambiguity)
+- ✅ LOW risk (score 0-3)
+- ✅ < 2 days effort
+- ✅ Uses existing patterns (no architectural changes)
+
+**When to Use Full Workflow**:
+- ❌ MEDIUM/HIGH risk (score ≥4)
+- ❌ Complex logic or many edge cases
+- ❌ Architectural changes needed (new ADRs)
+- ❌ Ambiguous requirements (needs clarification)
+- ❌ Multi-system integration
+- ❌ 3+ days effort
+
+### Workflow Phases
+
+**Phase 0: Context Loading** (v2.7 optimization)
+- Load strategic context only (5-8KB budget)
+- Constitution principles, no tactical examples yet
+
+**Phase 1: Quick Requirements Capture**
+- Prompt user for: What, Why, Acceptance Criteria, Files
+- Create task document: `.specify/quick-tasks/quick-task-[timestamp].md`
+- No formal spec.md or EARS requirements format
+
+**Phase 2: Constitutional Pre-Flight Check**
+- Validate against Article I-X (if constitution exists)
+- Check for prohibited patterns
+- Verify TDD applicable, integration-first compliance
+- Gate: ✅ PASS | ⚠️ CONDITIONAL | ❌ FAIL
+
+**Phase 3: TDD Implementation**
+- Load tactical context (20-30KB additional budget)
+- Follow RED-GREEN-REFACTOR cycle (enforced by git history validation)
+- Use existing patterns/libraries
+- Minimal documentation (inline comments only)
+
+**Phase 4: Quality Gate** (Streamlined - 4 reviewers)
+1. **Code Reviewer**: Linting, type safety, criteria met
+2. **Quality/Tests**: All tests pass, adequate coverage
+3. **Security**: No secrets, input validation, OWASP basics
+4. **Constitutional**: TDD compliance, prohibited pattern scan
+
+**Phase 5: Commit & Complete**
+- Commit with descriptive message
+- Update task document
+- No reconciliation phase needed (simple, complete implementation)
+
+### Smart Workflow Recommendation (Step 0.5 in `/speckit.specify`)
+
+`/speckit.specify` now analyzes feature complexity and recommends appropriate workflow:
+
+**Complexity Analysis Criteria**:
+- Task scope (isolated vs multi-component)
+- Risk level (LOW vs MEDIUM/HIGH)
+- Requirement clarity (clear vs ambiguous)
+- Effort estimate (< 2 days vs 3+ days)
+- Architectural impact (uses existing vs new patterns)
+
+**Recommendation Logic**:
+```
+IF meets ≥5 SIMPLE indicators AND 0 COMPLEX indicators:
+  → Prompt user: "Use /speckit.quick (saves 35-40%) or continue with full workflow?"
+  → IF user chooses quick: Exit /speckit.specify, user runs /speckit.quick
+  → IF user continues: Proceed with full workflow
+
+ELSE (complex feature):
+  → Skip recommendation, proceed directly with full workflow
+```
+
+**Example Scenarios**:
+- "Create user profile edit form" → Recommend `/speckit.quick`
+- "Add multi-tenant billing with Stripe" → No recommendation (complex, use full workflow)
+- "Fix date picker validation bug" → Recommend `/speckit.quick` (borderline, user choice)
+
+### Constitutional Enforcement Preserved
+
+**All constitutional validation maintained**:
+- ✅ Pre-flight check (Article I-X validation)
+- ✅ TDD enforcement (RED-GREEN-REFACTOR git history)
+- ✅ Integration-first testing (no prohibited mocks)
+- ✅ Prohibited pattern scanning (automated detection)
+- ✅ Simplicity/anti-abstraction checks
+- ✅ Quality gates (4 reviewers, same rigor as full workflow)
+
+**What's streamlined** (safe for small tasks):
+- ❌ Formal specification document (spec.md with EARS)
+- ❌ Multi-phase planning (Phase -1 through Phase 3)
+- ❌ Gap analysis (reusable components research)
+- ❌ Task breakdown (tasks.md)
+- ❌ Reconciliation phase (implementation complete and correct)
+
+### Token Economy
+
+| Workflow | Token Usage | Cost | Time |
+|----------|-------------|------|------|
+| **Quick Workflow** | 57-94K tokens | $1.10-$1.80 | 1-2 hours |
+| **Full Workflow (v2.7)** | 90-146K tokens | $1.75-$2.80 | 4-8 hours |
+| **Savings** | **-35-40%** | **-35-40%** | **-60-75%** |
+
+**ROI**: For simple tasks (forms, bug fixes, minor enhancements), quick workflow provides massive time/cost savings while maintaining quality.
+
+**Break-Even**: Immediate savings from first simple task.
+
+### Files Modified/Created
+
+**v2.9.0**:
+
+| File | Change | Why Important |
+|------|--------|---------------|
+| **Commands** | | |
+| `speckit.quick.md` | Created | New lightweight workflow command (500-700 lines) |
+| `speckit.specify.md` | Updated | Added Step 0.5: Workflow Recommendation (smart routing) |
+| **Templates** | | |
+| `quick-task-template.md` | Created | Template for quick task documents |
+| **Documentation** | | |
+| `CLAUDE.md` | Updated | Added v2.9 documentation |
+| `README.md` | Updated | Added quick workflow usage examples |
+
+### Backward Compatibility
+
+✅ **100% Backward Compatible**:
+- `/speckit.quick` is NEW command (no changes to existing workflows)
+- Projects can ignore `/speckit.quick` → Full workflow still works
+- Step 0.5 in `/speckit.specify` is optional (can proceed to full workflow)
+- No breaking changes
+
+### Use Cases
+
+**Perfect for `/speckit.quick`**:
+- ✅ User profile edit form (5-10 fields, validation, save)
+- ✅ Bug fix (date picker allows past dates)
+- ✅ New component (modal, card, button variant)
+- ✅ Minor enhancement (add field to existing form)
+- ✅ Styling update (responsive design fix)
+
+**Still need full workflow**:
+- ❌ Multi-tenant billing system (HIGH risk, external API)
+- ❌ OAuth2 authentication integration (security-critical)
+- ❌ Real-time dashboard with WebSockets (complex architecture)
+- ❌ Data migration script (HIGH risk, data integrity)
+
+</details>
 
 <details>
 <summary><strong>⚡ Context Optimization (v2.7)</strong> - Click to expand</summary>

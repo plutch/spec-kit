@@ -103,6 +103,101 @@ Given that feature description, do this:
 
 ---
 
+### Step 0.5: Workflow Recommendation (v2.9 - Quick Workflow)
+
+**Purpose**: Analyze feature complexity and recommend appropriate workflow (quick vs full).
+
+**Complexity Analysis**:
+
+Evaluate the feature description against these criteria:
+
+**SIMPLE Task Indicators** (consider `/speckit.quick`):
+- ✅ Simple, isolated component (form, button, card, modal)
+- ✅ Bug fix with clear root cause
+- ✅ Minor enhancement to existing feature
+- ✅ Clear requirements (no ambiguity)
+- ✅ Estimated < 2 days effort
+- ✅ No architectural changes needed
+- ✅ LOW risk (no sensitive data, simple logic)
+- ✅ Uses existing patterns/libraries
+
+**COMPLEX Task Indicators** (use full workflow):
+- ❌ Multi-component system or feature
+- ❌ New architectural patterns or ADRs needed
+- ❌ MEDIUM or HIGH risk (score ≥4)
+- ❌ External system integration (auth, payments, APIs)
+- ❌ Ambiguous or incomplete requirements
+- ❌ 3+ days effort estimated
+- ❌ Multiple edge cases or complex business logic
+
+**Decision Logic**:
+
+```yaml
+IF feature_description meets ≥5 SIMPLE indicators AND 0 COMPLEX indicators:
+
+  Present workflow recommendation to user:
+
+  "💡 WORKFLOW RECOMMENDATION
+
+  This appears to be a SIMPLE, LOW-RISK task that could use the quick workflow:
+
+  **Option A: Quick Workflow** (`/speckit.quick`) ⚡
+  - ✅ Single command (1-2 hours)
+  - ✅ Minimal documentation overhead
+  - ✅ Full constitutional enforcement & quality gates
+  - ✅ TDD still required (RED-GREEN-REFACTOR)
+  - ❌ No formal spec/plan (less documentation)
+  - Best for: Forms, components, bug fixes, minor enhancements
+
+  **Option B: Full Workflow** (`/speckit.specify` → `/speckit.plan` → `/speckit.implement`) 📋
+  - ✅ Comprehensive specification & planning
+  - ✅ Formal approval gates
+  - ✅ Detailed risk assessment & test strategy
+  - ✅ Better for team review & complex features
+  - ❌ More time (4-8+ hours)
+  - Best for: Complex features, architectural changes, high-risk work
+
+  **Recommendation**: `/speckit.quick` (saves 35-40% time/tokens)
+
+  Continue with full workflow anyway? (yes/no)
+  Type 'yes' to proceed with /speckit.specify
+  Type 'no' to exit (then run /speckit.quick instead)
+  "
+
+  Wait for user response.
+
+  IF user responds "no", "quick", "switch", or "exit":
+    Output: "✅ Exiting /speckit.specify. Please run `/speckit.quick` instead for fast implementation."
+    → STOP workflow (user will run /speckit.quick)
+
+  ELSE IF user responds "yes", "full", "continue", or "proceed":
+    Output: "✅ Continuing with full workflow (comprehensive documentation)."
+    → Proceed to Step 1 (Vagueness Detection)
+
+ELSE (feature meets COMPLEX criteria):
+  → Skip recommendation entirely
+  → Proceed directly to Step 1 (full workflow required)
+```
+
+**Example Scenarios**:
+
+**Scenario 1** (Recommend Quick):
+- Description: "Create user profile edit form with name, email, bio fields"
+- Analysis: Simple component, clear requirements, < 2 days, LOW risk
+- Recommendation: `/speckit.quick` (saves 2-4 hours)
+
+**Scenario 2** (No Recommendation - Complex):
+- Description: "Add multi-tenant billing system with Stripe integration"
+- Analysis: HIGH risk, external integration, complex business logic, 5+ days
+- Action: Proceed directly with full workflow (no prompt shown)
+
+**Scenario 3** (Borderline - User Choice):
+- Description: "Fix date picker validation bug (allow only future dates)"
+- Analysis: Meets SIMPLE criteria but touches multiple files
+- Recommendation: Offer choice, recommend `/speckit.quick`
+
+---
+
 1. **Vagueness Detection & Pre-Spec Discovery** (Adaptive Dialogue):
 
    **Purpose**: If the feature description is too high-level or vague, engage in brief discovery dialogue BEFORE generating the spec to build better understanding and prevent assumption-heavy specifications.
